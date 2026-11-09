@@ -40,7 +40,7 @@ function layoutScene() {
   if (bgInfo && bgInfo.W === W && bgInfo.H === H && bgInfo.px === ix * dpr && bgInfo.py === iy * dpr && bgInfo.k === (cr.width / WORLD.w) * dpr) return;
   const yH = Math.max(Math.round(H * 0.15), Math.round((iy - 0.33 * vh) * dpr));
   bgc.width = W; bgc.height = H;
-  bgStatic = makeBackdrop(W, H, dpr, yH, wide);
+  bgStatic = makeBackdrop(W, H, dpr, yH, wide, { x: ix * dpr, y: (iy + 40 * (cr.width / WORLD.w)) * dpr });
   shimmer = makeShimmer(W, H, dpr, yH);
   bgInfo = { W, H, dpr, px: ix * dpr, py: iy * dpr, k: (cr.width / WORLD.w) * dpr };
   if (reduceMotion) drawBg(0);
@@ -338,9 +338,9 @@ function drawReflection(t) {
     const wl = wlAt((xd + sw / 2 - view.tx) / S) * S + view.ty;
     const y0 = Math.max(0, wl - hs), hh = wl - y0;
     if (hh <= 0) continue;
-    const wob = Math.sin(xd * 0.05 / dpr + t * 1.7) * 1.6 * dpr;
+    const wob = Math.round(Math.sin(xd * 0.05 / dpr + t * 1.7) * 1.6 * dpr); // whole pixels: no soft seams between strips
     rctx.setTransform(1, 0, 0, -1, 0, 2 * wl);
-    rctx.drawImage(layer, xd, y0, sw, hh, xd + wob, y0, sw, hh);
+    rctx.drawImage(layer, xd, y0, sw + 2, hh, xd + wob, y0, sw + 2, hh); // 2px overlap hides gaps where neighbours shift apart
   }
   rctx.setTransform(1, 0, 0, 1, 0, 0);
   rctx.globalCompositeOperation = 'destination-in'; rctx.drawImage(reflFade, 0, 0);

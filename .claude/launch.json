@@ -12,6 +12,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["tools/dev-server.py", "prototype-code", "5174"],
       "port": 5174
+    },
+    {
+      "name": "yunamii-site",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["tools/dev-server.py", "site", "5175"],
+      "port": 5175
     }
   ]
 }

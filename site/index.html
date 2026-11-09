@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Yunamii Studio — Playful Ideas, Meaningful Apps</title>
+  <meta name="description" content="Yunamii Studio is a small software studio making games, learning apps and useful digital products.">
+  <meta name="theme-color" content="#0a3b52">
+  <meta property="og:title" content="Yunamii Studio — Playful Ideas, Meaningful Apps">
+  <meta property="og:description" content="A small software studio making games, learning apps and useful digital products.">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="css/site.css">
+  <script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<div class="site">
+  <header class="head">
+    <div class="shell head-in">
+      <a href="#top" class="logo" aria-label="Yunamii Studio — home"><span class="logomark" aria-hidden="true"><i></i><i></i><i></i></span>Yunamii</a>
+      <nav class="desktop-nav" aria-label="Main navigation">
+        <a href="#work">Work</a><a href="#open-source">Open Source</a><a href="#process">Approach</a><a href="#about">About</a>
+      </nav>
+      <div class="head-actions"><a href="impressum.html#kontakt" class="pill">Contact <span aria-hidden="true">↗</span></a></div>
+      <button type="button" class="hamburger" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="mobileOverlay"><svg width="22" height="22" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9" fill="none"><path d="M3 7h18M3 12h18M3 17h18"/></svg></button>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero" id="hero" aria-labelledby="heroTitle">
+      <canvas class="hero-bg" id="bg" aria-hidden="true"></canvas>
+      <div class="hero-inner">
+        <div class="hero-copy">
+          <div class="eyebrow">SOFTWARE STUDIO</div>
+          <h1 id="heroTitle"><span>Playful Ideas,</span><span>Meaningful Apps.</span></h1>
+          <p>We design and build games, learning apps, and digital products that people love.</p>
+          <div class="hero-buttons"><a href="#work" class="pill">See Our Work <span aria-hidden="true">↗</span></a><a href="#process" class="outline">Our Approach</a></div>
+        </div>
+        <div class="hero-stage">
+          <canvas id="scene" role="img" aria-label="Interactive cherry blossom bonsai on a mossy island. Move the cursor or finger through the blossoms."></canvas>
+        </div>
+      </div>
+      <div class="hero-hint" aria-hidden="true"><span>✦</span> move · explore · bloom</div>
+    </section>
+
+    <section class="what shell reveal" aria-label="What we create">
+      <a href="#work"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M10 14c-4 1-6 6-6 13 0 5 3 7 7 4l6-5h6l6 5c4 3 7 1 7-4 0-7-2-12-6-13-4-1-7 1-10 1s-6-2-10-1Z"/><path d="M13 18v9m-4-4.5h9M27 20h.1M31 24h.1"/></svg><div><strong>Games</strong><small>Play &amp; Relax</small></div></a>
+      <a href="#work"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="m5 17 15-9 15 9-15 9L5 17Zm0 7 15 9 15-9M5 30l15 8 15-8"/></svg><div><strong>Learning</strong><small>Learn &amp; Grow</small></div></a>
+      <a href="#work"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 5c2 9 5 12 14 15-9 2-12 5-14 15-2-10-5-13-14-15C15 17 18 14 20 5ZM6 5l1 4 4 1-4 1-1 4-1-4-4-1 4-1 1-4Zm28 26 1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3Z"/></svg><div><strong>Products</strong><small>Useful &amp; Delightful</small></div></a>
+      <a href="#about"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="m15 8-10 12 10 12M25 8l10 12-10 12M23 5l-6 30"/></svg><div><strong>Studio</strong><small>Design · Build · Launch</small></div></a>
+    </section>
+
+    <section class="projects shell reveal" id="work" aria-labelledby="workTitle">
+      <div class="section-head">
+        <div><div class="section-kicker">FEATURED PROJECTS</div><h2 class="section-title" id="workTitle">Our Creations</h2></div>
+        <div class="arrows"><button class="round" id="prev" type="button" aria-label="Previous project">‹</button><button class="round" id="next" type="button" aria-label="Next project">›</button></div>
+      </div>
+      <div class="cards" id="cards">
+        <a class="card" href="https://katsumii.com" target="_blank" rel="noopener" aria-label="Katsumii, offline trading journal (opens katsumii.com)">
+          <img src="assets/cards/katsumii.webp" alt="Katsumii trading journal dashboard" width="900" height="473" loading="lazy">
+          <div class="card-info"><strong>Katsumii</strong><small>Offline trading journal. Your trades, your machine.</small></div>
+          <span class="card-arrow" aria-hidden="true">↗</span>
+        </a>
+        <article class="card" aria-label="Gravity Merge, coming soon">
+          <img src="assets/cards/gravity-merge.webp" alt="Colorful floating numbered game tiles" width="640" height="470" loading="lazy">
+          <span class="tag-icon" aria-hidden="true"><svg viewBox="0 0 40 40"><path d="M10 14c-4 1-6 6-6 13 0 5 3 7 7 4l6-5h6l6 5c4 3 7 1 7-4 0-7-2-12-6-13-4-1-7 1-10 1s-6-2-10-1Z"/><path d="M13 18v9m-4-4.5h9"/></svg></span>
+          <span class="soon">Coming soon</span>
+          <div class="card-info"><strong>Gravity Merge</strong><small>A fresh twist on the 2048 puzzle.</small></div>
+        </article>
+        <article class="card" aria-label="Yunamii Language, coming soon">
+          <img src="assets/cards/yunamii-language.webp" alt="Dreamlike Japanese mountains and cherry blossoms" width="640" height="470" loading="lazy">
+          <span class="tag-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m2 9 10-5 10 5-10 5L2 9Zm4 2.5V16c0 1.5 3 3 6 3s6-1.5 6-3v-4.5M22 9v6"/></svg></span>
+          <span class="soon">Coming soon</span>
+          <div class="card-info"><strong>Yunamii Language</strong><small>Learn languages through stories and play.</small></div>
+        </article>
+        <article class="card" aria-label="Next project, coming soon">
+          <img src="assets/cards/next-project.webp" alt="Tiny glowing sprout emerging from a mossy floor" width="640" height="470" loading="lazy">
+          <span class="tag-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h12M6 21h12M7 3c0 5 5 6 5 9s-5 4-5 9m10-18c0 5-5 6-5 9s5 4 5 9"/></svg></span>
+          <div class="card-info"><strong>Next Project</strong><small>Something new is growing…</small></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="open shell reveal" id="open-source" aria-labelledby="osTitle">
+      <div>
+        <div class="section-kicker">OPEN SOURCE</div>
+        <h2 class="section-title" id="osTitle">Built in the open.</h2>
+        <p class="os-lead">Some of what we make is free to read, learn from and reuse. Find the code on GitHub.</p>
+      </div>
+      <div class="os-list">
+        <a class="os-item" href="https://github.com/FredMorbe/Yunamii" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+          <div><strong>Yunamii website</strong><small>This site, including the interactive blossom hero. <span class="mono">FredMorbe/Yunamii</span></small></div>
+          <span class="card-arrow" aria-hidden="true">↗</span>
+        </a>
+        <a class="os-more" href="https://github.com/FredMorbe" target="_blank" rel="noopener">More on GitHub <span aria-hidden="true">↗</span></a>
+      </div>
+    </section>
+
+    <section class="process-panel reveal" id="process" aria-labelledby="processTitle">
+      <div class="process shell">
+        <div><h2 id="processTitle">From Idea to Experience</h2><p>We turn ideas into delightful experiences people enjoy, learn from, and return to.</p></div>
+        <ol class="steps">
+          <li class="step"><span class="step-dot"></span><svg class="step-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3Z"/></svg><strong>Discover</strong><small>Find the right idea</small></li>
+          <li class="step"><span class="step-dot"></span><svg class="step-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19l-4 1ZM14 7l3 3"/></svg><strong>Design</strong><small>Shape the experience</small></li>
+          <li class="step"><span class="step-dot"></span><svg class="step-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 8-5 4 5 4m8-8 5 4-5 4m-2-11-4 14"/></svg><strong>Build</strong><small>Bring it to life</small></li>
+          <li class="step"><span class="step-dot"></span><svg class="step-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19c0-3 1-5 3-7 1-4 5-8 11-8 0 6-4 10-8 11m-6 4c-2 0-3 1-3 3 2 0 3-1 3-3Zm4-7 3 3M15 9h.01"/></svg><strong>Launch</strong><small>Share with the world</small></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="about shell reveal" id="about" aria-labelledby="aboutTitle">
+      <div>
+        <div class="section-kicker">SMALL STUDIO, BIG CURIOSITY</div>
+        <h2 id="aboutTitle">A little wonder.<br>A lot of intention.</h2>
+        <p>Yunamii is a creative software studio making thoughtfully crafted games, learning experiences, and useful digital products. We believe technology can feel a little more human, playful, and inspiring.</p>
+      </div>
+      <div class="about-bubble" aria-hidden="true"><span>y.</span></div>
+    </section>
+
+    <section class="bottom-cta shell reveal" id="contact">
+      <div><h2>Let’s create something meaningful.</h2><p>Have an idea, a project, or a collaboration in mind?</p></div>
+      <!-- TODO: swap for a mailto: link once the public contact address is decided -->
+      <a href="impressum.html#kontakt" class="pill">Get in touch <span aria-hidden="true">↗</span></a>
+    </section>
+  </main>
+
+  <footer class="footer shell">
+    <a href="#top" class="logo" aria-label="Yunamii Studio, back to top"><span class="logomark" aria-hidden="true"><i></i><i></i><i></i></span>Yunamii</a>
+    <span class="footer-note">Made with imagination, intention &amp; care.</span>
+    <span class="footer-links"><a href="impressum.html">Impressum</a><a href="datenschutz.html">Datenschutz</a><span>© 2026 Yunamii Studio</span></span>
+  </footer>
+</div>
+
+<div class="mobile-overlay" id="mobileOverlay" aria-hidden="true">
+  <nav class="mobile-menu" aria-label="Mobile navigation">
+    <button class="close-menu" id="closeMenu" type="button" aria-label="Close menu">✕</button>
+    <a href="#work">Work</a><a href="#open-source">Open Source</a><a href="#process">Approach</a><a href="#about">About</a><a href="impressum.html#kontakt">Contact</a>
+  </nav>
+</div>
+
+<script type="module" src="js/hero.js"></script>
+<script src="js/site.js" defer></script>
+</body>
+</html>
