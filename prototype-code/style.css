@@ -1,0 +1,60 @@
+:root {
+  --ink: #072638;
+  --ink2: #0b3244;
+  --text: #f1fcff;
+  --muted: #c6e0ec;
+  --cyan: #73ecf5;
+  --cyan2: #2fd1e4;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body {
+  color: var(--text);
+  font-family: Inter, "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--ink2);
+}
+.hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+}
+/* the whole scene (backdrop, island, tree, water) is one canvas filling the hero */
+#scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: pan-y;
+}
+/* text sits above the canvas but lets pointer events through to it */
+.wrap {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 24px;
+  pointer-events: none;
+}
+.copy { max-width: 520px; }
+.tools { pointer-events: auto; }
+.eyebrow { letter-spacing: .32em; text-transform: uppercase; font-size: 12px; color: var(--muted); margin: 0 0 18px; }
+h1 { font-size: clamp(40px, 5.2vw, 68px); font-weight: 400; line-height: 1.05; margin: 0 0 22px; letter-spacing: -.01em; }
+h1 span { color: var(--cyan); }
+.lead { color: var(--muted); font-size: 18px; line-height: 1.5; max-width: 30em; margin: 0 0 16px; }
+.hint { color: var(--muted); opacity: .7; font-size: 14px; margin: 0 0 22px; }
+.tools { display: flex; align-items: center; gap: 16px; }
+button {
+  font: inherit; font-weight: 600; color: #04303b; cursor: pointer;
+  background: linear-gradient(180deg, #8ff3fa, var(--cyan2));
+  border: 0; border-radius: 999px; padding: 12px 22px;
+}
+button:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+#hud { font: 12px/1.2 ui-monospace, Consolas, monospace; color: var(--muted); opacity: .7; }
+@media (max-width: 899px) {
+  .hero { align-items: flex-start; }
+  .wrap { padding-top: 32px; }
+}

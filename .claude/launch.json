@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "yunamii-prototype",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["tools/dev-server.py", "prototype", "5173"],
+      "port": 5173
+    },
+    {
+      "name": "yunamii-code",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["tools/dev-server.py", "prototype-code", "5174"],
+      "port": 5174
+    }
+  ]
+}

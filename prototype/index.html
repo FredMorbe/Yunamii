@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Yunamii Prototype – Bonsai</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <section class="hero" id="hero">
+    <canvas class="bg" id="bg" aria-hidden="true"></canvas>
+    <div class="wrap">
+      <div class="copy">
+        <p class="eyebrow">Software Studio</p>
+        <h1>Playful Ideas,<br><span>Meaningful Apps.</span></h1>
+        <p class="lead">We design and build games, learning apps, and digital products that people love.</p>
+        <p class="hint">Move your mouse (or finger) through the blossoms.</p>
+        <div class="tools">
+          <button id="replay" type="button">Replay bloom</button>
+          <span id="hud" aria-hidden="true"></span>
+        </div>
+      </div>
+      <div class="stage">
+        <canvas id="scene" aria-hidden="true"></canvas>
+      </div>
+    </div>
+  </section>
+  <script type="module" src="main.js"></script>
+</body>
+</html>
