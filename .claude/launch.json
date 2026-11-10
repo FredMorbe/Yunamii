@@ -18,6 +18,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["tools/dev-server.py", "site", "5175"],
       "port": 5175
+    },
+    {
+      "name": "concept-ocean-planet",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["tools/dev-server.py", "concepts/ocean-planet", "5176"],
+      "port": 5176
     }
   ]
 }

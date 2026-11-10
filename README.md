@@ -8,6 +8,7 @@ Static site for [yunamii.com](https://yunamii.com). Plain HTML, CSS and JavaScri
 |---|---|
 | `site/` | The website that gets deployed (landing page, Impressum, Datenschutz) |
 | `site/js/hero.js`, `site/js/backdrop.js` | Interactive hero: tree image with code-driven blossoms, code-drawn blurred backdrop |
+| `concepts/ocean-planet/` | Design concept "Ocean Planet" (not deployed, self-contained): WebGL2 sea at sunrise (`js/scene/`), orbit map of the products, canvas globe, light/dark. Run with `python tools/dev-server.py concepts/ocean-planet 5176` |
 | `prototype/`, `prototype-code/` | Earlier hero experiments (not deployed) |
 | `reference/` | Approved design mockup |
 | `tools/dev-server.py` | Local static server without caching |

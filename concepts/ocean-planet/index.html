@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>yunamii — Ruhe im Design. Tiefe im Detail.</title>
+  <meta name="description" content="yunamii ist das Ein-Personen-Studio eines unabhängigen Softwareentwicklers: Katsumii, Cubamii und weitere digitale Produkte, die sich klar und selbstverständlich anfühlen.">
+  <!-- design concept, not the live site -->
+  <meta name="robots" content="noindex">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#070d16">
+  <meta property="og:title" content="yunamii — Ruhe im Design. Tiefe im Detail.">
+  <meta property="og:description" content="Digitale Produkte eines unabhängigen Softwareentwicklers.">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preload" href="assets/fonts/DMSans-normal-300-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/Fraunces-italic-300-640-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <script>
+    // theme before first paint: stored choice, otherwise the system setting
+    (function () {
+      var root = document.documentElement, theme = null;
+      try { theme = localStorage.getItem('yunamii-theme'); } catch (e) { /* storage blocked: fall through to the system setting */ }
+      if (theme !== 'light' && theme !== 'dark') theme = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      root.dataset.theme = theme;
+      root.classList.add('js');
+    })();
+  </script>
+  <link rel="stylesheet" href="css/ocean.css">
+</head>
+<body>
+<svg width="0" height="0" class="sprite" aria-hidden="true" focusable="false">
+  <symbol id="i-arrow" viewBox="0 0 12 12"><path d="M2.5 9.5 9.5 2.5M4 2.5h5.5V8"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="3.4"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.3 4.3l1.5 1.5M14.2 14.2l1.5 1.5M4.3 15.7l1.5-1.5M14.2 5.8l1.5-1.5"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 20 20"><path d="M16 11.6A6.6 6.6 0 0 1 8.4 4a6.6 6.6 0 1 0 7.6 7.6Z"/></symbol>
+</svg>
+
+<a class="skip" href="#inhalt">Zum Inhalt springen</a>
+
+<header class="head" id="head">
+  <div class="shell head-in">
+    <a class="wordmark" href="#top" aria-label="yunamii, zum Seitenanfang">yunamii<span class="ember" aria-hidden="true">.</span></a>
+    <nav class="nav" aria-label="Hauptnavigation">
+      <a href="#produkte">Produkte</a>
+      <a href="#ueber-mich">Über mich</a>
+      <a href="#kontakt">Kontakt</a>
+    </nav>
+    <button class="theme" id="themeToggle" type="button" role="switch" aria-checked="true" aria-label="Dunkles Farbschema">
+      <span class="theme-thumb" aria-hidden="true"></span>
+      <svg aria-hidden="true"><use href="#i-sun"/></svg>
+      <svg aria-hidden="true"><use href="#i-moon"/></svg>
+    </button>
+    <button class="menu-btn" id="menuBtn" type="button" aria-haspopup="dialog" aria-controls="menu">Menü</button>
+  </div>
+</header>
+
+<dialog class="menu" id="menu" aria-label="Navigation">
+  <div class="menu-in">
+    <button class="menu-close" type="button" data-close>Schließen</button>
+    <nav aria-label="Mobile Navigation">
+      <a href="#produkte"><span lang="ja" aria-hidden="true">一</span>Produkte</a>
+      <a href="#ansatz"><span lang="ja" aria-hidden="true">二</span>Ansatz</a>
+      <a href="#ueber-mich"><span lang="ja" aria-hidden="true">三</span>Über mich</a>
+      <a href="#kontakt"><span lang="ja" aria-hidden="true">四</span>Kontakt</a>
+    </nav>
+  </div>
+</dialog>
+
+<main id="top">
+  <!-- ============ HERO: on the surface, at sunrise ============ -->
+  <section class="hero" id="hero" aria-labelledby="heroTitle">
+    <canvas class="hero-scene" id="scene" aria-hidden="true"></canvas>
+    <div class="shell hero-copy">
+      <p class="eyebrow"><span class="eyebrow-line" aria-hidden="true"></span>Independent Software Developer</p>
+      <h1 class="display hero-title" id="heroTitle">
+        <span class="line"><span class="serif">Ruhe im Design.</span></span>
+        <span class="line"><span class="bold">Tiefe im Detail<span class="ember">.</span></span></span>
+      </h1>
+      <p class="hero-lead">Ich baue digitale Produkte, die sich klar und selbstverständlich anfühlen.</p>
+      <p class="hero-cta"><a class="pill magnetic" href="#produkte">Meine Arbeit entdecken <svg class="arrow" aria-hidden="true"><use href="#i-arrow"/></svg></a></p>
+    </div>
+    <p class="hero-side" aria-hidden="true"><span lang="ja">夜明け</span><span>Yoake · Tagesanbruch</span></p>
+    <div class="shell hero-foot" aria-hidden="true">
+      <span class="scroll-cue"><i></i>Scroll</span>
+      <span class="hero-hint"><i></i>Berühre das Wasser</span>
+    </div>
+  </section>
+
+  <div id="inhalt"></div>
+
+  <!-- ============ PRODUKTE: the system in orbit ============ -->
+  <section class="section products" id="produkte" aria-labelledby="productsTitle">
+    <div class="shell">
+      <div class="products-head">
+        <div class="reveal">
+          <p class="kicker"><span>01</span>Produkte<span class="kicker-ja" lang="ja" aria-hidden="true">作品</span></p>
+          <h2 class="display" id="productsTitle"><span class="serif">Kleine Welten,</span> <span class="bold">in Ruhe gebaut.</span></h2>
+          <p class="lead">Jedes Produkt ist eine eigene kleine Welt auf eigener Umlaufbahn. Manche sind schon da, andere noch unterwegs. Wähle eine aus.</p>
+        </div>
+        <svg class="orrery reveal" id="orrery" viewBox="0 0 640 420" aria-hidden="true" focusable="false">
+          <defs>
+            <radialGradient id="sunGlow"><stop offset="0" stop-color="#ff7847" stop-opacity=".55"/><stop offset="1" stop-color="#ff7847" stop-opacity="0"/></radialGradient>
+          </defs>
+          <g class="orbits" transform="rotate(-14 320 212)">
+            <ellipse cx="320" cy="212" rx="84" ry="33.6"/>
+            <ellipse cx="320" cy="212" rx="138" ry="55.2"/>
+            <ellipse cx="320" cy="212" rx="192" ry="76.8"/>
+            <ellipse class="far" cx="320" cy="212" rx="246" ry="98.4"/>
+            <ellipse class="far" cx="320" cy="212" rx="300" ry="120"/>
+          </g>
+          <circle cx="320" cy="212" r="34" fill="url(#sunGlow)"/>
+          <circle class="orrery-sun" cx="320" cy="212" r="6"/>
+          <g class="planet" data-product="katsumii"><circle class="planet-hit" r="26"/><circle class="planet-ring" r="13"/><circle class="planet-body" r="6.5"/><text y="4">Katsumii</text></g>
+          <g class="planet" data-product="cubamii"><circle class="planet-hit" r="26"/><circle class="planet-ring" r="13"/><circle class="planet-body" r="6"/><text y="4">Cubamii</text></g>
+          <g class="planet" data-product="mediacenter"><circle class="planet-hit" r="26"/><circle class="planet-ring" r="13"/><circle class="planet-body" r="5.5"/><text y="4">Media Center</text></g>
+          <g class="planet planet--far" data-product="gravitymerge"><circle class="planet-hit" r="26"/><circle class="planet-ring" r="13"/><circle class="planet-body" r="4.5"/><text y="4">Gravity Merge</text></g>
+          <g class="planet planet--far" data-product="language"><circle class="planet-hit" r="26"/><circle class="planet-ring" r="13"/><circle class="planet-body" r="4.5"/><text y="4">Yunamii Language</text></g>
+        </svg>
+      </div>
+
+      <div class="showcase reveal" data-showcase>
+        <div class="tabs" role="tablist" aria-label="Produkte">
+          <button class="tab" type="button" role="tab" id="tab-katsumii" aria-controls="panel-katsumii" aria-selected="true" data-product="katsumii"><span class="tab-n">01</span><strong>Katsumii</strong><small>Offline Trading-Journal</small></button>
+          <button class="tab" type="button" role="tab" id="tab-cubamii" aria-controls="panel-cubamii" aria-selected="false" tabindex="-1" data-product="cubamii"><span class="tab-n">02</span><strong>Cubamii</strong><small>3D-Logikpuzzle für Android</small></button>
+          <button class="tab" type="button" role="tab" id="tab-mediacenter" aria-controls="panel-mediacenter" aria-selected="false" tabindex="-1" data-product="mediacenter"><span class="tab-n">03</span><strong>Media Center</strong><small>In Entwicklung</small></button>
+          <button class="tab" type="button" role="tab" id="tab-gravitymerge" aria-controls="panel-gravitymerge" aria-selected="false" tabindex="-1" data-product="gravitymerge"><span class="tab-n">04</span><strong>Gravity Merge</strong><small>Demnächst</small></button>
+          <button class="tab" type="button" role="tab" id="tab-language" aria-controls="panel-language" aria-selected="false" tabindex="-1" data-product="language"><span class="tab-n">05</span><strong>Yunamii Language</strong><small>Demnächst</small></button>
+        </div>
+
+        <div class="stage">
+          <article class="panel" role="tabpanel" id="panel-katsumii" aria-labelledby="tab-katsumii" tabindex="0">
+            <div class="panel-visual">
+              <figure class="window">
+                <div class="window-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+                <img src="assets/products/katsumii-dashboard.webp" alt="Katsumii-Dashboard mit Netto-Gewinn, Trefferquote, Profit-Faktor und einer täglichen P&amp;L-Heatmap" width="1500" height="938" decoding="async">
+              </figure>
+            </div>
+            <div class="panel-copy">
+              <p class="status status--live"><i aria-hidden="true"></i>Im Orbit · verfügbar</p>
+              <h3>Katsumii</h3>
+              <p>Ein Trading-Journal, das offline bleibt. Deine Trades, dein Rechner. Netto-P&amp;L, Trefferquote, Profit-Faktor und eine tägliche Heatmap auf einen Blick, für Funded-, Challenge-, Privat- und Backtest-Konten.</p>
+              <dl class="facts">
+                <div><dt>Offline</dt><dd>Deine Daten bleiben auf deinem Rechner</dd></div>
+                <div><dt>4</dt><dd>Modi: Funded, Challenge, Privat, Backtest</dd></div>
+                <div><dt>Täglich</dt><dd>P&amp;L-Heatmap und Edge-Treiber</dd></div>
+              </dl>
+              <a class="link" href="https://katsumii.com" target="_blank" rel="noopener">katsumii.com <svg class="arrow" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+            </div>
+          </article>
+
+          <article class="panel" role="tabpanel" id="panel-cubamii" aria-labelledby="tab-cubamii" tabindex="0" hidden>
+            <div class="panel-visual">
+              <div class="phones">
+                <figure class="phone"><img src="assets/products/cubamii-start.webp" alt="Cubamii-Puzzle: ein 7×7×7-Würfel mit Zahlen an den Reihen und den Werkzeugen Meißel, Farbe und Lupe" width="540" height="898" loading="lazy" decoding="async"></figure>
+                <figure class="phone"><img src="assets/products/cubamii-fox.webp" alt="Cubamii-Ergebnis: der freigelegte Voxel-Fuchs" width="540" height="898" loading="lazy" decoding="async"></figure>
+                <figure class="phone"><img src="assets/products/cubamii-garden.webp" alt="Cubamii-Ergebnis: ein japanischer Voxel-Garten mit Kirschbaum, Steinlaterne und roter Brücke" width="540" height="898" loading="lazy" decoding="async"></figure>
+              </div>
+            </div>
+            <div class="panel-copy">
+              <p class="status"><i aria-hidden="true"></i>Für Android</p>
+              <h3><img class="app-icon" src="assets/products/cubamii-icon.webp" alt="" width="44" height="44" loading="lazy">Cubamii</h3>
+              <p>Ein ruhiges 3D-Logikpuzzle. Die Zahlen auf jeder Seite verraten, wie viele Würfel einer Reihe zum Tier gehören. Meißle den Rest weg, markiere, was sicher ist, und Stück für Stück erscheint ein Voxel-Tier.</p>
+              <dl class="facts">
+                <div><dt>84</dt><dd>Voxel-Tiere zum Freilegen</dd></div>
+                <div><dt>7³–10³</dt><dd>Würfel pro Puzzle, von leicht bis schwer</dd></div>
+                <div><dt>3</dt><dd>Werkzeuge: Meißel, Farbe, Lupe</dd></div>
+              </dl>
+            </div>
+          </article>
+
+          <article class="panel" role="tabpanel" id="panel-mediacenter" aria-labelledby="tab-mediacenter" tabindex="0" hidden>
+            <div class="panel-visual">
+              <div class="windows">
+                <figure class="window">
+                  <div class="window-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+                  <img src="assets/products/mediacenter-start.webp" alt="Startseite des Media Centers mit einem großen Film und einer Reihe „Weiterschauen“" width="1600" height="929" loading="lazy" decoding="async">
+                </figure>
+                <figure class="window window--front">
+                  <div class="window-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+                  <img src="assets/products/mediacenter-library.webp" alt="Filmbibliothek des Media Centers mit Genre-Filtern und einem Raster aus Postern" width="1600" height="602" loading="lazy" decoding="async">
+                </figure>
+              </div>
+            </div>
+            <div class="panel-copy">
+              <p class="status status--soon"><i aria-hidden="true"></i>Im Anflug · in Entwicklung</p>
+              <h3>Media Center</h3>
+              <p>Die eigene Bibliothek aus Filmen, Serien, Musik, Radio, Live-TV und Podcasts in einer ruhigen, schnellen Oberfläche. Frühe Screens, der Name kann sich noch ändern.</p>
+              <dl class="facts">
+                <div><dt>6</dt><dd>Bereiche: Filme, Serien, Musik, Radio, Live-TV, Podcasts</dd></div>
+                <div><dt>Deins</dt><dd>Rund um die eigene Bibliothek gebaut</dd></div>
+              </dl>
+            </div>
+          </article>
+
+          <article class="panel panel--far" role="tabpanel" id="panel-gravitymerge" aria-labelledby="tab-gravitymerge" tabindex="0" hidden>
+            <div class="panel-visual">
+              <div class="signal">
+                <svg viewBox="0 0 320 200" aria-hidden="true" focusable="false">
+                  <ellipse class="signal-orbit" cx="160" cy="100" rx="140" ry="44" transform="rotate(-14 160 100)"/>
+                  <circle class="signal-body" cx="160" cy="100" r="46"/>
+                  <path class="signal-lines" d="M118 82q21-9 42 0t42 0M115 100q22-10 45 0t45 0M118 118q21-9 42 0t42 0"/>
+                  <circle class="signal-dot" cx="287" cy="62" r="4"/>
+                </svg>
+                <span>Noch am Horizont · Bilder folgen</span>
+              </div>
+            </div>
+            <div class="panel-copy">
+              <p class="status status--far"><i aria-hidden="true"></i>Am Horizont · demnächst</p>
+              <h3>Gravity Merge</h3>
+              <p>Ein frischer Dreh am 2048-Puzzle.</p>
+            </div>
+          </article>
+
+          <article class="panel panel--far" role="tabpanel" id="panel-language" aria-labelledby="tab-language" tabindex="0" hidden>
+            <div class="panel-visual">
+              <div class="signal">
+                <svg viewBox="0 0 320 200" aria-hidden="true" focusable="false">
+                  <ellipse class="signal-orbit" cx="160" cy="100" rx="140" ry="44" transform="rotate(12 160 100)"/>
+                  <circle class="signal-body" cx="160" cy="100" r="46"/>
+                  <path class="signal-lines" d="M118 82q21-9 42 0t42 0M115 100q22-10 45 0t45 0M118 118q21-9 42 0t42 0"/>
+                  <circle class="signal-dot" cx="28" cy="74" r="4"/>
+                </svg>
+                <span>Noch am Horizont · Bilder folgen</span>
+              </div>
+            </div>
+            <div class="panel-copy">
+              <p class="status status--far"><i aria-hidden="true"></i>Am Horizont · demnächst</p>
+              <h3>Yunamii Language</h3>
+              <p>Sprachen lernen durch Geschichten und Spiel.</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ANSATZ: four words from Japanese aesthetics ============ -->
+  <section class="section approach" id="ansatz" aria-labelledby="approachTitle">
+    <div class="shell approach-grid">
+      <div class="approach-intro reveal">
+        <p class="kicker"><span>02</span>Ansatz<span class="kicker-ja" lang="ja" aria-hidden="true">道</span></p>
+        <h2 class="display" id="approachTitle"><span class="serif">Weniger Lärm.</span> <span class="bold">Mehr Substanz.</span></h2>
+        <p class="lead">Vier Begriffe aus der japanischen Ästhetik, an denen ich meine Arbeit ausrichte.</p>
+      </div>
+      <ol class="principles" data-principles>
+        <li class="principle reveal">
+          <span class="principle-ja" lang="ja" aria-hidden="true">間</span>
+          <div><p class="principle-term">Ma · Zwischenraum</p><h3>Raum lassen</h3><p>Was fehlt, ist genauso gestaltet wie das, was da ist. Jede Ansicht bekommt nur, was sie wirklich braucht.</p></div>
+        </li>
+        <li class="principle reveal">
+          <span class="principle-ja" lang="ja" aria-hidden="true">簡素</span>
+          <div><p class="principle-term">Kanso · Einfachheit</p><h3>Klar vor clever</h3><p>Wenn sich etwas selbstverständlich anfühlt, steckt meist die meiste Arbeit dahinter. Die übernehme ich.</p></div>
+        </li>
+        <li class="principle reveal">
+          <span class="principle-ja" lang="ja" aria-hidden="true">静寂</span>
+          <div><p class="principle-term">Seijaku · Stille</p><h3>Ruhe bewahren</h3><p>Keine Pop-ups, kein Blinken, kein Buhlen um Aufmerksamkeit. Gute Software tritt zurück und lässt dich machen.</p></div>
+        </li>
+        <li class="principle reveal">
+          <span class="principle-ja" lang="ja" aria-hidden="true">幽玄</span>
+          <div><p class="principle-term">Yūgen · Tiefe</p><h3>Tiefe im Detail</h3><p>Kleine Dinge, die man erst beim zweiten Blick bemerkt: ein Übergang, ein Abstand, ein Moment, der einfach stimmt.</p></div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============ ÜBER MICH: the planet from afar ============ -->
+  <section class="section about" id="ueber-mich" aria-labelledby="aboutTitle">
+    <div class="shell about-grid">
+      <figure class="globe reveal">
+        <canvas id="planet" aria-hidden="true"></canvas>
+        <figcaption><span lang="ja">海の惑星</span>Umi no wakusei · der Ozeanplanet</figcaption>
+      </figure>
+      <div class="about-copy reveal">
+        <p class="kicker"><span>03</span>Über mich<span class="kicker-ja" lang="ja" aria-hidden="true">職人</span></p>
+        <h2 class="display" id="aboutTitle"><span class="serif">Ein Entwickler.</span> <span class="bold">Ein Studio.</span></h2>
+        <p class="lead">yunamii ist mein Ein-Personen-Studio. Ich entwerfe, gestalte und programmiere jedes Produkt selbst: Spiele, Lern-Apps und Werkzeuge, die ich selbst gern benutze.</p>
+        <p>Mich interessiert Software, die ruhig wirkt und trotzdem Tiefe hat. Klare Oberflächen, durchdachte Details, kein Lärm.</p>
+        <dl class="trio">
+          <div><dt>Idee</dt><dd>Ich baue, was ich selbst benutzen möchte.</dd></div>
+          <div><dt>Design</dt><dd>Erst das Gefühl, dann die Funktionen.</dd></div>
+          <div><dt>Code</dt><dd>Kurze Schleifen, echte Geräte, saubere Basis.</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ KONTAKT ============ -->
+  <section class="section contact" id="kontakt" aria-labelledby="contactTitle">
+    <div class="shell contact-in reveal">
+      <p class="kicker"><span>04</span>Kontakt<span class="kicker-ja" lang="ja" aria-hidden="true">縁</span></p>
+      <h2 class="display display--xl" id="contactTitle"><span class="bold">Idee, Frage, Feedback?</span> <span class="serif">Schreib mir<span class="ember">.</span></span></h2>
+      <div class="contact-actions">
+        <!-- TODO: replace with the public contact address (mailto:) once it is decided -->
+        <a class="pill magnetic" href="#kontakt">Kontakt aufnehmen <svg class="arrow" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        <a class="link" href="https://github.com/FredMorbe" target="_blank" rel="noopener">GitHub <svg class="arrow" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="foot-sea" aria-hidden="true">
+    <svg viewBox="0 0 2880 120" preserveAspectRatio="none" focusable="false">
+      <g class="foot-wave foot-wave--a"><path d="M0 46q180-34 360 0t360 0t360 0t360 0t360 0t360 0t360 0t360 0t360 0t360 0"/></g>
+      <g class="foot-wave foot-wave--b"><path d="M0 68q180 30 360 0t360 0t360 0t360 0t360 0t360 0t360 0t360 0t360 0t360 0"/></g>
+      <g class="foot-wave foot-wave--c"><path d="M0 90q180-22 360 0t360 0t360 0t360 0t360 0t360 0t360 0t360 0t360 0t360 0"/></g>
+    </svg>
+    <i class="foot-sun"></i>
+  </div>
+  <div class="shell foot-in">
+    <a class="wordmark" href="#top" aria-label="yunamii, zum Seitenanfang">yunamii<span class="ember" aria-hidden="true">.</span></a>
+    <p>Idee, Design und Code — aus einer Hand.</p>
+    <!-- TODO: link Impressum and Datenschutz once the concept becomes the site -->
+    <p class="foot-links"><a href="#top">Impressum</a><a href="#top">Datenschutz</a><span>© 2026 yunamii</span></p>
+  </div>
+</footer>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
