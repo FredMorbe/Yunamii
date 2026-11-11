@@ -11,6 +11,7 @@ const DESIGNS = [
   { id: 'shiki-bonsai', name: 'Shiki Bonsai' },
   { id: 'mesh-tide', name: 'Mesh Tide' },
   { id: 'orbit-mesh', name: 'Orbit Mesh' },
+  { id: 'moon-torii', name: 'Moon Torii' },
 ];
 
 const STYLE = `

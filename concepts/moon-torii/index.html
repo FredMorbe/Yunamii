@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Yunamii — Software Studio</title>
+  <meta name="description" content="Yunamii is a software studio: thoughtfully crafted desktop and mobile apps for a more intentional digital life.">
+  <!-- design concept (hero only), not the live site -->
+  <meta name="robots" content="noindex">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0c0c15">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preload" href="assets/fonts/DMSans-normal-300-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <script>document.documentElement.classList.add('js');</script>
+  <link rel="stylesheet" href="css/torii.css">
+</head>
+<body>
+<svg width="0" height="0" class="sprite" aria-hidden="true" focusable="false">
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M3.5 12h16M13.5 5.5 20 12l-6.5 6.5"/></symbol>
+</svg>
+
+<!-- the navigation has no targets yet: this concept is the hero only -->
+<header class="head">
+  <div class="head-in">
+    <a class="brand" href="#top" aria-label="Yunamii, back to the top">
+      <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true">
+        <defs>
+          <linearGradient id="crescent" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff1cf"/><stop offset="1" stop-color="#d4b183"/></linearGradient>
+          <mask id="crescent-cut"><rect width="48" height="48" fill="#fff"/><circle cx="31" cy="21" r="18" fill="#000"/></mask>
+        </defs>
+        <circle cx="24" cy="24" r="19.5" fill="none" stroke="#e6be8f" stroke-opacity=".2"/>
+        <circle cx="24" cy="24" r="21" fill="url(#crescent)" mask="url(#crescent-cut)"/>
+      </svg>
+      <span class="brand-name">Yunamii</span>
+    </a>
+    <nav class="nav" aria-label="Main navigation">
+      <a href="#top">Apps</a>
+      <a href="#top">Studio</a>
+      <a href="#top">Philosophy</a>
+      <a href="#top">Support</a>
+      <a class="nav-cta" href="#top">Get Apps</a>
+    </nav>
+    <button class="menu-btn" id="menuBtn" type="button" aria-haspopup="dialog" aria-controls="menu">Menu</button>
+  </div>
+</header>
+
+<dialog class="menu" id="menu" aria-label="Navigation">
+  <div class="menu-in">
+    <button class="menu-close" type="button" data-close>Close</button>
+    <nav aria-label="Mobile navigation">
+      <a href="#top"><span aria-hidden="true">01</span>Apps</a>
+      <a href="#top"><span aria-hidden="true">02</span>Studio</a>
+      <a href="#top"><span aria-hidden="true">03</span>Philosophy</a>
+      <a href="#top"><span aria-hidden="true">04</span>Support</a>
+      <a href="#top"><span aria-hidden="true">05</span>Get Apps</a>
+    </nav>
+  </div>
+</dialog>
+
+<main id="top">
+  <!-- a dark moon, a gate of light in front of it and ripples on the water below; the pointer only tilts the light -->
+  <section class="hero" id="hero" aria-labelledby="heroTitle">
+    <canvas class="scene" id="scene" aria-hidden="true"></canvas>
+    <div class="hero-main">
+      <p class="eyebrow">Software Studio<span class="eyebrow-line" aria-hidden="true"></span></p>
+      <h1 class="title" id="heroTitle">Yunamii</h1>
+      <p class="lead">Thoughtfully crafted desktop and mobile apps for a more intentional digital life.</p>
+      <div class="actions">
+        <a class="btn btn-solid" href="#top">Explore Our Apps <svg class="arrow" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        <a class="btn btn-line" href="#top">About the Studio</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script type="module" src="js/main.js"></script>
+<!-- design switcher for the concept review, not part of the final site -->
+<script type="module" src="../shared/switcher.js"></script>
+</body>
+</html>

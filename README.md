@@ -19,6 +19,7 @@ Static site for [yunamii.com](https://yunamii.com). Plain HTML, CSS and JavaScri
 | `concepts/shiki-bonsai/` | Concept "Shiki Bonsai" (hero only): a bonsai grown from a seed number (`js/grow.js`) and drawn in 3D with seasons, wind and falling leaves (`js/tree.js`) |
 | `concepts/mesh-tide/` | Concept "Mesh Tide" (hero only): a lattice of 25 600 nodes on moving water, Gerstner waves and all drawing in one WebGL2 vertex shader (`js/tide.js`); the pointer stirs the water, a press drops a stone |
 | `concepts/orbit-mesh/` | Concept "Orbit Mesh" (hero only): the same net, bent by a planet and two orbiting moons (gravity wells whose sum is evaluated in the vertex shader, `js/orbit.js`); the bodies are shaded sprites that sit in their wells and hide the lines behind them |
+| `concepts/moon-torii/` | Concept "Moon Torii" (hero only): a rim-lit moon, a gate of light and slowly spreading water rings, all drawn by one fragment shader from distance functions (`js/scene.js`); the pointer only tilts the light |
 | `prototype/`, `prototype-code/` | Earlier hero experiments (not deployed) |
 | `reference/` | Approved design mockup |
 | `tools/dev-server.py` | Local static server without caching; also serves `concepts/` under `/concepts/` (the `PORT` environment variable overrides the port) |
