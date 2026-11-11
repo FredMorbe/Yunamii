@@ -12,7 +12,11 @@ Static site for [yunamii.com](https://yunamii.com). Plain HTML, CSS and JavaScri
 | `site/assets/branches/` | Static cropped WebP cherry branches at the window edge (made from `hero/sprites/ast*.png`, which the page no longer loads; `ast3` is unused) |
 | `site/assets/products/` | Screenshots for the showcase (Cubamii, Katsumii, Media Center) |
 | `site/assets/fonts/` | Self-hosted Fraunces (display) and DM Sans (text), latin subset |
-| `concepts/ocean-planet/` | Design concept "Ocean Planet" (not deployed, self-contained): WebGL2 sea at sunrise (`js/scene/`), orbit map of the products, canvas globe, light/dark. Run with `python tools/dev-server.py concepts/ocean-planet 5176` |
+| `concepts/` | Design concepts (not deployed). Run with `python tools/dev-server.py concepts 5176`; `shared/switcher.js` adds a bar to switch between them |
+| `concepts/ocean-planet/` | Concept "Ocean Planet": WebGL2 sea at sunrise (`js/scene/`), orbit map of the products, canvas globe, light/dark |
+| `concepts/ink-atom/` | Concept "Ink Atom" (hero only): the headline's full stop is the nucleus of a hydrogen atom, its electron cloud is sampled in `js/orbital.js` and drawn in `js/atom.js` |
+| `concepts/gravity-lens/` | Concept "Gravity Lens" (hero only): a black hole bends the coordinate grid behind it, one fragment shader with the lens equation of a point mass (`js/lens.js`) |
+| `concepts/shiki-bonsai/` | Concept "Shiki Bonsai" (hero only): a bonsai grown from a seed number (`js/grow.js`) and drawn in 3D with seasons, wind and falling leaves (`js/tree.js`) |
 | `prototype/`, `prototype-code/` | Earlier hero experiments (not deployed) |
 | `reference/` | Approved design mockup |
 | `tools/dev-server.py` | Local static server without caching |

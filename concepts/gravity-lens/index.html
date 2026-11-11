@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>yunamii — Ideen mit Anziehungskraft.</title>
+  <meta name="description" content="yunamii ist das Ein-Personen-Studio eines unabhängigen Softwareentwicklers: Software, die durch Klarheit und Charakter überzeugt.">
+  <!-- design concept (hero only), not the live site -->
+  <meta name="robots" content="noindex">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#0b0c0f">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preload" href="assets/fonts/DMSans-normal-300-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <script>
+    // theme before first paint: stored choice, otherwise the system setting
+    (function () {
+      var root = document.documentElement, theme = null;
+      try { theme = localStorage.getItem('yunamii-theme'); } catch (e) { /* storage blocked: fall through to the system setting */ }
+      if (theme !== 'light' && theme !== 'dark') theme = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      root.dataset.theme = theme;
+      root.classList.add('js');
+    })();
+  </script>
+  <link rel="stylesheet" href="css/lens.css">
+</head>
+<body>
+<svg width="0" height="0" class="sprite" aria-hidden="true" focusable="false">
+  <symbol id="i-arrow" viewBox="0 0 12 12"><path d="M2.5 9.5 9.5 2.5M4 2.5h5.5V8"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="3.4"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.3 4.3l1.5 1.5M14.2 14.2l1.5 1.5M4.3 15.7l1.5-1.5M14.2 5.8l1.5-1.5"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 20 20"><path d="M16 11.6A6.6 6.6 0 0 1 8.4 4a6.6 6.6 0 1 0 7.6 7.6Z"/></symbol>
+</svg>
+
+<!-- the navigation has no targets yet: this concept is the hero only -->
+<header class="head">
+  <div class="shell head-in">
+    <a class="wordmark" href="#top" aria-label="yunamii, zum Seitenanfang">yunamii</a>
+    <nav class="nav" aria-label="Hauptnavigation">
+      <a href="#top">Produkte</a>
+      <a href="#top">Über mich</a>
+      <a href="#top">Kontakt</a>
+    </nav>
+    <button class="theme" id="themeToggle" type="button" role="switch" aria-checked="true" aria-label="Dunkles Farbschema">
+      <span class="theme-thumb" aria-hidden="true"></span>
+      <svg aria-hidden="true"><use href="#i-sun"/></svg>
+      <svg aria-hidden="true"><use href="#i-moon"/></svg>
+    </button>
+    <button class="menu-btn" id="menuBtn" type="button" aria-haspopup="dialog" aria-controls="menu">Menü</button>
+  </div>
+</header>
+
+<dialog class="menu" id="menu" aria-label="Navigation">
+  <div class="menu-in">
+    <button class="menu-close" type="button" data-close>Schließen</button>
+    <nav aria-label="Mobile Navigation">
+      <a href="#top"><span aria-hidden="true">01</span>Produkte</a>
+      <a href="#top"><span aria-hidden="true">02</span>Über mich</a>
+      <a href="#top"><span aria-hidden="true">03</span>Kontakt</a>
+    </nav>
+  </div>
+</dialog>
+
+<main id="top">
+  <section class="hero" id="hero" aria-labelledby="heroTitle">
+    <canvas class="lens" id="lens" aria-hidden="true"></canvas>
+    <div class="shell hero-main">
+      <p class="eyebrow"><span>0001</span>Unabhängig. Neugierig. Präzise.</p>
+      <h1 class="title" id="heroTitle">Ideen mit <br>Anziehungskraft.</h1>
+      <p class="lead">Ich entwickle Software, die durch Klarheit und Charakter überzeugt.</p>
+      <a class="cta" href="#top">Meine Produkte <svg class="arrow" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+    </div>
+    <div class="shell hero-foot" aria-hidden="true">
+      <!-- live values of the lens at the pointer, in Einstein radii -->
+      <dl class="readout">
+        <div><dt>r</dt><dd><output id="outR">2.00</output> θ<sub>E</sub></dd></div>
+        <div><dt>α</dt><dd><output id="outA">0.50</output> θ<sub>E</sub></dd></div>
+        <div><dt>μ</dt><dd><output id="outM">1.07</output></dd></div>
+      </dl>
+      <span class="bar"></span>
+    </div>
+  </section>
+</main>
+
+<script type="module" src="js/main.js"></script>
+<!-- design switcher for the concept review, not part of the final site -->
+<script type="module" src="../shared/switcher.js"></script>
+</body>
+</html>

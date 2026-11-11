@@ -25,7 +25,10 @@ export function initTheme({ reduceMotion, origin, onChange }) {
     // the new scheme opens as a circle, like light spreading from the sun
     const { x, y } = origin(toggle);
     const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+    // the class switches off the default cross-fade, which is kept for moving between designs
+    root.classList.add('theme-change');
     const transition = document.startViewTransition(() => apply(next));
+    transition.finished.finally(() => root.classList.remove('theme-change'));
     transition.ready.then(() => {
       root.animate(
         { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
