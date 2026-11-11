@@ -1,0 +1,163 @@
+/* yunamii · concept "Ink Atom" (hero only)
+   One idea: the full stop of the headline is the nucleus of an atom. The electron cloud around
+   it glows in the dark scheme and sits on the page like stippled ink in the light one. */
+
+@font-face { font-family: "DM Sans"; src: url("../assets/fonts/DMSans-normal-300-700-latin.woff2") format("woff2"); font-weight: 300 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Fraunces"; src: url("../assets/fonts/Fraunces-normal-300-640-latin.woff2") format("woff2"); font-weight: 300 640; font-style: normal; font-display: swap; }
+
+:root {
+  --sans: "DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --serif: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", Menlo, Consolas, monospace;
+  --jp: "Hiragino Mincho ProN", "Yu Mincho", YuMincho, "Noto Serif JP", "Noto Serif CJK JP", serif;
+  --gutter: clamp(20px, 5vw, 64px);
+  --ease: cubic-bezier(.2, .7, .1, 1);
+  --h1: clamp(2.7rem, min(7.4vw, 13.5vh), 7.2rem);
+
+  /* dark is the default; the script in <head> always sets data-theme */
+  color-scheme: dark;
+  --bg: #070d16;
+  --raise: #0c1724;
+  --ink: #eef2f7;
+  --ink-2: #a8b5c6;
+  --ink-3: #7a8a9e;
+  --hair: rgba(150, 205, 230, .14);
+  --hair-2: rgba(150, 205, 230, .3);
+  --accent: #22d3ee;
+  --accent-ink: #67e8f9;
+  --on-accent: #03222b;
+  --ember: #ff7847;
+  --halo: rgba(34, 211, 238, .09);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f8fafc;
+  --raise: #ffffff;
+  --ink: #0f172a;
+  --ink-2: #44536a;
+  --ink-3: #64748b;
+  --hair: rgba(15, 23, 42, .1);
+  --hair-2: rgba(15, 23, 42, .22);
+  --accent-ink: #0369a1;
+  --halo: rgba(3, 105, 161, .07);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 1.0625rem/1.6 var(--sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; overflow-x: clip; }
+button { font: inherit; }
+::selection { background: color-mix(in srgb, var(--accent) 40%, transparent); }
+:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 4px; border-radius: 4px; }
+[lang="ja"] { font-family: var(--jp); }
+.sprite { position: absolute; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.shell { width: min(1240px, 100% - 2 * var(--gutter)); margin-inline: auto; }
+.ember { color: var(--ember); }
+.arrow { flex: none; width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; transition: transform .35s var(--ease); }
+
+/* ---------- header ---------- */
+.head { position: fixed; inset: 0 0 auto; z-index: 50; }
+.head-in { display: flex; align-items: center; gap: clamp(16px, 3vw, 36px); height: 76px; }
+.wordmark { margin-right: auto; color: var(--ink); font-size: 1.45rem; font-weight: 700; letter-spacing: -.04em; text-decoration: none; }
+.nav { display: flex; gap: clamp(22px, 3vw, 40px); }
+.nav a { position: relative; padding: 10px 0; color: var(--ink); font-size: .95rem; font-weight: 500; text-decoration: none; }
+.nav a::after { content: ""; position: absolute; inset: auto 0 5px; height: 1px; background: currentColor; transform: scaleX(0); transform-origin: right; transition: transform .45s var(--ease); }
+.nav a:hover::after { transform: scaleX(1); transform-origin: left; }
+
+.theme { position: relative; display: grid; grid-template-columns: 1fr 1fr; place-items: center; flex: none; width: 72px; height: 38px; padding: 0 3px; border: 1px solid var(--hair-2); border-radius: 999px; background: color-mix(in srgb, var(--raise) 55%, transparent); color: var(--ink-3); cursor: pointer; }
+.theme svg { position: relative; width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; transition: color .3s; }
+.theme-thumb { position: absolute; top: 3px; left: 3px; width: 30px; height: 30px; border-radius: 50%; background: var(--raise); box-shadow: 0 1px 5px rgba(15, 23, 42, .2); transition: transform .5s var(--ease), background-color .3s; }
+[data-theme="light"] .theme svg:first-of-type { color: var(--ink); }
+[data-theme="dark"] .theme-thumb { transform: translateX(34px); background: var(--accent); box-shadow: 0 0 18px -4px var(--accent); }
+[data-theme="dark"] .theme svg:last-of-type { color: var(--on-accent); fill: currentColor; }
+
+.menu-btn, .menu-close { display: none; align-items: center; height: 38px; padding: 0 16px; border: 1px solid var(--hair-2); border-radius: 999px; background: none; color: var(--ink); font: 500 .68rem var(--mono); letter-spacing: .22em; text-transform: uppercase; cursor: pointer; }
+.menu { width: 100%; max-width: none; height: 100%; max-height: none; margin: 0; padding: 0; border: 0; background: color-mix(in srgb, var(--bg) 92%, transparent); -webkit-backdrop-filter: blur(22px); backdrop-filter: blur(22px); color: var(--ink); }
+.menu::backdrop { background: transparent; }
+.menu[open] { animation: menu-in .45s var(--ease); }
+.menu-in { display: flex; flex-direction: column; height: 100%; padding: 19px var(--gutter) 44px; }
+.menu-close { display: inline-flex; align-self: flex-end; }
+.menu nav { display: grid; margin-top: auto; }
+.menu nav a { display: flex; align-items: baseline; gap: 20px; padding: 16px 0; border-top: 1px solid var(--hair); color: var(--ink); font: 300 2.3rem/1.1 var(--serif); letter-spacing: -.03em; text-decoration: none; }
+.menu nav a span { width: 1.3em; color: var(--accent-ink); font-size: 1rem; }
+@keyframes menu-in { from { opacity: 0; transform: translateY(-10px); } }
+
+/* ---------- hero ---------- */
+/* --nx / --ny: where the nucleus sits, set from the measured position of the full stop */
+.hero { --nx: 58%; --ny: 56%; position: relative; isolation: isolate; display: grid; grid-template-rows: 1fr auto; min-height: max(100svh, 640px); overflow: hidden; }
+.hero::before, .hero::after { content: ""; position: absolute; top: var(--ny); left: var(--nx); aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; pointer-events: none; }
+.hero::before { z-index: -3; width: min(125vh, 115vw); background: radial-gradient(closest-side, var(--halo), transparent); }
+.hero::after { z-index: -2; width: clamp(120px, 20vmin, 240px); background: radial-gradient(closest-side, color-mix(in srgb, var(--ember) 30%, transparent), transparent 72%); }
+.atom { position: absolute; inset: 0; z-index: -1; display: block; width: 100%; height: 100%; }
+
+.hero-main { align-self: center; padding-block: clamp(100px, 15vh, 160px) clamp(20px, 4vh, 48px); }
+.eyebrow { display: flex; align-items: center; gap: 16px; margin: 0 0 clamp(18px, 3.2vh, 34px); font: 500 .72rem/1 var(--mono); letter-spacing: .32em; text-transform: uppercase; }
+.eyebrow-line { flex: none; width: 30px; height: 1px; background: var(--accent); }
+/* fit-content: the cloud is thinned only behind the words, not across the whole row */
+.title { width: fit-content; margin: 0; font: 300 var(--h1)/.99 var(--serif); letter-spacing: -.04em; }
+.title .line { display: block; }
+.br-narrow { display: none; }
+/* the full stop, drawn as a circle so its centre can be measured exactly */
+.nucleus { display: inline-block; width: .15em; height: .15em; margin-left: .05em; border-radius: 50%; background: var(--ember); box-shadow: 0 0 .5em color-mix(in srgb, var(--ember) 60%, transparent); }
+
+.hero-row { display: flex; flex-wrap: wrap; align-items: center; gap: clamp(20px, 3vw, 28px) clamp(28px, 4.5vw, 64px); margin-top: clamp(22px, 4.4vh, 46px); }
+.lead { max-width: 30ch; margin: 0; color: var(--ink-2); font-size: clamp(1.05rem, 1.4vw, 1.25rem); line-height: 1.45; }
+.cta { display: inline-flex; align-items: center; gap: 16px; color: var(--ink); font-weight: 600; text-decoration: none; }
+.cta-ring { display: grid; place-items: center; width: 54px; height: 54px; border-radius: 50%; background: var(--ink); color: var(--bg); transition: background-color .4s var(--ease), color .4s var(--ease), box-shadow .4s var(--ease); }
+.cta:hover .cta-ring { background: var(--accent); color: var(--on-accent); box-shadow: 0 0 0 7px color-mix(in srgb, var(--accent) 18%, transparent); }
+.cta:hover .arrow { transform: translate(2px, -2px); }
+
+.side { position: absolute; top: 22%; right: max(var(--gutter), calc((100% - 1240px) / 2)); display: flex; align-items: center; gap: 16px; margin: 0; writing-mode: vertical-rl; font: 500 .64rem var(--mono); letter-spacing: .3em; text-transform: uppercase; color: var(--ink-3); }
+.side span:first-child { color: var(--ink-2); font-size: 1.05rem; letter-spacing: .4em; }
+
+.hero-foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding-bottom: 26px; }
+.fig, .state-now { margin: 0; font: 500 .64rem/1.5 var(--mono); letter-spacing: .26em; text-transform: uppercase; color: var(--ink-3); }
+.fig { max-width: 36ch; }
+.fig span { display: block; margin-bottom: 6px; color: var(--ink-2); }
+.state { display: grid; justify-items: end; gap: 12px; }
+.state-now { display: flex; align-items: baseline; gap: 14px; }
+.state-now output { color: var(--ink); font: 300 1.9rem/1 var(--serif); letter-spacing: -.02em; text-transform: none; }
+.state-set { display: flex; gap: 6px; }
+.state-set button { min-width: 48px; height: 40px; padding: 0 12px; border: 1px solid var(--hair-2); border-radius: 999px; background: none; color: var(--ink-2); font: 500 .72rem var(--mono); letter-spacing: .08em; cursor: pointer; transition: background-color .35s var(--ease), border-color .35s var(--ease), color .35s var(--ease); }
+.state-set button:hover { border-color: var(--ink-2); color: var(--ink); }
+.state-set button[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: var(--bg); }
+
+/* ---------- intro: the page fades in while the atom unfolds from its full stop ---------- */
+/* opacity only: nothing may move the full stop while its position is measured */
+.js .eyebrow, .js .title .line, .js .hero-row, .js .side, .js .hero-foot { opacity: 0; transition: opacity 1.3s var(--ease); }
+.js .title .line:nth-child(2) { transition-delay: .16s; }
+.js .hero-row { transition-delay: .5s; }
+.js .side, .js .hero-foot { transition-delay: 1.5s; }
+.js.is-ready .eyebrow, .js.is-ready .title .line, .js.is-ready .hero-row, .js.is-ready .side, .js.is-ready .hero-foot { opacity: 1; }
+
+/* ---------- view transitions ---------- */
+/* designs cross-fade into each other; a theme change spreads as a circle from the nucleus */
+@view-transition { navigation: auto; }
+:root.theme-change::view-transition-old(root), :root.theme-change::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+
+/* ---------- responsive ---------- */
+@media (max-width: 900px) {
+  .side { display: none; }
+  .fig { display: none; }
+  .hero-foot { justify-content: center; padding-bottom: 76px; }
+  .state { justify-items: center; }
+}
+
+@media (max-width: 760px) {
+  :root { --h1: clamp(2.6rem, min(13.4vw, 9.4vh), 4.6rem); }
+  .nav { display: none; }
+  .menu-btn { display: inline-flex; }
+  .head-in { height: 68px; }
+  .wordmark { font-size: 1.3rem; }
+  .eyebrow { gap: 12px; font-size: .62rem; letter-spacing: .22em; }
+  .eyebrow-line { width: 22px; }
+  .br-narrow { display: inline; }
+  .hero-main { padding-top: clamp(92px, 13vh, 130px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .js .eyebrow, .js .title .line, .js .hero-row, .js .side, .js .hero-foot { opacity: 1; }
+}

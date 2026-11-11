@@ -1,0 +1,112 @@
+/* yunamii · concept "Moon Torii" (hero only)
+   One idea: a gate of light before a dark moon. The page is night ink with a single warm gold;
+   the moon is lit from its rim, the torii and the water rings are drawn by the scene (js/scene.js). */
+
+@font-face { font-family: "DM Sans"; src: url("../assets/fonts/DMSans-normal-300-700-latin.woff2") format("woff2"); font-weight: 300 700; font-style: normal; font-display: swap; }
+
+:root {
+  --sans: "DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", Menlo, Consolas, monospace;
+  --gutter: clamp(20px, 5.2vw, 120px);
+  --ease: cubic-bezier(.2, .7, .1, 1);
+  --h1: clamp(2.7rem, min(5.9vw, 12.8vh), 7.6rem);
+  --lead: clamp(1.05rem, min(1.8vw, 3.4vh), 2.1rem);
+  --small: clamp(.9rem, 1.14vw, 1.25rem);
+
+  color-scheme: dark;
+  --bg: #0c0c15;
+  --ink: #f7f4ee;
+  --ink-2: rgba(255, 255, 255, .88);
+  --ink-3: rgba(255, 255, 255, .7);
+  --gold: #e3bf95;
+  --gold-hot: #f7d4a4;
+  --gold-fill: #cfb083;
+  --gold-fill-2: #ddc298;
+  --on-gold: #231b11;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 300 1.0625rem/1.6 var(--sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; overflow-x: clip; }
+button { font: inherit; }
+::selection { background: rgba(227, 191, 149, .35); }
+:focus-visible { outline: 2px solid var(--gold-hot); outline-offset: 4px; border-radius: 6px; }
+.sprite { position: absolute; }
+.arrow { flex: none; width: 1.15em; height: 1.15em; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; transition: transform .5s var(--ease); }
+
+/* ---------- header ---------- */
+.head { position: fixed; inset: 0 0 auto; z-index: 50; }
+.head-in { display: flex; align-items: center; gap: 24px; padding: clamp(18px, 3.1vw, 30px) calc(var(--gutter) * .85) clamp(18px, 3.1vw, 30px) var(--gutter); }
+.brand { display: flex; align-items: center; gap: clamp(10px, 1.1vw, 16px); margin-right: auto; color: var(--ink); text-decoration: none; }
+.brand-mark { width: clamp(32px, 2.8vw, 48px); height: auto; aspect-ratio: 1; }
+.brand-name { font-size: clamp(1.05rem, 1.7vw, 1.75rem); font-weight: 300; letter-spacing: .42em; text-transform: uppercase; }
+
+.nav { display: flex; align-items: center; gap: clamp(26px, 4vw, 66px); }
+.nav a { position: relative; color: var(--ink); font-size: var(--small); font-weight: 400; text-decoration: none; }
+.nav a:not(.nav-cta)::after { content: ""; position: absolute; inset: auto 0 -6px; height: 1px; background: var(--gold); transform: scaleX(0); transform-origin: right; transition: transform .6s var(--ease); }
+.nav a:not(.nav-cta):hover::after { transform: scaleX(1); transform-origin: left; }
+.nav-cta { display: inline-flex; align-items: center; height: clamp(38px, 2.7vw, 48px); padding: 0 clamp(20px, 1.6vw, 28px); border: 1px solid var(--gold-hot); border-radius: 999px; transition: background-color .5s var(--ease), color .5s var(--ease); }
+.nav-cta:hover { background: rgba(247, 212, 164, .12); }
+
+.menu-btn, .menu-close { display: none; align-items: center; height: 38px; padding: 0 16px; border: 1px solid var(--gold); border-radius: 999px; background: none; color: var(--ink); font: 500 .68rem var(--mono); letter-spacing: .22em; text-transform: uppercase; cursor: pointer; }
+.menu { width: 100%; max-width: none; height: 100%; max-height: none; margin: 0; padding: 0; border: 0; background: rgba(12, 12, 21, .94); -webkit-backdrop-filter: blur(22px); backdrop-filter: blur(22px); color: var(--ink); }
+.menu::backdrop { background: transparent; }
+.menu[open] { animation: menu-in .5s var(--ease); }
+.menu-in { display: flex; flex-direction: column; height: 100%; padding: 19px var(--gutter) 44px; }
+.menu-close { display: inline-flex; align-self: flex-end; }
+.menu nav { display: grid; margin-top: auto; }
+.menu nav a { display: flex; align-items: baseline; gap: 20px; padding: 16px 0; border-top: 1px solid rgba(227, 191, 149, .28); color: var(--ink); font-size: 2rem; font-weight: 300; line-height: 1.1; letter-spacing: .02em; text-decoration: none; }
+.menu nav a span { color: var(--gold); font: 500 .8rem var(--mono); letter-spacing: .1em; }
+@keyframes menu-in { from { opacity: 0; transform: translateY(-10px); } }
+
+/* ---------- hero ---------- */
+.hero { position: relative; isolation: isolate; display: grid; align-items: center; min-height: max(100svh, 640px); overflow: hidden; }
+.scene { position: absolute; inset: 0; z-index: -1; display: block; width: 100%; height: 100%; }
+.hero-main { padding: clamp(104px, 12vh, 150px) var(--gutter) clamp(64px, 9vh, 130px); }
+
+.eyebrow { display: flex; align-items: center; gap: clamp(16px, 1.9vw, 30px); margin: 0 0 clamp(14px, 2.6vh, 30px); color: var(--ink-3); font-size: clamp(.72rem, 1.1vw, 1.2rem); font-weight: 400; letter-spacing: .47em; text-transform: uppercase; }
+.eyebrow-line { flex: none; width: clamp(48px, 5.8vw, 100px); height: 1px; background: linear-gradient(90deg, #c8b189, rgba(200, 177, 137, 0)); }
+
+.title { margin: 0; color: var(--ink); font-size: var(--h1); font-weight: 300; line-height: 1; letter-spacing: .41em; text-transform: uppercase; margin-right: -.41em; }
+.lead { max-width: 21em; margin: clamp(18px, 3.6vh, 38px) 0 clamp(26px, 4.4vh, 50px); color: var(--ink-2); font-size: var(--lead); font-weight: 300; line-height: 1.5; }
+
+.actions { display: flex; flex-wrap: wrap; gap: clamp(12px, 1.6vw, 26px); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: .7em; height: clamp(50px, 3.85vw, 68px); padding: 0 clamp(26px, 2.9vw, 50px); border-radius: 999px; font-size: clamp(.95rem, 1.2vw, 1.3rem); font-weight: 500; text-decoration: none; transition: background-color .5s var(--ease), color .5s var(--ease), border-color .5s var(--ease); }
+.btn-solid { background: var(--gold-fill); color: var(--on-gold); }
+.btn-solid:hover { background: var(--gold-fill-2); }
+.btn-solid:hover .arrow { transform: translateX(4px); }
+.btn-line { border: 1px solid var(--gold); color: var(--ink); }
+.btn-line:hover { background: rgba(227, 191, 149, .1); border-color: var(--gold-hot); }
+
+/* ---------- intro ---------- */
+/* the text rises in once its font is there, while the scene draws itself */
+.js .head, .js .eyebrow, .js .title, .js .lead, .js .actions { opacity: 0; transform: translateY(14px); transition: opacity 1.4s var(--ease), transform 1.4s var(--ease); }
+.js .head { transform: none; transition-delay: .2s; }
+.js .eyebrow { transition-delay: .35s; }
+.js .title { transition-delay: .55s; }
+.js .lead { transition-delay: .8s; }
+.js .actions { transition-delay: 1.05s; }
+.js.is-ready .head, .js.is-ready .eyebrow, .js.is-ready .title, .js.is-ready .lead, .js.is-ready .actions { opacity: 1; transform: none; }
+
+/* ---------- view transitions ---------- */
+/* designs cross-fade into each other */
+@view-transition { navigation: auto; }
+
+/* ---------- responsive ---------- */
+@media (max-width: 819px) {
+  :root { --h1: clamp(2.3rem, 11.5vw, 4.4rem); --lead: clamp(1.02rem, 4.4vw, 1.4rem); }
+  .nav { display: none; }
+  .menu-btn { display: inline-flex; }
+  .hero { align-items: end; }
+  .hero-main { padding-top: 0; padding-bottom: clamp(84px, 13vh, 120px); }
+  .title { letter-spacing: .24em; margin-right: -.24em; }
+  .eyebrow { letter-spacing: .34em; }
+  .lead { max-width: 26em; }
+  .btn { flex: 1 1 auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .js .head, .js .eyebrow, .js .title, .js .lead, .js .actions { opacity: 1; transform: none; }
+}

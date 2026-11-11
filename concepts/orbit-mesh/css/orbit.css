@@ -1,0 +1,145 @@
+/* yunamii · concept "Orbit Mesh" (hero only)
+   One idea: weight bends space. A net of light is pressed into wells by a planet and two moons that
+   circle on their orbits; the page itself stays dark ink (or paper) with one soft sakura light. */
+
+@font-face { font-family: "DM Sans"; src: url("../assets/fonts/DMSans-normal-300-700-latin.woff2") format("woff2"); font-weight: 300 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Fraunces"; src: url("../assets/fonts/Fraunces-italic-300-640-latin.woff2") format("woff2"); font-weight: 300 640; font-style: italic; font-display: swap; }
+
+:root {
+  --sans: "DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --serif: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", Menlo, Consolas, monospace;
+  --gutter: clamp(20px, 5vw, 64px);
+  --ease: cubic-bezier(.2, .7, .1, 1);
+  --h1: clamp(2.3rem, min(6.6vw, 12vh), 6rem);
+
+  /* dark is the default; the script in <head> always sets data-theme */
+  color-scheme: dark;
+  --bg: #04070c;
+  --ink: #eef3f8;
+  --ink-2: #b9c6d4;
+  --ink-3: #8393a5;
+  --hair: rgba(190, 215, 238, .24);
+  --button: #eef3f8;
+  --on-button: #0a1119;
+  --thumb: #eef3f8;
+  --on-thumb: #0a1119;
+  --accent: #f8c7da;
+  --on-accent: #1b0d14;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f8f5ef;
+  --ink: #0e1a28;
+  --ink-2: #384659;
+  --ink-3: #64717f;
+  --hair: rgba(14, 26, 40, .22);
+  --button: #0e1a28;
+  --on-button: #ffffff;
+  --thumb: #ffffff;
+  --on-thumb: #0e1a28;
+  --accent: #b8325f;
+  --on-accent: #ffffff;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 1.0625rem/1.6 var(--sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; overflow-x: clip; }
+button { font: inherit; }
+::selection { background: color-mix(in srgb, var(--accent) 45%, transparent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
+.sprite { position: absolute; }
+.shell { width: min(1240px, 100% - 2 * var(--gutter)); margin-inline: auto; }
+.arrow { flex: none; width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; transition: transform .35s var(--ease); }
+
+/* ---------- header ---------- */
+.head { position: fixed; inset: 0 0 auto; z-index: 50; }
+.head-in { display: flex; align-items: center; gap: clamp(16px, 3vw, 36px); height: 76px; }
+.wordmark { margin-right: auto; color: var(--ink); font-size: 1.55rem; font-weight: 700; letter-spacing: -.045em; text-decoration: none; }
+.nav { display: flex; gap: clamp(22px, 3vw, 40px); }
+.nav a { position: relative; padding: 10px 0; color: var(--ink); font-size: .95rem; font-weight: 500; text-decoration: none; }
+.nav a::after { content: ""; position: absolute; inset: auto 0 5px; height: 1px; background: currentColor; transform: scaleX(0); transform-origin: right; transition: transform .45s var(--ease); }
+.nav a:hover::after { transform: scaleX(1); transform-origin: left; }
+
+.theme { position: relative; display: grid; grid-template-columns: 1fr 1fr; place-items: center; flex: none; width: 72px; height: 38px; padding: 0 3px; border: 1px solid var(--hair); border-radius: 999px; background: color-mix(in srgb, var(--bg) 70%, transparent); color: var(--ink-3); cursor: pointer; }
+.theme svg { position: relative; width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; transition: color .3s; }
+.theme-thumb { position: absolute; top: 3px; left: 3px; width: 30px; height: 30px; border-radius: 50%; background: var(--thumb); box-shadow: 0 1px 5px rgba(0, 0, 0, .22); transition: transform .5s var(--ease), background-color .3s; }
+[data-theme="light"] .theme svg:first-of-type, [data-theme="dark"] .theme svg:last-of-type { color: var(--on-thumb); }
+[data-theme="dark"] .theme-thumb { transform: translateX(34px); }
+
+.menu-btn, .menu-close { display: none; align-items: center; height: 38px; padding: 0 16px; border: 1px solid var(--hair); border-radius: 999px; background: none; color: var(--ink); font: 500 .68rem var(--mono); letter-spacing: .22em; text-transform: uppercase; cursor: pointer; }
+.menu { width: 100%; max-width: none; height: 100%; max-height: none; margin: 0; padding: 0; border: 0; background: color-mix(in srgb, var(--bg) 94%, transparent); -webkit-backdrop-filter: blur(22px); backdrop-filter: blur(22px); color: var(--ink); }
+.menu::backdrop { background: transparent; }
+.menu[open] { animation: menu-in .45s var(--ease); }
+.menu-in { display: flex; flex-direction: column; height: 100%; padding: 19px var(--gutter) 44px; }
+.menu-close { display: inline-flex; align-self: flex-end; }
+.menu nav { display: grid; margin-top: auto; }
+.menu nav a { display: flex; align-items: baseline; gap: 20px; padding: 16px 0; border-top: 1px solid var(--hair); color: var(--ink); font-size: 2.2rem; font-weight: 700; line-height: 1.1; letter-spacing: -.04em; text-decoration: none; }
+.menu nav a span { color: var(--accent); font: 500 .8rem var(--mono); letter-spacing: .1em; }
+@keyframes menu-in { from { opacity: 0; transform: translateY(-10px); } }
+
+/* ---------- hero ---------- */
+.hero { position: relative; isolation: isolate; display: grid; grid-template-rows: 1fr auto; min-height: max(100svh, 620px); overflow: hidden; }
+.orbit { position: absolute; inset: 0; z-index: -2; display: block; width: 100%; height: 100%; }
+/* keeps the text readable where the net runs behind it */
+.scrim { position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--bg) 70%, transparent) 0, transparent 130px),
+    linear-gradient(96deg, color-mix(in srgb, var(--bg) 90%, transparent) 0%, color-mix(in srgb, var(--bg) 68%, transparent) 38%, transparent 70%); }
+.hero-main { align-self: center; padding-block: clamp(96px, 14vh, 150px) clamp(16px, 3vh, 40px); }
+.eyebrow { display: flex; align-items: center; gap: 14px; margin: 0 0 clamp(16px, 3vh, 30px); font: 500 .72rem/1 var(--mono); letter-spacing: .2em; text-transform: uppercase; }
+.eyebrow-line { flex: none; width: 30px; height: 1px; background: var(--accent); }
+.title { margin: 0; font: 700 var(--h1)/1.02 var(--sans); letter-spacing: -.05em; }
+.title span, .title em { display: block; }
+.title em { color: var(--accent); font: italic 400 1.04em/1.04 var(--serif); letter-spacing: -.035em; }
+.lead { max-width: 31ch; margin: clamp(18px, 3vh, 28px) 0 clamp(24px, 4vh, 38px); color: var(--ink-2); font-size: clamp(1.1rem, 1.6vw, 1.4rem); line-height: 1.4; }
+.cta { display: inline-flex; align-items: center; gap: 12px; height: 54px; padding: 0 24px; border-radius: 6px; background: var(--button); color: var(--on-button); font-weight: 600; text-decoration: none; transition: background-color .35s var(--ease), color .35s var(--ease); }
+.cta:hover { background: var(--accent); color: var(--on-accent); }
+.cta:hover .arrow { transform: translate(2px, -2px); }
+
+.hero-foot { padding-bottom: 28px; }
+.readout { display: grid; gap: 2px; width: fit-content; margin: 0; padding-left: 14px; border-left: 2px solid var(--accent); font: 500 .78rem/1.5 var(--mono); letter-spacing: .06em; }
+.readout div { display: flex; gap: 1ch; }
+.readout dt { min-width: 8ch; color: var(--ink-3); }
+.readout dd { margin: 0; }
+.readout output { display: inline-block; min-width: 4ch; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ---------- intro ---------- */
+.js .eyebrow, .js .title span, .js .title em, .js .lead, .js .cta, .js .hero-foot { opacity: 0; transform: translateY(16px); transition: opacity 1s var(--ease), transform 1s var(--ease); }
+.js .title em { transition-delay: .14s; }
+.js .lead { transition-delay: .26s; }
+.js .cta { transition: opacity 1s var(--ease) .38s, transform 1s var(--ease) .38s, background-color .35s var(--ease), color .35s var(--ease); }
+.js .hero-foot { transition-delay: 1.2s; }
+.js.is-ready .eyebrow, .js.is-ready .title span, .js.is-ready .title em, .js.is-ready .lead, .js.is-ready .cta, .js.is-ready .hero-foot { opacity: 1; transform: none; }
+
+/* ---------- view transitions ---------- */
+/* designs cross-fade into each other; a theme change spreads as a circle from the switch */
+@view-transition { navigation: auto; }
+:root.theme-change::view-transition-old(root), :root.theme-change::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+
+/* ---------- responsive ---------- */
+/* the design switcher of the concept review sits at the foot: keep the readout above it where they would meet */
+@media (max-width: 1180px) {
+  .hero-foot { padding-bottom: 76px; }
+}
+
+@media (max-width: 760px) {
+  :root { --h1: clamp(2.1rem, 9.4vw, 3.4rem); }
+  .nav { display: none; }
+  .menu-btn { display: inline-flex; }
+  .head-in { height: 68px; }
+  .wordmark { font-size: 1.35rem; }
+  .eyebrow { font-size: .62rem; letter-spacing: .14em; }
+  .hero-main { align-self: start; padding-top: clamp(104px, 15vh, 140px); }
+  .scrim { background: linear-gradient(180deg, color-mix(in srgb, var(--bg) 84%, transparent) 0%, color-mix(in srgb, var(--bg) 58%, transparent) 46%, transparent 72%); }
+  .hero-foot { padding-bottom: 72px; }
+  /* the near part of the net is bright: give the readout its own ground */
+  .readout { padding: 8px 14px; background: color-mix(in srgb, var(--bg) 78%, transparent); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .js .eyebrow, .js .title span, .js .title em, .js .lead, .js .cta, .js .hero-foot { opacity: 1; transform: none; }
+}
