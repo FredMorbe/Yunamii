@@ -1,9 +1,11 @@
 // The hero graphic: the fabric of space around a small planetary system, drawn as a net of light
-// (WebGL2). A planet and two moons press wells into a lattice of 180 x 180 nodes; the moons
-// circle on their orbits and their wells travel with them. The vertex shaders do all of it:
+// (WebGL2). Mars and its two moons, Phobos and Deimos, press wells into a lattice of 180 x 180 nodes;
+// the moons circle on their orbits and their wells travel with them. The vertex shaders do all of it:
 // the lattice lines (instanced quads, so their width is exact), the nodes (soft point sprites that
 // blur close to the camera) and the dashed orbits, which run along the surface. The three
-// bodies are shaded sprites that sit in their wells; lines behind a body are hidden by it.
+// bodies are sprites that sit in their wells: Mars is a photo laid on a sphere, the moons are rough
+// ellipsoids with craters made of formulas, locked to Mars as the real ones are. All three are lit by
+// the same sun, so the moons show phases as they go round. Lines behind a body are hidden by it.
 // The wells are the single source: JavaScript writes them into the shader and reads the same sum
 // for the sphere heights and the live readout.
 
@@ -30,35 +32,30 @@ const FOG = [10.5, 23];          // view depth where the net starts to fade, and
 
 // ---- the system, in its own units; layout() scales it to the screen.
 // A well is y = -depth * soft / sqrt(r^2 + soft^2): deepest at the centre, a long shallow tail outside.
-const PLANET = { radius: 1.2, depth: 4.8, soft: 2.0 };
+const PLANET = { radius: 1.2, depth: 4.8, soft: 2.0 };       // Mars
 const MOONS = [
-  { orbit: 3.7, radius: 0.34, depth: 1.4, soft: 0.7, period: 38, phase: 2.5 },    // period in seconds
-  { orbit: 5.7, radius: 0.27, depth: 1.1, soft: 0.58, period: 91, phase: -0.6 },
+  { orbit: 3.7, radius: 0.4, depth: 1.4, soft: 0.7, period: 38, phase: 2.5 },     // Phobos, the inner one; radius is the long one; period in seconds
+  { orbit: 5.7, radius: 0.32, depth: 1.1, soft: 0.58, period: 91, phase: -0.6 },  // Deimos
 ];
 const POINTER = { depth: 0.7, soft: 1.1 };    // the pointer is a light mass that dents the net a little
 
 const LOOKS = {
   dark: {
     bg0: '#04060b', bg1: '#0a1b29', glow: '#3b86ad', line: '#9db8d0', crest: '#d2e8fa', hot: '#ffd6e4',
-    lineA: 0.5, pointA: 0.8, add: true, halo: 1,
-    bodies: [
-      { lit: '#cfeaff', dark: '#08131f', rim: '#73ecf5' },
-      { lit: '#ffdbe8', dark: '#1a1018', rim: '#f8c7da' },
-      { lit: '#e4ecf5', dark: '#0e1218', rim: '#a9c6e0' },
-    ],
+    lineA: 0.3, pointA: 0.48, add: true, halo: 1,      // the net is 40 % more transparent than it was (0.5, 0.8)
+    night: '#04070d', air: '#e89a6a',                  // what a body keeps in its shadow, and the colour of the dust haze round Mars
   },
   light: {
     bg0: '#f8f5ef', bg1: '#e6ebec', glow: '#ffffff', line: '#1d3c5b', crest: '#14527f', hot: '#d04d78',
-    lineA: 0.6, pointA: 0.85, add: false, halo: 0.35,
-    bodies: [
-      { lit: '#5a93c4', dark: '#10253c', rim: '#2f6fa8' },
-      { lit: '#ee86a9', dark: '#6a2a45', rim: '#d04d78' },
-      { lit: '#a9b9ca', dark: '#3a4a5c', rim: '#5e7d9c' },
-    ],
+    lineA: 0.36, pointA: 0.51, add: false, halo: 0.35,   // 40 % more transparent than it was (0.6, 0.85)
+    night: '#26364b', air: '#c0643a',
   },
 };
 
-const STAGES = 3;                // the planet and its two moons
+const STAGES = 3;                // Mars, Phobos and Deimos, in this order
+const MARS_PHOTO = new URL('../assets/mars.webp', import.meta.url);
+const SPRITE = [1.6, 1.3, 1.3];  // size of each sprite in radii of its body: room for the haze round Mars, the edge of a moon
+const HALO = [1, 0, 0];          // strength of the haze round each body
 
 // the sum of wells shared by every shader, and the lattice
 const WELL_GLSL = `
@@ -311,7 +308,7 @@ void main() {
   frag = vec4(vCol.rgb, vCol.a * a * unhidden(gl_FragCoord.xy, vDepth));
 }`;
 
-// The bodies: one sprite each, big enough for the sphere and a halo around it.
+// The bodies: one sprite each, big enough for the sphere (or the moon) and the haze round it.
 const VS_BODY = `#version 300 es
 precision highp float;
 uniform mat4 uViewProj;
@@ -340,38 +337,145 @@ void main() {
 
 const FS_BODY = `#version 300 es
 precision highp float;
-uniform vec3 uLit[${STAGES}];
-uniform vec3 uDark[${STAGES}];
-uniform vec3 uRim[${STAGES}];
+uniform sampler2D uMars;             // the photo of Mars, a disc cropped to a square
+uniform vec3 uBasis[${(STAGES - 1) * 3}];     // the frame of each moon in view space: towards Mars, along its orbit, up
+uniform vec3 uNight;                 // what a body keeps where the sun does not light it
+uniform vec3 uAir;                   // the colour of the haze round Mars
 in float vId;
 in float vScale;
 in float vRadius;
 in float vShown;
 in float vHalo;
 out vec4 frag;
-const vec3 LIGHT = normalize(vec3(-0.55, 0.5, 0.67));
+const vec3 SUN = normalize(vec3(-0.55, 0.5, 0.67));       // the light: from the upper left, a little from the front
+
+// ---- noise in space (the same formulas as in the "Moon Torii" concept)
+float hash13(vec3 p3) {
+  p3 = fract(p3 * 0.1031);
+  p3 += dot(p3, p3.zyx + 31.32);
+  return fract((p3.x + p3.y) * p3.z);
+}
+float vnoise3(vec3 p) {
+  vec3 i = floor(p), f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(mix(hash13(i), hash13(i + vec3(1.0, 0.0, 0.0)), f.x), mix(hash13(i + vec3(0.0, 1.0, 0.0)), hash13(i + vec3(1.0, 1.0, 0.0)), f.x), f.y),
+             mix(mix(hash13(i + vec3(0.0, 0.0, 1.0)), hash13(i + vec3(1.0, 0.0, 1.0)), f.x), mix(hash13(i + vec3(0.0, 1.0, 1.0)), hash13(i + vec3(1.0, 1.0, 1.0)), f.x), f.y), f.z);
+}
+float fbm3(vec3 p) {
+  float s = 0.0, a = 0.5;
+  for (int i = 0; i < 4; i++) { s += a * vnoise3(p); p = p * 2.02 + vec3(5.1, 1.7, 9.3); a *= 0.5; }
+  return s;
+}
+
+// how much of the sun's light a point of a body gets: a soft terminator
+float sunlight(vec3 n) { return pow(clamp((dot(n, SUN) + 0.08) / 1.08, 0.0, 1.0), 1.1); }
+
+// ---- Mars: the disc of the photo is laid on the disc of the planet (the photo shows one side, so Mars
+// does not turn), tamed in colour, and lit by the sun: the light and the shadow come on top of it. A
+// faint haze of dust stands at the rim on the side of the sun.
+const float MARS_SATURATION = 0.68;     // 1 would be the photo as it is
+const float MARS_GAIN = 1.2;
+vec3 marsSurface(vec3 photo, vec3 n) {
+  vec3 a = mix(vec3(dot(photo, vec3(0.299, 0.587, 0.114))), photo, MARS_SATURATION) * MARS_GAIN;
+  float k = sunlight(n);
+  return a * (uNight + 1.25 * k) + uAir * pow(1.0 - n.z, 3.0) * 0.2 * smoothstep(-0.3, 0.6, dot(n, SUN));
+}
+
+// ---- Phobos and Deimos: lumps, not balls. Each is an ellipsoid whose long axis points at Mars, as the
+// real ones do (they are locked to it, so they always show it the same face and turn once per orbit).
+// The craters are made of noise on the moon itself, shallow, with a dark floor and a faint bright rim,
+// and the walls that face the sun are brighter; Phobos has one huge crater, Stickney.
+const vec3 STICKNEY = normalize(vec3(0.5, -0.7, 0.5));
+float craters3(vec3 p) {
+  vec3 i = floor(p), f = fract(p);
+  float h = 0.0;
+  for (int z = -1; z <= 1; z++) {
+    for (int y = -1; y <= 1; y++) {
+      for (int x = -1; x <= 1; x++) {
+        vec3 g = vec3(float(x), float(y), float(z));
+        vec3 id = i + g;
+        if (hash13(id + 3.3) > 0.6) continue;
+        vec3 o = vec3(hash13(id), hash13(id + 1.7), hash13(id + 5.1));
+        float rad = 0.22 + 0.3 * hash13(id + 7.7);
+        float d = length(g + o - f) / rad;
+        float e = (d - 1.0) / 0.14;
+        h -= 0.5 * (1.0 - smoothstep(0.0, 0.9, d));
+        h += 0.35 * exp(-e * e);
+      }
+    }
+  }
+  return h;
+}
+float moonRelief(vec3 p, int i) {
+  float h = craters3(p * 2.6) * 0.65 + craters3(p * 6.5 + 9.0) * 0.35;
+  if (i == 1) {
+    float s = acos(clamp(dot(p, STICKNEY), -1.0, 1.0));
+    float e = (s - 0.52) / 0.09;
+    h += -0.9 * (1.0 - smoothstep(0.0, 0.5, s)) + 0.5 * exp(-e * e);
+  }
+  return h;
+}
+
 void main() {
   int i = int(vId + 0.5);
   vec2 q = (gl_PointCoord - 0.5) * 2.0 * vScale;     // in radii of the body, y down
-  q.y = -q.y;
+  q.y = -q.y;                                         // y up, like the view space of the light
   float d = length(q);
+  vec3 n = vec3(q / max(d, 1.0), sqrt(max(1.0 - d * d, 0.0)));
+
+  // What needs screen derivatives is done before anything is discarded: the photo of Mars (the level of
+  // detail), and for a moon the outline of its ellipsoid. A moon's axes are scaled so that it becomes a
+  // unit sphere; the line of sight meets it where alpha z^2 + 2 beta z + gamma = 0 (delta > 0 inside).
+  vec3 photo = vec3(0.0);
+  vec3 U = vec3(1.0, 0.0, 0.0), V = vec3(0.0, 1.0, 0.0), W = vec3(0.0, 0.0, 1.0);
+  vec3 is = vec3(1.0);
+  vec3 cxy = vec3(0.0), cz = vec3(0.0);
+  float alpha = 1.0, beta = 0.0, delta = 0.0, fw = 1.0;
+  if (i == 0) {
+    photo = texture(uMars, vec2(0.5 + 0.475 * n.x, 0.5 - 0.475 * n.y)).rgb;     // 5 % of the rim are left out: no edge shows
+  } else {
+    U = uBasis[3 * (i - 1)];
+    V = uBasis[3 * (i - 1) + 1];
+    W = uBasis[3 * (i - 1) + 2];
+    is = i == 1 ? vec3(1.0, 1.0 / 0.877, 1.0 / 0.70) : vec3(1.0, 1.0 / 0.81, 1.0 / 0.69);      // the three radii of Phobos and of Deimos
+    cxy = (q.x * vec3(U.x, V.x, W.x) + q.y * vec3(U.y, V.y, W.y)) * is;
+    cz = vec3(U.z, V.z, W.z) * is;
+    alpha = dot(cz, cz);
+    beta = dot(cxy, cz);
+    delta = beta * beta - alpha * (dot(cxy, cxy) - 1.0);
+    fw = max(fwidth(delta), 1e-5);
+  }
   if (d > vScale) discard;
-  vec3 lit = uLit[i];
-  vec3 dark = uDark[i];
-  vec3 rim = uRim[i];
 
-  vec3 n = vec3(q, sqrt(max(1.0 - d * d, 0.0)));
-  float l = dot(n, LIGHT);
-  vec3 sphere = mix(dark, lit, smoothstep(-0.12, 0.85, l));
-  // the planet has soft bands, like a gas giant
-  if (i == 0) sphere *= 1.0 - 0.13 * (0.5 + 0.5 * sin(q.y * 7.0 + sin(q.x * 2.3) * 0.9));
-  sphere += rim * pow(1.0 - n.z, 2.5) * (0.25 + 0.9 * smoothstep(-0.4, 0.5, l));
-  float body = (1.0 - smoothstep(1.0 - 1.2 / vRadius, 1.0 + 0.6 / vRadius, d)) * vShown;
+  vec3 surf = vec3(0.0);
+  float cover;                                        // how much of the pixel the body covers
+  float haze = 0.0;                                   // opacity of the haze round Mars
+  if (i == 0) {
+    cover = 1.0 - smoothstep(1.0 - 1.2 / vRadius, 1.0 + 0.6 / vRadius, d);
+    if (cover > 0.0) surf = marsSurface(photo, n);
+    float x = max(d - 1.0, 0.0);                      // the distance from the limb
+    float limbLit = smoothstep(-0.25, 0.75, dot(q / max(d, 1e-3), SUN.xy) + 0.4 * SUN.z);     // the part of the limb the sun shines on
+    haze = 0.3 * exp(-x * 14.0) * limbLit * vHalo * (1.0 - smoothstep(0.6 * vScale, vScale, d));
+  } else {
+    cover = clamp(0.5 + delta / fw, 0.0, 1.0);
+    if (cover > 0.0) {
+      float z = (-beta + sqrt(max(delta, 0.0))) / alpha;
+      vec3 p = cxy + z * cz;                          // the point on the moon, as a unit vector in its own frame
+      vec3 nv = normalize(U * (p.x * is.x) + V * (p.y * is.y) + W * (p.z * is.z));
+      float rel = moonRelief(p, i);
+      float relSun = moonRelief(normalize(p + 0.05 * vec3(dot(SUN, U), dot(SUN, V), dot(SUN, W))), i);     // the same place a little towards the sun
+      float k = sunlight(nv) * clamp(1.0 + 2.0 * (rel - relSun), 0.2, 2.0);
+      vec3 albedo = (i == 1 ? vec3(0.38, 0.34, 0.30) : vec3(0.55, 0.50, 0.45)) * (0.8 + 0.5 * rel) * (0.85 + 0.3 * fbm3(p * 3.0 + float(i) * 7.0));
+      surf = albedo * 1.2 * (uNight + 1.25 * k);
+    }
+  }
 
-  float halo = exp(-max(d - 1.0, 0.0) * 2.2) * (1.0 - smoothstep(0.5 * vScale, vScale, d)) * vHalo * vShown;
-  float a = body + (1.0 - body) * halo;
-  vec3 col = (sphere * body + rim * halo * (1.0 - body)) / max(a, 1e-4);
-  frag = vec4(col, a);
+  float a = cover * vShown;
+  vec3 pm = surf * a;
+  haze *= vShown;
+  pm += uAir * haze * (1.0 - a);
+  a += haze * (1.0 - a);
+  frag = vec4(pm / max(a, 1e-4), a);
 }`;
 
 const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
@@ -411,6 +515,14 @@ function groundPoint(cam, nx, ny, y) {
   if (dir[1] > -0.02) return null;
   const t = (y - CAM_H) / dir[1];
   return { x: dir[0] * t, z: dir[2] * t };
+}
+
+// a world direction in view space (x to the right, y up, z towards the viewer), as a unit vector
+function toView(cam, d) {
+  const dot = (a) => a[0] * d[0] + a[1] * d[1] + a[2] * d[2];
+  const v = [dot(cam.right), dot(cam.up), -dot(cam.forward)];
+  const len = Math.hypot(...v);
+  return v.map((x) => x / len);
 }
 
 // the canvas position (in px from the bottom left) and view depth of a world point
@@ -480,6 +592,7 @@ export function createOrbit(canvas, { theme, reduceMotion, onProbe }) {
   let raf = 0;
   let last = 0;
   let probed = 0;
+  let marsPhoto = null;          // the photo of Mars, once it is loaded
 
   function program(vs, fs, names) {
     const p = gl.createProgram();
@@ -503,11 +616,40 @@ export function createOrbit(canvas, { theme, reduceMotion, onProbe }) {
       bg: program(VS_BG, FS_BG, ['uView', 'uBg0', 'uBg1', 'uGlow', 'uMood']),
       line: program(VS_LINE, FS_LINE, net),
       point: program(VS_POINT, FS_POINT, net),
-      body: program(VS_BODY, FS_BODY, ['uViewProj', 'uView', 'uBodyPos', 'uBodyLook', 'uLit', 'uDark', 'uRim']),
+      body: program(VS_BODY, FS_BODY, ['uViewProj', 'uView', 'uBodyPos', 'uBodyLook', 'uBasis', 'uMars', 'uNight', 'uAir']),
+      mars: gl.createTexture(),
       vao: gl.createVertexArray(),
     };
     gl.bindVertexArray(res.vao);
+    upload();
     resize();
+  }
+
+  // the photo of Mars goes to texture unit 0 (a black pixel stands in until it is loaded)
+  function upload() {
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, res.mars);
+    if (marsPhoto) {
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, marsPhoto);
+      gl.generateMipmap(gl.TEXTURE_2D);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    } else {
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255]));
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    }
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  }
+
+  // A failed load is an error in the console (nothing catches it); Mars then stays black.
+  async function load() {
+    const response = await fetch(MARS_PHOTO);
+    if (!response.ok) throw new Error(`The photo of Mars did not load (${response.status}): ${MARS_PHOTO}`);
+    marsPhoto = await createImageBitmap(await response.blob());
+    if (!res) return;                  // the context is lost: build() uploads it when it comes back
+    upload();
+    if (!running) draw();
   }
 
   // The system sits at the right of the screen (lower and centred on narrow ones) and takes a
@@ -545,8 +687,9 @@ export function createOrbit(canvas, { theme, reduceMotion, onProbe }) {
     const k = sys.k;
     const strength = 0.25 + 0.75 * (1 - (1 - intro) ** 3);     // the wells deepen while the page opens
     const wells = [{ x: sys.x, z: sys.z, depth: PLANET.depth * k * strength, soft: PLANET.soft * k }];
+    const angleOf = (m) => m.phase + (TAU * time) / m.period;
     for (const m of MOONS) {
-      const a = m.phase + (TAU * time) / m.period;
+      const a = angleOf(m);
       wells.push({ x: sys.x + m.orbit * k * Math.cos(a), z: sys.z + m.orbit * k * Math.sin(a), depth: m.depth * k * strength, soft: m.soft * k });
     }
     wells.push({ x: dent.x, z: dent.z, depth: POINTER.depth * k * dent.mass * Math.max(0.2, 1 + pull) * strength, soft: POINTER.soft * k });
@@ -557,7 +700,13 @@ export function createOrbit(canvas, { theme, reduceMotion, onProbe }) {
       const r = b.radius * k;
       const y = rest(wells, wells[i].x, wells[i].z, Math.max(r * shown, 1e-3), sagOf(wells[i]));
       const p = project(cam, canvas, wells[i].x, y, wells[i].z);
-      return { x: wells[i].x, y, z: wells[i].z, r, screen: [p.x, p.y, (r * shown * pxPerUnit) / p.w, p.w] };
+      // a moon's frame in view space: towards Mars, along its orbit, up (Mars needs none)
+      let basis = null;
+      if (i > 0) {
+        const a = angleOf(MOONS[i - 1]);
+        basis = [[-Math.cos(a), 0, -Math.sin(a)], [-Math.sin(a), 0, Math.cos(a)], [0, 1, 0]].flatMap((d) => toView(cam, d));
+      }
+      return { x: wells[i].x, y, z: wells[i].z, r, screen: [p.x, p.y, (r * shown * pxPerUnit) / p.w, p.w], basis };
     });
     return { wells, bodies, shown, strength };
   }
@@ -604,10 +753,11 @@ export function createOrbit(canvas, { theme, reduceMotion, onProbe }) {
     gl.uniformMatrix4fv(u.uViewProj, false, cam.matrix);
     gl.uniform4f(u.uView, canvas.width, canvas.height, ratio, (0.5 * canvas.height) / cam.tanV);
     gl.uniform4fv(u.uBodyPos, f.bodies.flatMap((b) => [b.x, b.y, b.z, b.r]));
-    gl.uniform4fv(u.uBodyLook, f.bodies.flatMap((_, i) => [i === 0 ? 3 : 2.2, f.shown, (i === 0 ? 0.42 : 0.3) * c.halo, 0]));
-    gl.uniform3fv(u.uLit, c.bodies.flatMap((b) => hex(b.lit)));
-    gl.uniform3fv(u.uDark, c.bodies.flatMap((b) => hex(b.dark)));
-    gl.uniform3fv(u.uRim, c.bodies.flatMap((b) => hex(b.rim)));
+    gl.uniform4fv(u.uBodyLook, f.bodies.flatMap((_, i) => [SPRITE[i], f.shown, HALO[i] * c.halo, 0]));
+    gl.uniform3fv(u.uBasis, f.bodies.slice(1).flatMap((b) => b.basis));
+    gl.uniform3fv(u.uNight, hex(c.night));
+    gl.uniform3fv(u.uAir, hex(c.air));
+    gl.uniform1i(u.uMars, 0);
     gl.drawArrays(gl.POINTS, 0, STAGES);
 
     // the net: lines add up to a glow on a dark page, and lie over a light one
@@ -675,6 +825,7 @@ export function createOrbit(canvas, { theme, reduceMotion, onProbe }) {
   }
 
   build();
+  load();
   new ResizeObserver(resize).observe(canvas);
   new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; update(); }).observe(canvas);
   document.addEventListener('visibilitychange', update);
