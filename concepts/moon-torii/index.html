@@ -18,6 +18,7 @@
 <svg width="0" height="0" class="sprite" aria-hidden="true" focusable="false">
   <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M3.5 12h16M13.5 5.5 20 12l-6.5 6.5"/></symbol>
   <symbol id="i-chevron" viewBox="0 0 12 12"><path d="M2.5 4.5 6 8l3.5-3.5"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="3.6"/><path d="M10 2v2.4M10 15.6V18M2 10h2.4M15.6 10H18M4.3 4.3 6 6M14 14l1.7 1.7M4.3 15.7 6 14M14 6l1.7-1.7"/></symbol>
 </svg>
 
 <!-- the navigation has no targets yet: this concept is the hero only -->
@@ -59,7 +60,7 @@
 </dialog>
 
 <main id="top">
-  <!-- a dark moon, a gate of light in front of it and ripples on the water below; the pointer tilts the light, a click on the water drops a slow ring; the moon can be turned into Mars, Earth or Saturn -->
+  <!-- a dark moon, a gate of light in front of it and ripples on the water below; the pointer tilts the light, a click on the water drops a slow ring; the moon can be turned into Mars, Earth or Saturn; the sun follows the mouse or the last click, slowly; a click on the planet is an eclipse -->
   <section class="hero" id="hero" aria-labelledby="heroTitle">
     <canvas class="scene" id="scene" aria-hidden="true"></canvas>
     <div class="hero-main">
@@ -72,20 +73,34 @@
       </div>
     </div>
 
-    <!-- the body in the sky: the moon, or Mars or Earth -->
-    <div class="planet" id="planet">
-      <button class="planet-btn" id="planetBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="planetList">
-        <span class="planet-dot" data-planet="moon" aria-hidden="true"></span>
-        <span class="planet-name">Moon</span>
-        <svg class="planet-chev" aria-hidden="true"><use href="#i-chevron"/></svg>
-        <span class="visually-hidden">: choose the planet</span>
-      </button>
-      <ul class="planet-list" id="planetList" role="listbox" aria-label="Planet" tabindex="-1" hidden>
-        <li role="option" id="planet-moon" data-planet="moon"><span class="planet-dot" data-planet="moon" aria-hidden="true"></span>Moon</li>
-        <li role="option" id="planet-mars" data-planet="mars"><span class="planet-dot" data-planet="mars" aria-hidden="true"></span>Mars</li>
-        <li role="option" id="planet-earth" data-planet="earth"><span class="planet-dot" data-planet="earth" aria-hidden="true"></span>Earth</li>
-        <li role="option" id="planet-saturn" data-planet="saturn"><span class="planet-dot" data-planet="saturn" aria-hidden="true"></span>Saturn</li>
-      </ul>
+    <!-- two small controls: how the sun moves (it follows the mouse, or the last click, or stays), and the body in the sky (the moon, Mars, Earth or Saturn) -->
+    <div class="hero-controls" id="controls">
+      <div class="planet" id="sunPick">
+        <button class="planet-btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="sunList">
+          <svg class="sun-icon" aria-hidden="true"><use href="#i-sun"/></svg>
+          <span class="visually-hidden">Sun: </span><span class="planet-name">Mouse</span>
+          <svg class="planet-chev" aria-hidden="true"><use href="#i-chevron"/></svg>
+        </button>
+        <ul class="planet-list" id="sunList" role="listbox" aria-label="How the sun moves" tabindex="-1" hidden>
+          <li role="option" id="sun-mouse" data-value="mouse" data-label="Mouse">The sun follows the mouse</li>
+          <li role="option" id="sun-click" data-value="click" data-label="Click">The sun follows the last click</li>
+          <li role="option" id="sun-off" data-value="off" data-label="Fixed">The sun stays where it is</li>
+        </ul>
+      </div>
+      <div class="planet" id="planet">
+        <button class="planet-btn" id="planetBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="planetList">
+          <span class="planet-dot" data-planet="moon" aria-hidden="true"></span>
+          <span class="planet-name">Moon</span>
+          <svg class="planet-chev" aria-hidden="true"><use href="#i-chevron"/></svg>
+          <span class="visually-hidden">: choose the planet</span>
+        </button>
+        <ul class="planet-list" id="planetList" role="listbox" aria-label="Planet" tabindex="-1" hidden>
+          <li role="option" id="planet-moon" data-value="moon"><span class="planet-dot" data-planet="moon" aria-hidden="true"></span>Moon</li>
+          <li role="option" id="planet-mars" data-value="mars"><span class="planet-dot" data-planet="mars" aria-hidden="true"></span>Mars</li>
+          <li role="option" id="planet-earth" data-value="earth"><span class="planet-dot" data-planet="earth" aria-hidden="true"></span>Earth</li>
+          <li role="option" id="planet-saturn" data-value="saturn"><span class="planet-dot" data-planet="saturn" aria-hidden="true"></span>Saturn</li>
+        </ul>
+      </div>
     </div>
   </section>
 </main>

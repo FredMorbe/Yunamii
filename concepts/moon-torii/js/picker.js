@@ -1,6 +1,8 @@
-// The planet picker: a button that opens a short list. It is a custom listbox, so that it looks like
-// the rest of the page, with the keyboard behaviour of a native one: arrows, Home and End move,
-// Enter or Space choose, Escape closes. A press outside closes it as well.
+// A picker: a button that opens a short list. It is a custom listbox, so that it looks like the rest
+// of the page, with the keyboard behaviour of a native one: arrows, Home and End move, Enter or
+// Space choose, Escape closes. A press outside closes it as well. Used for the planet and for the way
+// the sun moves. Each option has a data-value; it may have a data-label, which is what the button
+// shows (otherwise the text of the option). A button may carry a .planet-dot that shows the value.
 
 export function createPicker(root, { initial, onChange }) {
   const button = root.querySelector('.planet-btn');
@@ -8,15 +10,15 @@ export function createPicker(root, { initial, onChange }) {
   const label = root.querySelector('.planet-name');
   const dot = button.querySelector('.planet-dot');
   const options = [...list.querySelectorAll('[role="option"]')];
-  let current = Math.max(0, options.findIndex((option) => option.dataset.planet === initial));
+  let current = Math.max(0, options.findIndex((option) => option.dataset.value === initial));
   let active = current;
 
   // the chosen option shows on the button
   function show(index) {
     current = index;
     options.forEach((option, i) => option.setAttribute('aria-selected', String(i === index)));
-    label.textContent = options[index].textContent.trim();
-    dot.dataset.planet = options[index].dataset.planet;
+    label.textContent = options[index].dataset.label ?? options[index].textContent.trim();
+    if (dot) dot.dataset.planet = options[index].dataset.value;
   }
 
   // the option the keyboard or the pointer is on
@@ -44,7 +46,7 @@ export function createPicker(root, { initial, onChange }) {
     close(true);
     if (index === current) return;
     show(index);
-    onChange(options[index].dataset.planet);
+    onChange(options[index].dataset.value);
   }
 
   button.addEventListener('click', () => (list.hidden ? open() : close(false)));

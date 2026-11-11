@@ -1,9 +1,11 @@
-// Entry point of the "Moon Torii" hero: starts the scene and wires the planet picker and the mobile menu.
+// Entry point of the "Moon Torii" hero: starts the scene and wires the two pickers (the planet, and
+// the way the sun moves) and the mobile menu.
 
-import { createScene, PLANETS } from './scene.js';
+import { createScene, PLANETS, SUN_MODES } from './scene.js';
 import { createPicker } from './picker.js';
 
 const PLANET_KEY = 'yunamii-planet';
+const SUN_KEY = 'yunamii-sun';
 
 const root = document.documentElement;
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -15,20 +17,38 @@ try {
   if (PLANETS.includes(saved)) planet = saved;
 } catch { /* storage blocked: it is the moon */ }
 
-// a click on the water drops a ring, except on links, text and the picker
-const scene = createScene(document.getElementById('scene'), { reduceMotion, solid: 'a, button, .eyebrow, .title, .lead, .planet', planet });
-const picker = document.getElementById('planet');
+// the sun follows the mouse, unless the visitor has chosen another way before
+let sunMode = SUN_MODES[0];
+try {
+  const saved = localStorage.getItem(SUN_KEY);
+  if (SUN_MODES.includes(saved)) sunMode = saved;
+} catch { /* storage blocked: it follows the mouse */ }
+
+// a click on the water drops a ring, except on links, text and the controls
+const scene = createScene(document.getElementById('scene'), { reduceMotion, solid: 'a, button, .eyebrow, .title, .lead, .hero-controls', planet, sunMode });
 if (scene) {
-  createPicker(picker, {
+  const remember = (key, value) => {
+    try { localStorage.setItem(key, value); } catch { /* storage blocked: the choice lasts for this page view */ }
+  };
+  createPicker(document.getElementById('planet'), {
     initial: planet,
     onChange(id) {
       scene.setPlanet(id);
-      try { localStorage.setItem(PLANET_KEY, id); } catch { /* storage blocked: the choice lasts for this page view */ }
+      remember(PLANET_KEY, id);
     },
   });
+  createPicker(document.getElementById('sunPick'), {
+    initial: sunMode,
+    onChange(mode) {
+      scene.setSunMode(mode);
+      remember(SUN_KEY, mode);
+    },
+  });
+  // with reduced motion the light stays where it is, so there is nothing to choose for the sun
+  if (reduceMotion) document.getElementById('sunPick').hidden = true;
 } else {
   // no WebGL2 on this device: the page keeps its plain background, and there is nothing to choose
-  picker.hidden = true;
+  document.getElementById('controls').hidden = true;
   console.warn('WebGL2 is not available, the scene is not drawn.');
 }
 

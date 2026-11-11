@@ -81,7 +81,9 @@ button { font: inherit; }
 /* ---------- planet picker ---------- */
 /* a small control in the corner of the hero: the body in the sky can be the moon, Mars or Earth */
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.planet { position: absolute; right: var(--gutter); bottom: clamp(18px, 3.2vh, 32px); z-index: 5; }
+.hero-controls { position: absolute; right: var(--gutter); bottom: clamp(18px, 3.2vh, 32px); z-index: 5; display: flex; align-items: center; gap: 10px; }
+.planet { position: relative; }
+.sun-icon { flex: none; width: 18px; height: 18px; fill: none; stroke: var(--gold-hot); stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
 .planet-btn { display: inline-flex; align-items: center; gap: 10px; height: 40px; padding: 0 14px 0 10px; border: 1px solid rgba(227, 191, 149, .45); border-radius: 999px; background: rgba(7, 7, 14, .55); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: var(--ink); font-size: .9rem; font-weight: 400; letter-spacing: .04em; cursor: pointer; transition: background-color .5s var(--ease), border-color .5s var(--ease); }
 .planet-btn:hover, .planet-btn[aria-expanded="true"] { border-color: var(--gold); background: rgba(227, 191, 149, .1); }
 .planet-chev { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; transition: transform .5s var(--ease); }
@@ -94,21 +96,21 @@ button { font: inherit; }
 .planet-dot[data-planet="saturn"]::after { content: ""; position: absolute; left: 50%; top: 50%; width: 31px; height: 10px; border: 1.5px solid rgba(236, 214, 168, .85); border-radius: 50%; translate: -50% -50%; rotate: -16deg; }
 .planet-list { position: absolute; right: 0; bottom: calc(100% + 8px); min-width: 100%; margin: 0; padding: 6px; list-style: none; border: 1px solid rgba(227, 191, 149, .4); border-radius: 18px; background: rgba(9, 9, 17, .92); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 18px 40px -18px rgba(0, 0, 0, .8); outline: none; }
 .planet-list:not([hidden]) { animation: pick-in .35s var(--ease); }
-.planet-list li { display: flex; align-items: center; gap: 10px; padding: 8px 14px 8px 8px; border-radius: 12px; color: var(--ink-2); font-size: .9rem; letter-spacing: .04em; cursor: pointer; }
+.planet-list li { display: flex; white-space: nowrap; align-items: center; gap: 10px; padding: 8px 14px 8px 8px; border-radius: 12px; color: var(--ink-2); font-size: .9rem; letter-spacing: .04em; cursor: pointer; }
 .planet-list li[data-active] { background: rgba(227, 191, 149, .13); color: var(--ink); }
 .planet-list li[aria-selected="true"] { color: var(--gold-hot); }
 @keyframes pick-in { from { opacity: 0; transform: translateY(6px); } }
 
 /* ---------- intro ---------- */
 /* the text rises in once its font is there, while the scene draws itself */
-.js .head, .js .eyebrow, .js .title, .js .lead, .js .actions, .js .planet { opacity: 0; transform: translateY(14px); transition: opacity 1.4s var(--ease), transform 1.4s var(--ease); }
+.js .head, .js .eyebrow, .js .title, .js .lead, .js .actions, .js .hero-controls { opacity: 0; transform: translateY(14px); transition: opacity 1.4s var(--ease), transform 1.4s var(--ease); }
 .js .head { transform: none; transition-delay: .2s; }
 .js .eyebrow { transition-delay: .35s; }
 .js .title { transition-delay: .55s; }
 .js .lead { transition-delay: .8s; }
 .js .actions { transition-delay: 1.05s; }
-.js .planet { transform: none; transition-delay: 1.4s; }
-.js.is-ready .head, .js.is-ready .eyebrow, .js.is-ready .title, .js.is-ready .lead, .js.is-ready .actions, .js.is-ready .planet { opacity: 1; transform: none; }
+.js .hero-controls { transform: none; transition-delay: 1.4s; }
+.js.is-ready .head, .js.is-ready .eyebrow, .js.is-ready .title, .js.is-ready .lead, .js.is-ready .actions, .js.is-ready .hero-controls { opacity: 1; transform: none; }
 
 /* ---------- view transitions ---------- */
 /* designs cross-fade into each other */
@@ -126,11 +128,11 @@ button { font: inherit; }
   .lead { max-width: 26em; }
   .btn { flex: 1 1 auto; }
   /* the design switcher of the concept review sits at the foot: stay above it */
-  .planet { bottom: 62px; }
+  .hero-controls { bottom: 62px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   @view-transition { navigation: none; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
-  .js .head, .js .eyebrow, .js .title, .js .lead, .js .actions, .js .planet { opacity: 1; transform: none; }
+  .js .head, .js .eyebrow, .js .title, .js .lead, .js .actions, .js .hero-controls { opacity: 1; transform: none; }
 }
