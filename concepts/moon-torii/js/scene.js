@@ -2,7 +2,8 @@
 // ripples spreading on the water below (WebGL2). One fragment shader draws all of it from distance
 // functions, so every line has an exact width and no texture is loaded: the moon is a shaded sphere
 // with a procedural surface, the torii is a few lines with a glow, the ripples are ellipses that
-// grow slowly and fade, and a faint orbit passes behind the moon.
+// grow slowly and fade. A click on the water drops one more slow ring there, drawn in the same
+// perspective as the others.
 // The numbers (proportions of the gate, the rim light of the moon, the spacing of the rings) are
 // measured from the design this concept rebuilds; everything is sized in moon radii.
 
@@ -10,6 +11,10 @@ const MAX_PIXEL_RATIO = 2;
 const MAX_PIXELS = 5e6;          // canvas pixel budget for very large screens
 const INTRO_SECONDS = 5;
 const STILL_TIME = 0;            // the moment shown when motion is reduced
+const TAP_SLOTS = 3;             // rings from clicks that can exist at once (one lives, one gives way, one spare)
+const TAP_LIFE = 11;             // seconds a click ring lives
+const TAP_FADE = 1.2;            // seconds an older click ring needs to give way when a new one comes
+const TAP_WATER = 1.25;          // the water starts this many moon radii below the moon's centre
 
 const VS = `#version 300 es
 void main() {
@@ -23,6 +28,7 @@ uniform vec2 uRes;       // canvas size in device pixels
 uniform vec3 uMoon;      // moon centre x, y (device pixels from the top left) and radius
 uniform vec2 uLook;      // the pointer, smoothed, -1..1
 uniform vec3 uClock;     // seconds, intro 0..1, narrow layout 0/1
+uniform vec4 uTap[${TAP_SLOTS}];   // rings from clicks: x, y (moon radii, in the water layer), progress 0..1, strength
 out vec4 outColor;
 
 const vec3 BG0  = vec3(0.047, 0.047, 0.082);    // page ink
@@ -143,26 +149,6 @@ vec3 stars(vec2 v, float S, float t, float I) {
   return add * k;
 }
 
-// ---- the orbit: a very wide, faint ellipse (fitted to the picture). Beyond the rim it shows at
-// both sides of the moon; across the dark face of the moon a faint trace of it fades out.
-// Returns the brightness outside the moon (x) and over the moon (y).
-vec2 orbit(vec2 v, float S, float I) {
-  const vec2 C = vec2(3.50, 1.245);
-  const float A = 1.763, B = 5.43, TH = 1.6;
-  vec2 d = v - C;
-  float c = cos(TH), s = sin(TH);
-  float u = c * d.x + s * d.y;
-  float w = -s * d.x + c * d.y;
-  float e = max(sqrt((u / A) * (u / A) + (w / B) * (w / B)), 1e-3);
-  float dist = (e - 1.0) / (length(vec2(u / (A * A), w / (B * B))) / e) * S;
-  float lw = max(0.0055 * S, 1.1);
-  float window = 0.36 * smoothstep(-1.95, -1.45, v.x) * (1.0 - smoothstep(-1.0, -0.9, v.x))
-               + 0.28 * smoothstep(0.95, 1.35, v.x) * (1.0 - 0.7 * smoothstep(1.55, 2.1, v.x));
-  float upper = 1.0 - smoothstep(-0.02, 0.02, v.y - C.y);
-  float line = cover(abs(dist), lw * 0.5) * upper * smoothstep(0.1, 0.6, I);
-  return line * vec2(window, 0.18 * (1.0 - smoothstep(-0.95, -0.35, v.x)));
-}
-
 // ---- the gate: two pillars, a tie beam and a curved roof beam, all in gold light
 vec3 torii(vec2 v, float S, float t, float I) {
   vec2 a = vec2(abs(v.x), v.y);
@@ -235,6 +221,35 @@ vec3 water(vec2 v, float S, float t, float I) {
   return acc;
 }
 
+// ---- rings from clicks: two ripples, the second a little behind the first. The water lies in
+// perspective: its horizon is 0.93 moon radii below the moon's centre, so a ring is flatter and
+// smaller further up and rounder and larger further down (at the gate it equals the rings above).
+vec3 taps(vec2 v, float S) {
+  vec3 acc = vec3(0.0);
+  float lw = max(0.0055 * S, 1.1);
+  for (int k = 0; k < ${TAP_SLOTS}; k++) {
+    vec4 tp = uTap[k];
+    if (tp.w <= 0.0) continue;
+    float depth = tp.y - 0.93;
+    float s = clamp(depth / 0.432, 0.7, 1.45);
+    vec2 u = v - tp.xy;
+    for (int j = 0; j < 2; j++) {
+      float delay = 0.13 * float(j);
+      float p = (tp.z - delay) / (1.0 - delay);
+      if (p <= 0.0) continue;
+      float a = 1.0 * s * (1.0 - pow(1.0 - p, 2.0));      // spreads fast at first, then ever slower
+      if (a < 0.02) continue;
+      float b = a * (0.244 * depth + 0.0202 * a);
+      float d = abs(ellipseD(vec2(u.x, u.y - 0.0298 * a * a) * S, vec2(a, b) * S));
+      if (d > 24.0) continue;
+      float al = smoothstep(0.0, 0.08, p) * pow(1.0 - p, 1.5) * (j == 0 ? 0.8 : 0.45);
+      float side = 0.55 + 0.55 * min(abs(u.x) / a, 1.0);
+      acc += GOLD * (1.35 * cover(d, lw * 0.5) + 0.3 * exp(-d / (0.014 * S))) * al * side * tp.w;
+    }
+  }
+  return acc;
+}
+
 void main() {
   float S = uMoon.z;
   float t = uClock.x;
@@ -249,16 +264,14 @@ void main() {
   float lift = 1.0 - smoothstep(0.4, 4.6, length(rel / S - vec2(0.3, 0.9)));
   vec3 col = mix(BG0, BG1, lift);
   col += stars(qB / S, S, t, I);
-  vec2 ring = orbit(qM / S, S, I);
-  col += GOLD * ring.x;
 
   float cov;
   vec3 m = moon(qM, S, I, cov);
   col = mix(col, m, cov);
-  col += GOLD * ring.y * cov;
 
   col += torii(qT / S, S, t, I);
   col += water(qT / S, S, t, I);
+  col += taps(qT / S, S);
 
   col += (hash12(gl_FragCoord.xy + 0.5) - 0.5) * (1.5 / 255.0);
   outColor = vec4(col, 1.0);
@@ -277,7 +290,9 @@ function layout(w, h) {
 }
 
 // Returns false when the device has no WebGL2; shader or link errors throw.
-export function createScene(canvas, { reduceMotion }) {
+// `solid` selects the elements of the page that take a click themselves (links, text): a click on
+// them does not drop a ring.
+export function createScene(canvas, { reduceMotion, solid = 'a, button' }) {
   const gl = canvas.getContext('webgl2', { alpha: false, antialias: false });
   if (!gl) return false;
 
@@ -292,6 +307,8 @@ export function createScene(canvas, { reduceMotion }) {
   let visible = true;
   let raf = 0;
   let last = 0;
+  const taps = Array.from({ length: TAP_SLOTS }, () => ({ x: 0, y: 0, born: -Infinity, fade: -1 }));
+  const tapData = new Float32Array(TAP_SLOTS * 4);
 
   function build() {
     const p = gl.createProgram();
@@ -305,7 +322,7 @@ export function createScene(canvas, { reduceMotion }) {
     gl.linkProgram(p);
     if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(`Program link failed: ${gl.getProgramInfoLog(p)}`);
     const u = {};
-    for (const n of ['uRes', 'uMoon', 'uLook', 'uClock']) u[n] = gl.getUniformLocation(p, n);
+    for (const n of ['uRes', 'uMoon', 'uLook', 'uClock', 'uTap']) u[n] = gl.getUniformLocation(p, n);
     res = { p, u, vao: gl.createVertexArray() };
     gl.bindVertexArray(res.vao);
     resize();
@@ -331,8 +348,17 @@ export function createScene(canvas, { reduceMotion }) {
     gl.uniform3f(res.u.uMoon, geo.x * ratio, geo.y * ratio, geo.R * ratio);
     gl.uniform2f(res.u.uLook, look.x, look.y);
     gl.uniform3f(res.u.uClock, time, intro, geo.narrow ? 1 : 0);
+    taps.forEach((t, i) => {
+      const alive = tapAlive(t);
+      const giving = t.fade < 0 ? 0 : Math.min((time - t.fade) / TAP_FADE, 1);
+      tapData.set(alive ? [t.x, t.y, (time - t.born) / TAP_LIFE, 0.5 + 0.5 * Math.cos(Math.PI * giving)] : [0, 0, 0, 0], i * 4);
+    });
+    gl.uniform4fv(res.u.uTap, tapData);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }
+
+  // a click ring lives for TAP_LIFE seconds, or until the one that replaces it has faded it out
+  const tapAlive = (t) => time - t.born < TAP_LIFE && (t.fade < 0 || time - t.fade < TAP_FADE);
 
   function tick(now) {
     raf = requestAnimationFrame(tick);
@@ -361,6 +387,21 @@ export function createScene(canvas, { reduceMotion }) {
     look.ty = Math.max(-1, Math.min(1, ((e.clientY - rect.top) / rect.height) * 2 - 1));
   }
 
+  // A click on the water drops a ring. At most two exist at a time: a click while one is alive lets
+  // that one fade out softly (never cut off); a click while two are alive is ignored.
+  function drop(e) {
+    if (!geo || intro < 0.6 || e.target.closest(solid)) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left - geo.x) / geo.R;
+    const y = (e.clientY - rect.top - geo.y) / geo.R;
+    if (y < TAP_WATER) return;
+    const alive = taps.filter(tapAlive);
+    if (alive.length >= 2) return;
+    for (const t of alive) if (t.fade < 0) t.fade = time;
+    // the water layer drifts a little with the pointer (see the shader): the ring lands under it
+    Object.assign(taps.find((t) => !tapAlive(t)), { x: x + look.x * 0.012, y: y + look.y * 0.0084, born: time, fade: -1 });
+  }
+
   build();
   new ResizeObserver(resize).observe(canvas);
   new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; update(); }).observe(canvas);
@@ -370,6 +411,7 @@ export function createScene(canvas, { reduceMotion }) {
   if (!reduceMotion) {
     host.addEventListener('pointermove', (e) => { if (e.pointerType !== 'touch') aim(e); }, { passive: true });
     host.addEventListener('pointerleave', () => { look.tx = 0; look.ty = 0; }, { passive: true });
+    host.addEventListener('click', drop);
   }
   update();
   return true;

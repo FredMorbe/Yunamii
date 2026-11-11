@@ -5,7 +5,8 @@ import { createScene } from './scene.js';
 const root = document.documentElement;
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-if (!createScene(document.getElementById('scene'), { reduceMotion })) {
+// a click on the water drops a ring, except on links and text
+if (!createScene(document.getElementById('scene'), { reduceMotion, solid: 'a, button, .eyebrow, .title, .lead' })) {
   // no WebGL2 on this device: the page keeps its plain background
   console.warn('WebGL2 is not available, the scene is not drawn.');
 }
