@@ -17,6 +17,7 @@ Static site for [yunamii.com](https://yunamii.com). Plain HTML, CSS and JavaScri
 | `concepts/ink-atom/` | Concept "Ink Atom" (hero only): the headline's full stop is the nucleus of a hydrogen atom, its electron cloud is sampled in `js/orbital.js` and drawn in `js/atom.js` |
 | `concepts/gravity-lens/` | Concept "Gravity Lens" (hero only): a black hole bends the coordinate grid behind it, one fragment shader with the lens equation of a point mass (`js/lens.js`) |
 | `concepts/shiki-bonsai/` | Concept "Shiki Bonsai" (hero only): a bonsai grown from a seed number (`js/grow.js`) and drawn in 3D with seasons, wind and falling leaves (`js/tree.js`) |
+| `concepts/mesh-tide/` | Concept "Mesh Tide" (hero only): a lattice of 25 600 nodes on moving water, Gerstner waves and all drawing in one WebGL2 vertex shader (`js/tide.js`); the pointer stirs the water, a press drops a stone |
 | `prototype/`, `prototype-code/` | Earlier hero experiments (not deployed) |
 | `reference/` | Approved design mockup |
 | `tools/dev-server.py` | Local static server without caching |
