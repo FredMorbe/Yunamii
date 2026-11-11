@@ -71,6 +71,9 @@ button { font: inherit; }
 .lead { max-width: 21em; margin: clamp(18px, 3.6vh, 38px) 0 clamp(26px, 4.4vh, 50px); color: var(--ink-2); font-size: var(--lead); font-weight: 300; line-height: 1.5; }
 
 .actions { display: flex; flex-wrap: wrap; gap: clamp(12px, 1.6vw, 26px); }
+/* The blocks of text are only as wide as their content. Otherwise they would reach under the planet, and
+   a click on the planet would land on the headline (clicks on text do nothing to the scene). */
+.eyebrow, .title, .actions { width: fit-content; max-width: 100%; }
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: .7em; height: clamp(50px, 3.85vw, 68px); padding: 0 clamp(26px, 2.9vw, 50px); border-radius: 999px; font-size: clamp(.95rem, 1.2vw, 1.3rem); font-weight: 500; text-decoration: none; transition: background-color .5s var(--ease), color .5s var(--ease), border-color .5s var(--ease); }
 .btn-solid { background: var(--gold-fill); color: var(--on-gold); }
 .btn-solid:hover { background: var(--gold-fill-2); }
@@ -122,6 +125,7 @@ button { font: inherit; }
   .nav { display: none; }
   .menu-btn { display: inline-flex; }
   .hero { align-items: end; }
+  .actions { width: 100%; }
   .hero-main { padding-top: 0; padding-bottom: clamp(84px, 13vh, 120px); }
   .title { letter-spacing: .24em; margin-right: -.24em; }
   .eyebrow { letter-spacing: .34em; }
