@@ -15,7 +15,28 @@ const TAP_SLOTS = 3;             // rings from clicks that can exist at once (on
 const TAP_LIFE = 11;             // seconds a click ring lives
 const TAP_FADE = 1.2;            // seconds an older click ring needs to give way when a new one comes
 const TAP_WATER = 1.25;          // the water starts this many moon radii below the moon's centre
-export const PLANETS = ['moon', 'mars', 'earth', 'saturn'];   // the order is the number the shader knows them by
+export const PLANETS = ['moon', 'mars', 'earth', 'saturn'];
+// The sun is the direction the light comes from. It may follow the mouse, or the last click: it turns
+// towards the side of the planet where that is, but takes seconds to get there and never turns fast.
+export const SUN_MODES = ['mouse', 'click', 'off'];    // follow the mouse, follow the last click, stay
+// Where the mouse is (or the last click was) decides how it stands: the side of the planet gives the
+// direction, the distance from the planet gives the height: close, the sun is in front and there is
+// little shadow (on the planet's centre none at all); far away it is behind the planet and only a thin
+// crescent is lit.
+const SUN_SECONDS = 9;           // time constant of the chase
+const SUN_SPEED = 0.1;           // the fastest it turns round the planet, radians per second (about 6 degrees)
+const SUN_LIFT_SPEED = 0.16;     // the fastest it rises or sinks, radians per second
+const SUN_AZIMUTH = 0.98;        // where the light comes from when the sun is not turned: the upper right
+const SUN_FRONT = 1.64;          // lifted this much the light comes from the front: no shadow
+const SUN_BEHIND = -0.65;        // far from the planet the sun is behind it
+const ECLIPSE_LIFT = -3.2;       // in an eclipse the sun is exactly behind the body
+const ECLIPSE_SECONDS = 12;      // how long an eclipse lasts before it fades out
+const BODY_RADIUS = [1, 1, 1, 0.72];     // the radius of each body in radii of the page's planet (Saturn's globe is smaller)
+const wrap = (angle) => Math.atan2(Math.sin(angle), Math.cos(angle));
+const clamp = (x, low, high) => Math.min(high, Math.max(low, x));
+const smooth01 = (x) => { const t = clamp(x, 0, 1); return t * t * (3 - 2 * t); };
+// the height of the sun for a pointer d planet radii from the planet's centre
+const liftFor = (d) => SUN_FRONT * (1 - smooth01(d / 1.5)) + SUN_BEHIND * smooth01((d - 1.5) / 2.5);   // the order is the number the shader knows them by
 const SWAP_SECONDS = 2;          // how long one body takes to turn into another
 // the photos laid on the moon, Mars and Earth (a photo shows one side, so these bodies do not turn);
 // the index is the texture unit, and each photo has a sampler and a flag for the shader
@@ -36,6 +57,9 @@ precision highp float;
 uniform vec2 uRes;       // canvas size in device pixels
 uniform vec3 uMoon;      // moon centre x, y (device pixels from the top left) and radius
 uniform vec2 uLook;      // the pointer, smoothed, -1..1
+uniform float uSun;      // how far the light is turned from its usual direction, in radians
+uniform float uSunLift;  // how far the light is lifted towards the viewer (+) or sunk behind the body (-), in radians
+uniform float uEclipse;  // 0..1: a solar eclipse, the body is dark and its outline glows
 uniform vec3 uClock;     // seconds, intro 0..1, narrow layout 0/1
 uniform sampler2D uMars; // the photo of Mars, a disc cropped to a square
 uniform float uMarsOn;   // 1 once the photo is loaded
@@ -119,11 +143,18 @@ vec3 moonRamp(float l) {
 }
 vec3 direction(float az, float el) { return vec3(cos(az) * cos(el), sin(az) * cos(el), sin(el)); }
 
+// How high the light stands over a body, towards the viewer. Lifted to the front (+) the lit part grows
+// until there is no shadow; sunk behind the body (-) it shrinks to a thin crescent. sunFull is 1 when
+// the light comes from the front and the body is lit evenly.
+float sunElevation(float usual) { return clamp(usual + uSunLift, -1.5708, 1.5708); }
+float sunFull(float usual) { return smoothstep(0.55, 1.4, sunElevation(usual)); }
+
 vec3 moonSurface(vec3 n, float I) {
-  float tilt = -uLook.x * 0.12;                 // the pointer turns the light a little
-  float t1 = max(dot(n, direction(0.93 + tilt, -0.07)) + 0.38, 0.0) / 1.38;
-  float t2 = max(dot(n, direction(2.14 + tilt, -0.19)) + 0.21, 0.0) / 1.21;
+  float tilt = uSun;                            // the light may be turned (see the sun in scene.js)
+  float t1 = max(dot(n, direction(0.93 + tilt, sunElevation(-0.07))) + 0.38, 0.0) / 1.38;
+  float t2 = max(dot(n, direction(2.14 + tilt, sunElevation(-0.19))) + 0.21, 0.0) / 1.21;
   float lit = 216.0 * pow(t1, 2.51) + 105.0 * pow(t2, 3.64);
+  lit = mix(lit, 192.0 * (0.76 + 0.24 * n.z), sunFull(-0.07));      // from the front it is lit all over, like a full moon
 
   // The surface: the photo of the moon says how much lighter or darker each spot is than the average
   // of the photo (seas, craters, rays); this scales the light. Until the photo is there, noise does it.
@@ -163,8 +194,11 @@ vec3 rotY(vec3 n, float a) {
   float c = cos(a), s = sin(a);
   return vec3(c * n.x + s * n.z, n.y, -s * n.x + c * n.z);
 }
-vec3 planetDir() { return direction(0.98 - uLook.x * 0.12, 0.45); }
-float planetLight(vec3 n) { return pow(clamp((dot(n, planetDir()) + 0.08) / 1.08, 0.0, 1.0), 1.1); }
+vec3 planetDir() { return direction(0.98 + uSun, sunElevation(0.45)); }
+float planetLight(vec3 n) {
+  float lambert = pow(clamp((dot(n, planetDir()) + 0.08) / 1.08, 0.0, 1.0), 1.1);
+  return mix(lambert, 0.84 + 0.1 * n.z, sunFull(0.45));      // no shadow when the light comes from the front
+}
 
 // the colour of Mars made of noise: shown until the photo is there
 vec3 marsGenerated(vec3 n, float t) {
@@ -246,7 +280,7 @@ vec3 earthSurface(vec3 n, float I, float t) {
     c = earthGenerated(n, t);
   }
   // the air at the rim
-  float side = clamp(dot(n.xy, L.xy) / max(length(n.xy), 1e-3) * 0.5 + 0.5, 0.0, 1.0);
+  float side = mix(clamp(dot(n.xy, L.xy) / max(length(n.xy), 1e-3) * 0.5 + 0.5, 0.0, 1.0), 1.0, sunFull(0.45));
   c += vec3(0.25, 0.5, 1.0) * pow(1.0 - n.z, 3.0) * 0.32 * (0.25 + 0.75 * side);
   c *= 1.0 + 0.06 * (hash12(gl_FragCoord.xy) - 0.5);
   return c * smoothstep(0.0, 0.5, I);
@@ -315,7 +349,7 @@ vec4 saturnRings(vec2 q, float S, float covGlobe) {
   float pl = dot(P, Lh);
   float d = sqrt(max(dot(P, P) - pl * pl, 0.0));
   float shade = pl < 0.0 ? smoothstep(0.96, 1.04, d) : 1.0;       // the shadow of the globe
-  vec3 c = ringColor(rho) * (0.10 + 1.15 * clamp(dot(N, Lh), 0.0, 1.0)) * mix(0.10, 1.0, shade);
+  vec3 c = ringColor(rho) * (0.10 + 1.15 * mix(clamp(dot(N, Lh), 0.0, 1.0), 0.9, sunFull(0.45))) * mix(0.10, 1.0, shade);
   return vec4(c, dens * 0.95 * (1.0 - hidden));
 }
 
@@ -349,7 +383,7 @@ vec3 halo(vec2 q, float S, int kind, float I) {
   float r = length(q);
   if (r < (1.0 - FEATHER) * S - 1.0) return vec3(0.0);       // the glow starts where the disc begins to fade out
   float d = max(r - S, 0.0) / S;
-  float side = clamp(dot(vec2(q.x, -q.y) / max(r, 1e-3), planetDir().xy / max(length(planetDir().xy), 1e-3)) * 0.5 + 0.5, 0.0, 1.0);
+  float side = mix(clamp(dot(vec2(q.x, -q.y) / max(r, 1e-3), planetDir().xy / max(length(planetDir().xy), 1e-3)) * 0.5 + 0.5, 0.0, 1.0), 1.0, sunFull(0.45));
   float w = 0.3 * exp(-d / 0.022) + 0.07 * exp(-d / 0.07);
   return vec3(0.25, 0.5, 1.0) * w * (0.2 + 0.8 * side * side) * smoothstep(0.0, 0.5, I);
 }
@@ -375,6 +409,24 @@ vec4 marsMoon(vec2 v, float S, float t, int i, bool front) {
   float k = pow(clamp((dot(n, planetDir()) + 0.05) / 1.05, 0.0, 1.0), 1.1);
   vec3 albedo = i == 0 ? vec3(0.38, 0.34, 0.30) : vec3(0.55, 0.50, 0.45);
   return vec4(albedo * (0.05 + 1.2 * k), alpha);
+}
+
+// ---- a solar eclipse: the body is dark and its outline glows, thin and bright at the rim, with a wide
+// soft corona further out that is brighter on the side of the sun, and a bright point, the diamond,
+// where the sun comes through at the rim
+vec3 corona(vec2 q, float Sk, float t) {
+  float r = length(q);
+  if (r < (1.0 - FEATHER) * Sk - 1.0) return vec3(0.0);
+  float d = max(r - Sk, 0.0) / Sk;
+  vec2 up = vec2(q.x, -q.y);                                       // y up, like the light
+  vec2 sunDir = vec2(cos(0.98 + uSun), sin(0.98 + uSun));
+  float facing = dot(up / max(r, 1e-3), sunDir) * 0.5 + 0.5;
+  float glow = 0.9 * exp(-d / 0.028) + 0.36 * exp(-d / 0.1) + 0.12 * exp(-d / 0.35);
+  vec2 rel = up - sunDir * Sk;                                     // from the diamond
+  float dd = length(rel) / Sk;
+  float diamond = exp(-dd / 0.035) + 0.3 * exp(-dd / 0.16) + 0.18 * pow(abs(cos(atan(rel.y, rel.x) * 3.0 + t * 0.05)), 18.0) * exp(-dd / 0.45);
+  vec3 warm = mix(vec3(1.0, 0.40, 0.10), vec3(1.0, 0.78, 0.46), exp(-d / 0.06));
+  return warm * glow * (0.6 + 0.4 * facing * facing) + vec3(1.0, 0.9, 0.7) * diamond * 0.9;
 }
 
 // ---- the Moon of Earth: one small grey sphere on a slanted orbit round the planet, made like the
@@ -574,13 +626,14 @@ void main() {
   if (cov > 0.0) {
     vec3 c = bodyColor(to, qM, S, I, t);
     if (swap < 1.0) c = mix(bodyColor(from, qM, S, I, t), c, swap);       // while one body turns into another, both are drawn
-    col = mix(col, c, cov);
+    col = mix(col, c * (1.0 - 0.88 * uEclipse), cov);
   }
   col += mix(halo(qM, S, from, I), halo(qM, S, to, I), swap);
+  if (uEclipse > 0.0) col += mix(corona(qM, S * bodyScale(from), t), corona(qM, S * bodyScale(to), t), swap) * uEclipse;
   float saturn = ((from == 3 ? 1.0 - swap : 0.0) + (to == 3 ? swap : 0.0)) * moonsIn;
   if (saturn > 0.0) {
     vec4 ring = saturnRings(qM, S, bodyCover(r, S * SATURN_SCALE, 3, 1.0));
-    col = mix(col, ring.rgb, ring.a * saturn);
+    col = mix(col, ring.rgb * (1.0 - 0.88 * uEclipse), ring.a * saturn);
   }
   if (luna > 0.0) {
     vec4 m = earthMoon(qM / S, S, t, true);
@@ -613,6 +666,11 @@ function layout(w, h) {
   return { x: 0.725 * w, y: 0.409 * h, R, narrow };
 }
 
+function checkSunMode(mode) {
+  if (!SUN_MODES.includes(mode)) throw new Error(`Unknown sun mode "${mode}", expected one of ${SUN_MODES.join(', ')}.`);
+  return mode;
+}
+
 function bodyIndex(id) {
   const index = PLANETS.indexOf(id);
   if (index < 0) throw new Error(`Unknown planet "${id}", expected one of ${PLANETS.join(', ')}.`);
@@ -622,12 +680,17 @@ function bodyIndex(id) {
 // Returns false when the device has no WebGL2; shader or link errors throw.
 // `solid` selects the elements of the page that take a click themselves (links, text): a click on
 // them does not drop a ring.
-export function createScene(canvas, { reduceMotion, solid = 'a, button', planet = 'moon' }) {
+export function createScene(canvas, { reduceMotion, solid = 'a, button', planet = 'moon', sunMode = SUN_MODES[0] }) {
   const gl = canvas.getContext('webgl2', { alpha: false, antialias: false });
   if (!gl) return false;
 
   const host = canvas.parentElement;
   const look = { x: 0, y: 0, tx: 0, ty: 0 };
+  // turn, lift: how far the sun is turned and lifted from its usual place; mode: what it follows;
+  // mouse, click: where the mouse was and where it last clicked (null before); tilt: 1 while the sun
+  // follows nothing, then the pointer turns the light a little, quickly (this fades in and out)
+  const sun = { turn: 0, lift: 0, mode: checkSunMode(sunMode), tilt: sunMode === 'off' ? 1 : 0, mouse: null, click: null };
+  const eclipse = { on: false, level: 0, until: 0 };     // a click on the planet darkens it for a while
   let res = null;                // GL resources, rebuilt after a context loss
   let geo = null;
   let ratio = 1;
@@ -655,7 +718,7 @@ export function createScene(canvas, { reduceMotion, solid = 'a, button', planet 
     gl.linkProgram(p);
     if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(`Program link failed: ${gl.getProgramInfoLog(p)}`);
     const u = {};
-    const names = ['uRes', 'uMoon', 'uLook', 'uClock', 'uTap', 'uPlanet', ...PHOTOS.flatMap(({ uniform }) => [uniform, `${uniform}On`])];
+    const names = ['uRes', 'uMoon', 'uLook', 'uSun', 'uSunLift', 'uEclipse', 'uClock', 'uTap', 'uPlanet', ...PHOTOS.flatMap(({ uniform }) => [uniform, `${uniform}On`])];
     for (const n of names) u[n] = gl.getUniformLocation(p, n);
     res = { p, u, vao: gl.createVertexArray(), textures: PHOTOS.map(() => gl.createTexture()) };
     gl.bindVertexArray(res.vao);
@@ -710,6 +773,10 @@ export function createScene(canvas, { reduceMotion, solid = 'a, button', planet 
     gl.uniform2f(res.u.uRes, canvas.width, canvas.height);
     gl.uniform3f(res.u.uMoon, geo.x * ratio, geo.y * ratio, geo.R * ratio);
     gl.uniform2f(res.u.uLook, look.x, look.y);
+    gl.uniform1f(res.u.uSun, sun.turn - sun.tilt * 0.12 * look.x);
+    const dark = smooth01(eclipse.level);
+    gl.uniform1f(res.u.uSunLift, sun.lift * (1 - dark) + ECLIPSE_LIFT * dark);
+    gl.uniform1f(res.u.uEclipse, dark);
     gl.uniform3f(res.u.uClock, time, intro, geo.narrow ? 1 : 0);
     taps.forEach((t, i) => {
       const alive = tapAlive(t);
@@ -738,10 +805,31 @@ export function createScene(canvas, { reduceMotion, solid = 'a, button', planet 
       sky.mix = Math.min(1, sky.mix + dt / SWAP_SECONDS);
       if (sky.mix === 1 && sky.queued >= 0) swap(sky.queued);
     }
-    // the pointer only tilts the light and shifts the layers; it follows slowly
+    // the pointer shifts the layers a little; it follows slowly
     const k = 1 - Math.exp(-dt / 1.3);
     look.x += (look.tx - look.x) * k;
     look.y += (look.ty - look.y) * k;
+    // the sun chases the side of the planet the mouse is on (or the last click was), and the height that
+    // goes with its distance; close to the planet's centre there is no side
+    let turnTo = 0;
+    let liftTo = 0;
+    const aimAt = sun.mode === 'mouse' ? sun.mouse : sun.mode === 'click' ? sun.click : null;
+    if (aimAt && geo) {
+      const dx = aimAt.x - geo.x;
+      const dy = geo.y - aimAt.y;
+      const d = Math.hypot(dx, dy) / geo.R;
+      liftTo = liftFor(d);
+      turnTo = d < 0.25 ? sun.turn : wrap(Math.atan2(dy, dx) - SUN_AZIMUTH);
+    }
+    const chase = 1 - Math.exp(-dt / SUN_SECONDS);
+    const turnReach = SUN_SPEED * dt;
+    const liftReach = SUN_LIFT_SPEED * dt;
+    sun.turn = wrap(sun.turn + clamp(wrap(turnTo - sun.turn) * chase, -turnReach, turnReach));
+    sun.lift += clamp((liftTo - sun.lift) * chase, -liftReach, liftReach);
+    sun.tilt += ((sun.mode === 'off' ? 1 : 0) - sun.tilt) * (1 - Math.exp(-dt));
+    // an eclipse comes in slowly, stays for a while and goes out slower still
+    if (eclipse.on && time > eclipse.until) eclipse.on = false;
+    eclipse.level = clamp(eclipse.level + (eclipse.on ? dt / 3.5 : -dt / 5), 0, 1);
     draw();
   }
 
@@ -755,6 +843,7 @@ export function createScene(canvas, { reduceMotion, solid = 'a, button', planet 
 
   function aim(e) {
     const rect = canvas.getBoundingClientRect();
+    sun.mouse = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     look.tx = Math.max(-1, Math.min(1, ((e.clientX - rect.left) / rect.width) * 2 - 1));
     look.ty = Math.max(-1, Math.min(1, ((e.clientY - rect.top) / rect.height) * 2 - 1));
   }
@@ -764,8 +853,15 @@ export function createScene(canvas, { reduceMotion, solid = 'a, button', planet 
   function drop(e) {
     if (!geo || intro < 0.6 || e.target.closest(solid)) return;
     const rect = canvas.getBoundingClientRect();
+    sun.click = { x: e.clientX - rect.left, y: e.clientY - rect.top };      // where the sun goes when it follows the last click
     const x = (e.clientX - rect.left - geo.x) / geo.R;
     const y = (e.clientY - rect.top - geo.y) / geo.R;
+    // a click on the planet is an eclipse (and another click ends it)
+    if (Math.hypot(x, y) <= BODY_RADIUS[sky.to]) {
+      eclipse.on = !eclipse.on;
+      eclipse.until = time + ECLIPSE_SECONDS;
+      return;
+    }
     if (y < TAP_WATER) return;
     const alive = taps.filter(tapAlive);
     if (alive.length >= 2) return;
@@ -791,10 +887,18 @@ export function createScene(canvas, { reduceMotion, solid = 'a, button', planet 
   if (!reduceMotion) {
     host.addEventListener('pointermove', (e) => { if (e.pointerType !== 'touch') aim(e); }, { passive: true });
     host.addEventListener('pointerleave', () => { look.tx = 0; look.ty = 0; }, { passive: true });
+    // a touch has no hover: for the sun it counts as the mouse where the finger last was
+    host.addEventListener('pointerdown', (e) => {
+      if (e.pointerType !== 'touch') return;
+      const rect = canvas.getBoundingClientRect();
+      sun.mouse = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    }, { passive: true });
     host.addEventListener('click', drop);
   }
   update();
   return {
+    // What the sun follows: 'mouse', 'click' (the last click) or 'off'; it never jumps, it turns slowly.
+    setSunMode(mode) { sun.mode = checkSunMode(mode); },
     // Turns the body in the sky into `id` ('moon', 'mars' or 'earth'): at once when nothing moves
     // (reduced motion, hidden page), otherwise as a slow cross-fade; a change asked for while one
     // is under way follows it.
