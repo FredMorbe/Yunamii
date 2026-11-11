@@ -12,15 +12,16 @@ Static site for [yunamii.com](https://yunamii.com). Plain HTML, CSS and JavaScri
 | `site/assets/branches/` | Static cropped WebP cherry branches at the window edge (made from `hero/sprites/ast*.png`, which the page no longer loads; `ast3` is unused) |
 | `site/assets/products/` | Screenshots for the showcase (Cubamii, Katsumii, Media Center) |
 | `site/assets/fonts/` | Self-hosted Fraunces (display) and DM Sans (text), latin subset |
-| `concepts/` | Design concepts (not deployed). Run with `python tools/dev-server.py concepts 5176`; `shared/switcher.js` adds a bar to switch between them |
+| `concepts/` | Design concepts, published under `/concepts/` while they are under review (the workflow copies them next to the site). `shared/switcher.js` adds a bar to switch between the main page and the concepts; `site/index.html` loads it too. Run with `python tools/dev-server.py concepts 5176`, or open them through the site's dev server, which serves them under `/concepts/` |
 | `concepts/ocean-planet/` | Concept "Ocean Planet": WebGL2 sea at sunrise (`js/scene/`), orbit map of the products, canvas globe, light/dark |
 | `concepts/ink-atom/` | Concept "Ink Atom" (hero only): the headline's full stop is the nucleus of a hydrogen atom, its electron cloud is sampled in `js/orbital.js` and drawn in `js/atom.js` |
 | `concepts/gravity-lens/` | Concept "Gravity Lens" (hero only): a black hole bends the coordinate grid behind it, one fragment shader with the lens equation of a point mass (`js/lens.js`) |
 | `concepts/shiki-bonsai/` | Concept "Shiki Bonsai" (hero only): a bonsai grown from a seed number (`js/grow.js`) and drawn in 3D with seasons, wind and falling leaves (`js/tree.js`) |
 | `concepts/mesh-tide/` | Concept "Mesh Tide" (hero only): a lattice of 25 600 nodes on moving water, Gerstner waves and all drawing in one WebGL2 vertex shader (`js/tide.js`); the pointer stirs the water, a press drops a stone |
+| `concepts/orbit-mesh/` | Concept "Orbit Mesh" (hero only): the same net, bent by a planet and two orbiting moons (gravity wells whose sum is evaluated in the vertex shader, `js/orbit.js`); the bodies are shaded sprites that sit in their wells and hide the lines behind them |
 | `prototype/`, `prototype-code/` | Earlier hero experiments (not deployed) |
 | `reference/` | Approved design mockup |
-| `tools/dev-server.py` | Local static server without caching |
+| `tools/dev-server.py` | Local static server without caching; also serves `concepts/` under `/concepts/` (the `PORT` environment variable overrides the port) |
 
 ## Run locally
 
@@ -32,12 +33,13 @@ Then open http://localhost:5175.
 
 ## Deploy
 
-`.github/workflows/pages.yml` publishes `site/` to GitHub Pages on every push to `main`.
+`.github/workflows/pages.yml` publishes `site/` to GitHub Pages on every push to `main`, with `concepts/` copied to `/concepts/` next to it.
 One-time setup: repository Settings → Pages → Source: **GitHub Actions**.
 The custom domain (DNS at Cloudflare, `CNAME` file) is not set up yet.
 
 ## Before going live
 
+- Take the design concepts offline: remove the "Assemble the site" step of `.github/workflows/pages.yml` (publish `site` again) and the `concepts/shared/switcher.js` script at the end of `site/index.html`.
 - Fill in the yellow placeholders in `site/impressum.html` and `site/datenschutz.html`.
 - Replace the contact link in `site/index.html` (marked `TODO`) with the public contact address.
 - Gravity Merge and Yunamii Language are shown as "Coming soon" concepts; link them once they exist.

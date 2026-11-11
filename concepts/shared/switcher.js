@@ -1,13 +1,16 @@
-// Design switcher for the concept review: a small bar at the foot of every concept page that
-// leads to the other designs (also with the number keys). Not part of the final site.
-// It expects the concepts as sibling folders, served from their common parent (concepts/).
+// Design switcher for the concept review: a small bar at the foot of the main page and of every
+// concept page that leads to all the designs (also with the number keys, 0 is the main page).
+// Not part of the final site. It finds the concepts from its own location (concepts/shared/), so it
+// works wherever the page that loads it lives, as long as the concepts are served as concepts/.
 
 const DESIGNS = [
+  { id: '', name: 'Hauptseite' },                 // the landing page, one level above concepts/
   { id: 'ocean-planet', name: 'Ocean Planet' },
   { id: 'ink-atom', name: 'Ink Atom' },
   { id: 'gravity-lens', name: 'Gravity Lens' },
   { id: 'shiki-bonsai', name: 'Shiki Bonsai' },
   { id: 'mesh-tide', name: 'Mesh Tide' },
+  { id: 'orbit-mesh', name: 'Orbit Mesh' },
 ];
 
 const STYLE = `
@@ -24,13 +27,19 @@ const STYLE = `
 [data-theme="light"] .design-switch { border-color: rgba(15, 23, 42, .16); background: rgba(255, 255, 255, .8); color: #44536a; box-shadow: 0 12px 32px -18px rgba(15, 23, 42, .4); }
 [data-theme="light"] .design-switch a:hover { background: rgba(15, 23, 42, .07); color: #0f172a; }
 [data-theme="light"] .design-switch a[aria-current] { background: #0f172a; color: #f8fafc; }
-@media (max-width: 620px) {
+@media (max-width: 1120px) {
   .design-switch span, .design-switch a:not([aria-current]) i { display: none; }
+}
+@media (max-width: 620px) {
+  .design-switch a i { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .design-switch a { transition: none; } }
 `;
 
-const current = DESIGNS.findIndex((design) => location.pathname.includes(`/${design.id}/`));
+const CONCEPTS = new URL('../', import.meta.url);
+const HOME = new URL('../', CONCEPTS);
+const found = DESIGNS.findIndex((design) => design.id && location.pathname.includes(`/${design.id}/`));
+const current = found < 0 ? 0 : found;
 
 const style = document.createElement('style');
 style.textContent = STYLE;
@@ -44,11 +53,11 @@ label.textContent = 'Design';
 nav.append(label);
 const links = DESIGNS.map((design, i) => {
   const link = document.createElement('a');
-  link.href = `../${design.id}/`;
-  link.title = `Taste ${i + 1}`;
+  link.href = design.id ? new URL(`${design.id}/`, CONCEPTS).href : HOME.href;
+  link.title = `${design.name} (Taste ${i})`;
   if (i === current) link.setAttribute('aria-current', 'page');
   const number = document.createElement('b');
-  number.textContent = String(i + 1).padStart(2, '0');
+  number.textContent = String(i).padStart(2, '0');
   const name = document.createElement('i');
   name.style.fontStyle = 'normal';
   name.textContent = design.name;
@@ -61,6 +70,7 @@ document.body.append(nav);
 // number keys jump to a design, unless someone is typing
 addEventListener('keydown', (e) => {
   if (e.ctrlKey || e.metaKey || e.altKey || e.target.closest?.('input, textarea, select, [contenteditable]')) return;
-  const index = Number(e.key) - 1;
-  if (Number.isInteger(index) && links[index] && index !== current) links[index].click();
+  if (!/^[0-9]$/.test(e.key)) return;
+  const index = Number(e.key);
+  if (links[index] && index !== current) links[index].click();
 });
