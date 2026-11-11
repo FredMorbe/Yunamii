@@ -7,8 +7,6 @@ const DESIGNS = [
   { id: '', name: 'Hauptseite' },                 // the landing page, one level above concepts/
   { id: 'ocean-planet', name: 'Ocean Planet' },
   { id: 'ink-atom', name: 'Ink Atom' },
-  { id: 'gravity-lens', name: 'Gravity Lens' },
-  { id: 'shiki-bonsai', name: 'Shiki Bonsai' },
   { id: 'mesh-tide', name: 'Mesh Tide' },
   { id: 'orbit-mesh', name: 'Orbit Mesh' },
   { id: 'moon-torii', name: 'Moon Torii' },

@@ -15,15 +15,15 @@ const TAP_SLOTS = 3;             // rings from clicks that can exist at once (on
 const TAP_LIFE = 11;             // seconds a click ring lives
 const TAP_FADE = 1.2;            // seconds an older click ring needs to give way when a new one comes
 const TAP_WATER = 1.25;          // the water starts this many moon radii below the moon's centre
-export const PLANETS = ['moon', 'mars', 'earth'];   // the order is the number the shader knows them by
+export const PLANETS = ['moon', 'mars', 'earth', 'saturn'];   // the order is the number the shader knows them by
 const SWAP_SECONDS = 2;          // how long one body takes to turn into another
-// the photos laid on the planets (a photo shows one side, so these planets do not turn); the index
-// is the texture unit, and the names give the uniforms uMars, uMarsOn, uEarth, uEarthOn
+// the photos laid on the moon, Mars and Earth (a photo shows one side, so these bodies do not turn);
+// the index is the texture unit, and each photo has a sampler and a flag for the shader
 const PHOTOS = [
-  { name: 'mars', url: new URL('../assets/mars.webp', import.meta.url) },
-  { name: 'earth', url: new URL('../assets/earth.webp', import.meta.url) },
+  { name: 'mars', uniform: 'uMars', url: new URL('../assets/mars.webp', import.meta.url) },
+  { name: 'earth', uniform: 'uEarth', url: new URL('../assets/earth.webp', import.meta.url) },
+  { name: 'moon', uniform: 'uMoonPhoto', url: new URL('../assets/moon.webp', import.meta.url) },
 ];
-const photoUniform = (name) => `u${name[0].toUpperCase()}${name.slice(1)}`;
 
 const VS = `#version 300 es
 void main() {
@@ -41,6 +41,8 @@ uniform sampler2D uMars; // the photo of Mars, a disc cropped to a square
 uniform float uMarsOn;   // 1 once the photo is loaded
 uniform sampler2D uEarth;
 uniform float uEarthOn;
+uniform sampler2D uMoonPhoto;   // the photo of the moon
+uniform float uMoonPhotoOn;
 uniform vec3 uPlanet;    // the body shown before (0 moon, 1 mars, 2 earth), the one shown after, progress 0..1
 uniform vec4 uTap[${TAP_SLOTS}];   // rings from clicks: x, y (moon radii, in the water layer), progress 0..1, strength
 out vec4 outColor;
@@ -123,8 +125,16 @@ vec3 moonSurface(vec3 n, float I) {
   float t2 = max(dot(n, direction(2.14 + tilt, -0.19)) + 0.21, 0.0) / 1.21;
   float lit = 216.0 * pow(t1, 2.51) + 105.0 * pow(t2, 3.64);
 
-  vec2 uv = vec2(atan(n.x, n.z), asin(clamp(n.y, -1.0, 1.0)));
-  float tex = (fbm(uv * 1.7 + 3.1) - 0.5) * 0.3 + (craters(uv * 2.4) * 0.6 + craters(uv * 5.5 + 9.0) * 0.4) * 0.2;
+  // The surface: the photo of the moon says how much lighter or darker each spot is than the average
+  // of the photo (seas, craters, rays); this scales the light. Until the photo is there, noise does it.
+  float tex;
+  if (uMoonPhotoOn > 0.5) {
+    vec3 photo = texture(uMoonPhoto, vec2(0.5 + 0.475 * n.x, 0.5 - 0.475 * n.y)).rgb;
+    tex = clamp(dot(photo, vec3(0.299, 0.587, 0.114)) / 0.59 - 1.0, -0.6, 0.7);
+  } else {
+    vec2 uv = vec2(atan(n.x, n.z), asin(clamp(n.y, -1.0, 1.0)));
+    tex = (fbm(uv * 1.7 + 3.1) - 0.5) * 0.3 + (craters(uv * 2.4) * 0.6 + craters(uv * 5.5 + 9.0) * 0.4) * 0.2;
+  }
   float grain = hash12(gl_FragCoord.xy) - 0.5;
   lit *= (1.0 + tex) * (1.0 + grain * 0.16) * smoothstep(0.0, 0.5, I);
   return moonRamp(20.0 + lit);
@@ -242,10 +252,87 @@ vec3 earthSurface(vec3 n, float I, float t) {
   return c * smoothstep(0.0, 0.5, I);
 }
 
+// ---- Saturn: a globe of soft bands and its rings, all made of formulas. The globe is drawn smaller
+// than the other bodies (SATURN_SCALE of the page radius) so that the rings have room; sizes in the
+// functions below are in globe radii. The rings lie in a plane seen from 24 degrees above it and
+// turned a little on the screen; they cast a shadow on the globe, and the globe one on them.
+const float SATURN_SCALE = 0.72;
+vec3 ringNormal() {
+  const float TURN = -0.28;                       // how the rings are turned on the screen
+  return vec3(-sin(TURN) * 0.9135, cos(TURN) * 0.9135, 0.4067);
+}
+
+// how much of the light the rings stop at distance rho from Saturn: the faint C ring, the dense B
+// ring, the dark Cassini division, the A ring with its narrow Encke gap, and a thin F ring
+float ringDensity(float rho, float w) {
+  float c = smoothstep(1.24 - w, 1.29 + w, rho) * (1.0 - smoothstep(1.52 - w, 1.54 + w, rho)) * 0.2;
+  float b = smoothstep(1.52 - w, 1.54 + w, rho) * (1.0 - smoothstep(1.94 - w, 1.96 + w, rho)) * (0.78 + 0.3 * (vnoise(vec2(rho * 70.0, 3.0)) - 0.5));
+  float a = smoothstep(2.03 - w, 2.05 + w, rho) * (1.0 - smoothstep(2.27 - w, 2.27 + w, rho)) * 0.62
+          * (1.0 - 0.9 * (1.0 - smoothstep(0.0, 0.012 + w, abs(rho - 2.215))));
+  float f = (1.0 - smoothstep(0.0, 0.008 + w, abs(rho - 2.32))) * 0.14;
+  return clamp(c + b + a + f, 0.0, 1.0);
+}
+vec3 ringColor(float rho) {
+  vec3 c = vec3(0.42, 0.36, 0.30);                                          // C ring
+  c = mix(c, vec3(0.90, 0.80, 0.62), smoothstep(1.48, 1.58, rho));          // B ring
+  return mix(c, vec3(0.74, 0.66, 0.54), smoothstep(1.97, 2.06, rho));       // A ring
+}
+
+vec3 saturnSurface(vec3 n, float I, float t) {
+  vec3 Lh = planetDir();
+  vec3 N = ringNormal();
+  float k = planetLight(n);
+  vec3 p = rotY(n, t * 0.012);
+  float lat = asin(clamp(p.y, -1.0, 1.0));
+  float warp = fbm3(vec3(p.x * 2.2, p.y * 7.0, p.z * 2.2)) - 0.5;                  // the bands wander a little
+  float band = 0.5 + 0.26 * sin(lat * 24.0 + warp * 6.0) + 0.2 * sin(lat * 9.0 + 1.3 + warp * 3.0);
+  vec3 cream = vec3(0.93, 0.85, 0.66), sand = vec3(0.76, 0.62, 0.43), brown = vec3(0.60, 0.48, 0.34);
+  vec3 a = mix(sand, cream, smoothstep(0.25, 0.8, band));
+  a = mix(a, brown, (1.0 - smoothstep(0.1, 0.45, band)) * 0.5);
+  a = mix(a, vec3(0.58, 0.55, 0.47), smoothstep(1.05, 1.35, abs(lat)) * 0.55);      // greyer towards the poles
+  a *= 0.93 + 0.14 * fbm3(p * vec3(6.0, 16.0, 6.0));
+  // the shadow of the rings: follow the ray to the light until it meets the plane of the rings
+  float tau = -dot(n, N) / dot(Lh, N);
+  float shade = 1.0;
+  if (tau > 0.0) shade = 1.0 - 0.85 * ringDensity(length(n + tau * Lh), 0.01);
+  vec3 c = a * (0.03 + 1.25 * k * shade);
+  c *= 1.0 + 0.08 * (hash12(gl_FragCoord.xy) - 0.5);
+  return c * smoothstep(0.0, 0.5, I);
+}
+
+// the rings at this pixel: colour and opacity. covGlobe is how much the globe covers the pixel; the
+// part of the rings behind the globe is hidden by it, the part in front crosses it.
+vec4 saturnRings(vec2 q, float S, float covGlobe) {
+  vec2 s = vec2(q.x, -q.y) / (S * SATURN_SCALE);
+  vec3 N = ringNormal();
+  float zr = -(s.x * N.x + s.y * N.y) / N.z;       // where the line of sight meets the plane of the rings
+  vec3 P = vec3(s, zr);
+  float rho = length(P);
+  float dens = ringDensity(rho, max(fwidth(rho), 0.003));
+  float zs = sqrt(max(1.0 - dot(s, s), 0.0));
+  float hidden = zr < zs ? covGlobe : 0.0;
+  vec3 Lh = planetDir();
+  float pl = dot(P, Lh);
+  float d = sqrt(max(dot(P, P) - pl * pl, 0.0));
+  float shade = pl < 0.0 ? smoothstep(0.96, 1.04, d) : 1.0;       // the shadow of the globe
+  vec3 c = ringColor(rho) * (0.10 + 1.15 * clamp(dot(N, Lh), 0.0, 1.0)) * mix(0.10, 1.0, shade);
+  return vec4(c, dens * 0.95 * (1.0 - hidden));
+}
+
+float bodyScale(int kind) { return kind == 3 ? SATURN_SCALE : 1.0; }
+
 vec3 body(int kind, vec3 n, float I, float t) {
   if (kind == 1) return marsSurface(n, I, t);
   if (kind == 2) return earthSurface(n, I, t);
+  if (kind == 3) return saturnSurface(n, I, t);
   return moonSurface(n, I);
+}
+
+// the colour of one body at this pixel (q in pixels from the centre of the planet, S the page radius)
+vec3 bodyColor(int kind, vec2 q, float S, float I, float t) {
+  float Sk = S * bodyScale(kind);
+  vec3 n = vec3(q.x, -q.y, sqrt(max(Sk * Sk - dot(q, q), 0.0))) / Sk;
+  return body(kind, n, I, t);
 }
 
 // how much of the disc is there at radius r: the moon has a crisp edge, a planet a fuzzy one that
@@ -483,14 +570,18 @@ void main() {
   }
 
   float r = length(qM);
-  float cov = mix(bodyCover(r, S, from, I), bodyCover(r, S, to, I), swap);
+  float cov = mix(bodyCover(r, S * bodyScale(from), from, I), bodyCover(r, S * bodyScale(to), to, I), swap);
   if (cov > 0.0) {
-    vec3 n = vec3(qM.x, -qM.y, sqrt(max(S * S - r * r, 0.0))) / S;
-    vec3 c = body(to, n, I, t);
-    if (swap < 1.0) c = mix(body(from, n, I, t), c, swap);       // while one body turns into another, both are drawn
+    vec3 c = bodyColor(to, qM, S, I, t);
+    if (swap < 1.0) c = mix(bodyColor(from, qM, S, I, t), c, swap);       // while one body turns into another, both are drawn
     col = mix(col, c, cov);
   }
   col += mix(halo(qM, S, from, I), halo(qM, S, to, I), swap);
+  float saturn = ((from == 3 ? 1.0 - swap : 0.0) + (to == 3 ? swap : 0.0)) * moonsIn;
+  if (saturn > 0.0) {
+    vec4 ring = saturnRings(qM, S, bodyCover(r, S * SATURN_SCALE, 3, 1.0));
+    col = mix(col, ring.rgb, ring.a * saturn);
+  }
   if (luna > 0.0) {
     vec4 m = earthMoon(qM / S, S, t, true);
     col = mix(col, m.rgb, m.a * luna);
@@ -564,7 +655,7 @@ export function createScene(canvas, { reduceMotion, solid = 'a, button', planet 
     gl.linkProgram(p);
     if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(`Program link failed: ${gl.getProgramInfoLog(p)}`);
     const u = {};
-    const names = ['uRes', 'uMoon', 'uLook', 'uClock', 'uTap', 'uPlanet', ...PHOTOS.flatMap(({ name }) => [photoUniform(name), `${photoUniform(name)}On`])];
+    const names = ['uRes', 'uMoon', 'uLook', 'uClock', 'uTap', 'uPlanet', ...PHOTOS.flatMap(({ uniform }) => [uniform, `${uniform}On`])];
     for (const n of names) u[n] = gl.getUniformLocation(p, n);
     res = { p, u, vao: gl.createVertexArray(), textures: PHOTOS.map(() => gl.createTexture()) };
     gl.bindVertexArray(res.vao);
@@ -627,9 +718,9 @@ export function createScene(canvas, { reduceMotion, solid = 'a, button', planet 
     });
     gl.uniform4fv(res.u.uTap, tapData);
     gl.uniform3f(res.u.uPlanet, sky.from, sky.to, sky.mix);
-    PHOTOS.forEach(({ name }, i) => {
-      gl.uniform1i(res.u[photoUniform(name)], i);
-      gl.uniform1f(res.u[`${photoUniform(name)}On`], photos[i] ? 1 : 0);
+    PHOTOS.forEach(({ uniform }, i) => {
+      gl.uniform1i(res.u[uniform], i);
+      gl.uniform1f(res.u[`${uniform}On`], photos[i] ? 1 : 0);
     });
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }

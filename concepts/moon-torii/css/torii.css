@@ -90,6 +90,8 @@ button { font: inherit; }
 .planet-dot[data-planet="moon"] { background: radial-gradient(circle at 68% 26%, #efdcc2 0, #8a7b6f 45%, #2a2830 100%); }
 .planet-dot[data-planet="mars"] { background: radial-gradient(circle at 68% 26%, #f2b088 0, #b4552f 48%, #3a1c14 100%); }
 .planet-dot[data-planet="earth"] { background: radial-gradient(circle at 34% 42%, #3f9a55 0 13%, transparent 14%), radial-gradient(circle at 58% 64%, #4a9a58 0 11%, transparent 12%), radial-gradient(circle at 68% 26%, #9fd4ff 0, #2a62b0 50%, #0b1c3a 100%); }
+.planet-dot[data-planet="saturn"] { position: relative; background: radial-gradient(circle at 68% 26%, #f3e2b4 0, #b99b6c 52%, #2f2418 100%); }
+.planet-dot[data-planet="saturn"]::after { content: ""; position: absolute; left: 50%; top: 50%; width: 31px; height: 10px; border: 1.5px solid rgba(236, 214, 168, .85); border-radius: 50%; translate: -50% -50%; rotate: -16deg; }
 .planet-list { position: absolute; right: 0; bottom: calc(100% + 8px); min-width: 100%; margin: 0; padding: 6px; list-style: none; border: 1px solid rgba(227, 191, 149, .4); border-radius: 18px; background: rgba(9, 9, 17, .92); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 18px 40px -18px rgba(0, 0, 0, .8); outline: none; }
 .planet-list:not([hidden]) { animation: pick-in .35s var(--ease); }
 .planet-list li { display: flex; align-items: center; gap: 10px; padding: 8px 14px 8px 8px; border-radius: 12px; color: var(--ink-2); font-size: .9rem; letter-spacing: .04em; cursor: pointer; }
