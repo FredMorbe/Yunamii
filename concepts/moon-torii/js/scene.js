@@ -29,8 +29,6 @@ const SUN_LIFT_SPEED = 0.16;     // the fastest it rises or sinks, radians per s
 const SUN_AZIMUTH = 0.98;        // where the light comes from when the sun is not turned: the upper right
 const SUN_FRONT = 1.64;          // lifted this much the light comes from the front: no shadow
 const SUN_BEHIND = -0.65;        // far from the planet the sun is behind it
-const ECLIPSE_LIFT = -3.2;       // in an eclipse the sun is exactly behind the body
-const ECLIPSE_SECONDS = 12;      // how long an eclipse lasts before it fades out
 const BODY_RADIUS = [1, 1, 1, 0.72];     // the radius of each body in radii of the page's planet (Saturn's globe is smaller)
 const wrap = (angle) => Math.atan2(Math.sin(angle), Math.cos(angle));
 const clamp = (x, low, high) => Math.min(high, Math.max(low, x));
@@ -372,8 +370,11 @@ vec3 bodyColor(int kind, vec2 q, float S, float I, float t) {
 // how much of the disc is there at radius r: the moon has a crisp edge, a planet a fuzzy one that
 // fades out over 1.4 % of its radius (2 to 3 pixels on a desktop screen)
 const float FEATHER = 0.014;
+// in an eclipse the dark disc stands against a bright rim, where a crisp edge shows its steps: all
+// bodies get a wider fade then
+const float ECLIPSE_FEATHER = 0.03;
 float bodyCover(float r, float S, int kind, float I) {
-  float soft = kind == 0 ? 0.0 : FEATHER * S;
+  float soft = mix(kind == 0 ? 0.0 : FEATHER * S, ECLIPSE_FEATHER * S, uEclipse);
   return (1.0 - smoothstep(S - 0.8 - soft, S + 0.4, r)) * smoothstep(0.0, 0.3, I);
 }
 
@@ -411,12 +412,15 @@ vec4 marsMoon(vec2 v, float S, float t, int i, bool front) {
   return vec4(albedo * (0.05 + 1.2 * k), alpha);
 }
 
-// ---- a solar eclipse: the body is dark and its outline glows, thin and bright at the rim, with a wide
+// ---- a solar eclipse: the body keeps its picture and its light but is dimmed to ECLIPSE_LEFT of its
+// brightness, and its outline glows, thin and bright at the rim, with a wide
 // soft corona further out that is brighter on the side of the sun, and a bright point, the diamond,
 // where the sun comes through at the rim
+const float ECLIPSE_LEFT = 0.05;      // how much of its brightness a body keeps in an eclipse
 vec3 corona(vec2 q, float Sk, float t) {
   float r = length(q);
-  if (r < (1.0 - FEATHER) * Sk - 1.0) return vec3(0.0);
+  if (r < (1.0 - ECLIPSE_FEATHER) * Sk) return vec3(0.0);
+  float rim = smoothstep((1.0 - ECLIPSE_FEATHER) * Sk, Sk, r);         // the glow fades in over the edge of the disc
   float d = max(r - Sk, 0.0) / Sk;
   vec2 up = vec2(q.x, -q.y);                                       // y up, like the light
   vec2 sunDir = vec2(cos(0.98 + uSun), sin(0.98 + uSun));
@@ -426,7 +430,7 @@ vec3 corona(vec2 q, float Sk, float t) {
   float dd = length(rel) / Sk;
   float diamond = exp(-dd / 0.035) + 0.3 * exp(-dd / 0.16) + 0.18 * pow(abs(cos(atan(rel.y, rel.x) * 3.0 + t * 0.05)), 18.0) * exp(-dd / 0.45);
   vec3 warm = mix(vec3(1.0, 0.40, 0.10), vec3(1.0, 0.78, 0.46), exp(-d / 0.06));
-  return warm * glow * (0.6 + 0.4 * facing * facing) + vec3(1.0, 0.9, 0.7) * diamond * 0.9;
+  return (warm * glow * (0.6 + 0.4 * facing * facing) + vec3(1.0, 0.9, 0.7) * diamond * 0.9) * rim;
 }
 
 // ---- the Moon of Earth: one small grey sphere on a slanted orbit round the planet, made like the
@@ -626,14 +630,14 @@ void main() {
   if (cov > 0.0) {
     vec3 c = bodyColor(to, qM, S, I, t);
     if (swap < 1.0) c = mix(bodyColor(from, qM, S, I, t), c, swap);       // while one body turns into another, both are drawn
-    col = mix(col, c * (1.0 - 0.88 * uEclipse), cov);
+    col = mix(col, c * mix(1.0, ECLIPSE_LEFT, uEclipse), cov);
   }
-  col += mix(halo(qM, S, from, I), halo(qM, S, to, I), swap);
+  col += mix(halo(qM, S, from, I), halo(qM, S, to, I), swap) * (1.0 - uEclipse);       // the corona takes the place of the glow of Earth's air
   if (uEclipse > 0.0) col += mix(corona(qM, S * bodyScale(from), t), corona(qM, S * bodyScale(to), t), swap) * uEclipse;
   float saturn = ((from == 3 ? 1.0 - swap : 0.0) + (to == 3 ? swap : 0.0)) * moonsIn;
   if (saturn > 0.0) {
     vec4 ring = saturnRings(qM, S, bodyCover(r, S * SATURN_SCALE, 3, 1.0));
-    col = mix(col, ring.rgb * (1.0 - 0.88 * uEclipse), ring.a * saturn);
+    col = mix(col, ring.rgb * mix(1.0, ECLIPSE_LEFT, uEclipse), ring.a * saturn);
   }
   if (luna > 0.0) {
     vec4 m = earthMoon(qM / S, S, t, true);
@@ -690,7 +694,7 @@ export function createScene(canvas, { reduceMotion, solid = 'a, button', planet 
   // mouse, click: where the mouse was and where it last clicked (null before); tilt: 1 while the sun
   // follows nothing, then the pointer turns the light a little, quickly (this fades in and out)
   const sun = { turn: 0, lift: 0, mode: checkSunMode(sunMode), tilt: sunMode === 'off' ? 1 : 0, mouse: null, click: null };
-  const eclipse = { on: false, level: 0, until: 0 };     // a click on the planet darkens it for a while
+  const eclipse = { on: false, level: 0 };     // a click on the planet darkens it, the next click ends that; the sun stands still meanwhile
   let res = null;                // GL resources, rebuilt after a context loss
   let geo = null;
   let ratio = 1;
@@ -774,9 +778,8 @@ export function createScene(canvas, { reduceMotion, solid = 'a, button', planet 
     gl.uniform3f(res.u.uMoon, geo.x * ratio, geo.y * ratio, geo.R * ratio);
     gl.uniform2f(res.u.uLook, look.x, look.y);
     gl.uniform1f(res.u.uSun, sun.turn - sun.tilt * 0.12 * look.x);
-    const dark = smooth01(eclipse.level);
-    gl.uniform1f(res.u.uSunLift, sun.lift * (1 - dark) + ECLIPSE_LIFT * dark);
-    gl.uniform1f(res.u.uEclipse, dark);
+    gl.uniform1f(res.u.uSunLift, sun.lift);
+    gl.uniform1f(res.u.uEclipse, smooth01(eclipse.level));
     gl.uniform3f(res.u.uClock, time, intro, geo.narrow ? 1 : 0);
     taps.forEach((t, i) => {
       const alive = tapAlive(t);
@@ -821,14 +824,15 @@ export function createScene(canvas, { reduceMotion, solid = 'a, button', planet 
       liftTo = liftFor(d);
       turnTo = d < 0.25 ? sun.turn : wrap(Math.atan2(dy, dx) - SUN_AZIMUTH);
     }
-    const chase = 1 - Math.exp(-dt / SUN_SECONDS);
-    const turnReach = SUN_SPEED * dt;
-    const liftReach = SUN_LIFT_SPEED * dt;
-    sun.turn = wrap(sun.turn + clamp(wrap(turnTo - sun.turn) * chase, -turnReach, turnReach));
-    sun.lift += clamp((liftTo - sun.lift) * chase, -liftReach, liftReach);
+    if (!eclipse.on) {       // during an eclipse the sun does not follow anything
+      const chase = 1 - Math.exp(-dt / SUN_SECONDS);
+      const turnReach = SUN_SPEED * dt;
+      const liftReach = SUN_LIFT_SPEED * dt;
+      sun.turn = wrap(sun.turn + clamp(wrap(turnTo - sun.turn) * chase, -turnReach, turnReach));
+      sun.lift += clamp((liftTo - sun.lift) * chase, -liftReach, liftReach);
+    }
     sun.tilt += ((sun.mode === 'off' ? 1 : 0) - sun.tilt) * (1 - Math.exp(-dt));
-    // an eclipse comes in slowly, stays for a while and goes out slower still
-    if (eclipse.on && time > eclipse.until) eclipse.on = false;
+    // an eclipse comes in slowly and goes out slower still
     eclipse.level = clamp(eclipse.level + (eclipse.on ? dt / 3.5 : -dt / 5), 0, 1);
     draw();
   }
@@ -853,15 +857,15 @@ export function createScene(canvas, { reduceMotion, solid = 'a, button', planet 
   function drop(e) {
     if (!geo || intro < 0.6 || e.target.closest(solid)) return;
     const rect = canvas.getBoundingClientRect();
-    sun.click = { x: e.clientX - rect.left, y: e.clientY - rect.top };      // where the sun goes when it follows the last click
     const x = (e.clientX - rect.left - geo.x) / geo.R;
     const y = (e.clientY - rect.top - geo.y) / geo.R;
-    // a click on the planet is an eclipse (and another click ends it)
+    // a click on the planet is an eclipse, and the next click on it ends the eclipse; neither moves the sun
     if (Math.hypot(x, y) <= BODY_RADIUS[sky.to]) {
       eclipse.on = !eclipse.on;
-      eclipse.until = time + ECLIPSE_SECONDS;
       return;
     }
+    // any other click is where the sun goes when it follows the last click (but not during an eclipse)
+    if (!eclipse.on) sun.click = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     if (y < TAP_WATER) return;
     const alive = taps.filter(tapAlive);
     if (alive.length >= 2) return;
