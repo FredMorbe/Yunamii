@@ -8,7 +8,7 @@
   <!-- design concept (hero only), not the live site -->
   <meta name="robots" content="noindex">
   <meta name="color-scheme" content="dark">
-  <meta name="theme-color" content="#0c0c15">
+  <meta name="theme-color" content="#07070e">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="preload" href="assets/fonts/DMSans-normal-300-700-latin.woff2" as="font" type="font/woff2" crossorigin>
   <script>document.documentElement.classList.add('js');</script>
@@ -17,6 +17,7 @@
 <body>
 <svg width="0" height="0" class="sprite" aria-hidden="true" focusable="false">
   <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M3.5 12h16M13.5 5.5 20 12l-6.5 6.5"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 12 12"><path d="M2.5 4.5 6 8l3.5-3.5"/></symbol>
 </svg>
 
 <!-- the navigation has no targets yet: this concept is the hero only -->
@@ -58,7 +59,7 @@
 </dialog>
 
 <main id="top">
-  <!-- a dark moon, a gate of light in front of it and ripples on the water below; the pointer tilts the light, a click on the water drops a slow ring -->
+  <!-- a dark moon, a gate of light in front of it and ripples on the water below; the pointer tilts the light, a click on the water drops a slow ring; the moon can be turned into Mars, Earth or Saturn -->
   <section class="hero" id="hero" aria-labelledby="heroTitle">
     <canvas class="scene" id="scene" aria-hidden="true"></canvas>
     <div class="hero-main">
@@ -69,6 +70,22 @@
         <a class="btn btn-solid" href="#top">Explore Our Apps <svg class="arrow" aria-hidden="true"><use href="#i-arrow"/></svg></a>
         <a class="btn btn-line" href="#top">About the Studio</a>
       </div>
+    </div>
+
+    <!-- the body in the sky: the moon, or Mars or Earth -->
+    <div class="planet" id="planet">
+      <button class="planet-btn" id="planetBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="planetList">
+        <span class="planet-dot" data-planet="moon" aria-hidden="true"></span>
+        <span class="planet-name">Moon</span>
+        <svg class="planet-chev" aria-hidden="true"><use href="#i-chevron"/></svg>
+        <span class="visually-hidden">: choose the planet</span>
+      </button>
+      <ul class="planet-list" id="planetList" role="listbox" aria-label="Planet" tabindex="-1" hidden>
+        <li role="option" id="planet-moon" data-planet="moon"><span class="planet-dot" data-planet="moon" aria-hidden="true"></span>Moon</li>
+        <li role="option" id="planet-mars" data-planet="mars"><span class="planet-dot" data-planet="mars" aria-hidden="true"></span>Mars</li>
+        <li role="option" id="planet-earth" data-planet="earth"><span class="planet-dot" data-planet="earth" aria-hidden="true"></span>Earth</li>
+        <li role="option" id="planet-saturn" data-planet="saturn"><span class="planet-dot" data-planet="saturn" aria-hidden="true"></span>Saturn</li>
+      </ul>
     </div>
   </section>
 </main>

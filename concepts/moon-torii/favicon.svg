@@ -3,6 +3,6 @@
     <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff1cf"/><stop offset="1" stop-color="#d4b183"/></linearGradient>
     <mask id="m"><rect width="64" height="64" fill="#fff"/><circle cx="40" cy="28" r="23" fill="#000"/></mask>
   </defs>
-  <rect width="64" height="64" rx="14" fill="#0c0c15"/>
+  <rect width="64" height="64" rx="14" fill="#07070e"/>
   <circle cx="32" cy="32" r="21" fill="url(#g)" mask="url(#m)"/>
 </svg>
