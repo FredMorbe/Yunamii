@@ -1,4 +1,4 @@
-// Light and dark colour scheme. The choice is stored; without one the system setting decides
+// Light and dark colour scheme. The choice is stored; without one it is dark
 // (see the inline script in <head>, which sets data-theme before the first paint).
 
 const KEY = 'yunamii-theme';
