@@ -95,7 +95,18 @@ if (scene) {
 // ---- mobile menu: a modal <dialog> brings focus trap, Escape and inert background with it
 const menu = document.getElementById('menu');
 document.getElementById('menuBtn').addEventListener('click', () => menu.showModal());
-menu.addEventListener('click', (e) => { if (e.target.closest('a, [data-close]')) menu.close(); });
+menu.addEventListener('click', (e) => {
+  const link = e.target.closest('a');
+  if (link) {
+    // the page behind a modal dialog is inert and is not scrolled to: close the menu first, then go there
+    e.preventDefault();
+    menu.close();
+    history.pushState(null, '', link.hash);
+    document.querySelector(link.hash).scrollIntoView();
+  } else if (e.target.closest('[data-close]')) {
+    menu.close();
+  }
+});
 
 // the text comes in once its font is there (or after a short wait on a slow connection)
 Promise.race([document.fonts.ready, new Promise((done) => setTimeout(done, 1500))]).then(() => root.classList.add('is-ready'));
