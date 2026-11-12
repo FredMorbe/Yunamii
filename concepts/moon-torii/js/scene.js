@@ -6,6 +6,11 @@
 // perspective as the others.
 // The numbers (proportions of the gate, the rim light of the moon, the spacing of the rings) are
 // measured from the design this concept rebuilds; everything is sized in moon radii.
+// The light colour scheme is the same scene by day: sky and water as one mirrored gradient from light blue
+// at the horizon to white instead of night ink, the gate
+// in vermilion lacquer and the rings in ink instead of gold light, high cloud instead of stars, the
+// bodies whose shadows are the sky showing through (the atmosphere lies in front of them). Light does not glow on a light page, so the lines
+// of the gate and the water are returned with a coverage as well (see `lay`).
 
 const MAX_PIXEL_RATIO = 2;
 const MAX_PIXELS = 5e6;          // canvas pixel budget for very large screens
@@ -16,6 +21,7 @@ const TAP_LIFE = 11;             // seconds a click ring lives
 const TAP_FADE = 1.2;            // seconds an older click ring needs to give way when a new one comes
 const TAP_WATER = 1.25;          // the water starts this many moon radii below the moon's centre
 export const PLANETS = ['moon', 'mars', 'earth', 'saturn'];
+export const THEMES = ['dark', 'light'];     // night, day
 // The sun is the direction the light comes from. It may follow the mouse, or the last click: it turns
 // towards the side of the planet where that is, but takes seconds to get there and never turns fast.
 export const SUN_MODES = ['mouse', 'click', 'off'];    // follow the mouse, follow the last click, stay
@@ -58,6 +64,7 @@ uniform vec2 uLook;      // the pointer, smoothed, -1..1
 uniform float uSun;      // how far the light is turned from its usual direction, in radians
 uniform float uSunLift;  // how far the light is lifted towards the viewer (+) or sunk behind the body (-), in radians
 uniform float uEclipse;  // 0..1: a solar eclipse, the body is dark and its outline glows
+uniform float uDay;      // 0 night (dark colour scheme), 1 day (light colour scheme)
 uniform vec3 uClock;     // seconds, intro 0..1, narrow layout 0/1
 uniform sampler2D uMars; // the photo of Mars, a disc cropped to a square
 uniform float uMarsOn;   // 1 once the photo is loaded
@@ -73,6 +80,16 @@ const vec3 BG0  = vec3(0.027, 0.027, 0.055);    // page ink
 const vec3 BG1  = vec3(0.043, 0.047, 0.075);    // a little lighter round the scene
 const vec3 GOLD = vec3(0.902, 0.745, 0.561);
 const vec3 HOT  = vec3(1.000, 0.945, 0.780);
+
+// by day
+const float WATER_TOP = ${TAP_WATER.toFixed(2)};                  // the horizon, in moon radii below the moon's centre: where the water begins
+const vec3 DAY_WHITE = vec3(1.0);                  // the page far from the horizon, in the sky and in the water
+const vec3 DAY_BLUE = vec3(0.741, 0.863, 0.957);   // light blue right at the horizon
+const vec3 CIRRUS = vec3(0.78, 0.86, 0.94);        // the streaks of high cloud
+const vec3 LACQUER = vec3(0.788, 0.251, 0.165);    // the gate: vermilion lacquer
+const vec3 WASH = vec3(0.498, 0.573, 0.608);       // the rings: a wash of blue-grey ink
+const vec3 DAY_RIM = vec3(0.55, 0.62, 0.67);       // the thin ink line round a body
+const vec3 DAY_ECLIPSE = vec3(0.78, 0.74, 0.76);   // how much of its light the day keeps in an eclipse (the dark text on it stays legible)
 
 float hash12(vec2 p) {
   vec3 p3 = fract(vec3(p.xyx) * 0.1031);
@@ -126,10 +143,10 @@ float ellipseD(vec2 p, vec2 ab) {
   return (e - 1.0) * e / max(length(p / (ab * ab)), 1e-5);
 }
 
-// ---- the moon: a sphere lit from behind, from the upper right and (more softly) the upper left.
-// The light is Lambert with a wide wrap, so the terminator is a soft arc and the lit part is a
-// fat crescent. Both directions and all the numbers are fitted to the measured moon of the design.
-// The colour comes from the resulting brightness (0..255) along the warm greys of that moon.
+// ---- the moon: a sphere lit by one sun from behind and the upper right, so that its lit part is a fat
+// crescent and the rim is the brightest. With a single light the line between light and shadow (the
+// terminator) is a half ellipse, the same on both sides of the axis of the light, as it is on a real
+// moon. The colour comes from the resulting brightness (0..255) along the warm greys of the moon of the design.
 vec3 moonRamp(float l) {
   vec3 c = vec3(0.066, 0.064, 0.094);
   c = mix(c, vec3(0.149, 0.141, 0.153), lin(21.0, 37.0, l));
@@ -137,8 +154,17 @@ vec3 moonRamp(float l) {
   c = mix(c, vec3(0.604, 0.525, 0.467), lin(75.0, 138.0, l));
   c = mix(c, vec3(0.812, 0.718, 0.624), lin(138.0, 188.0, l));
   c = mix(c, vec3(0.933, 0.859, 0.757), lin(188.0, 222.0, l));
-  return c;
+  vec3 day = mix(vec3(0.62, 0.69, 0.78), vec3(0.93, 0.95, 0.98), smoothstep(40.0, 215.0, l));      // by day: blue-grey where the light is weak, pale where it is strong (darker than the white sky, so that it stands out)
+  return mix(c, day, uDay);
 }
+
+// By day the atmosphere lies in front of the bodies: where the sun does not light a body, the sky shows
+// through it (the body is transparent there), and only the lit part stands out from the sky. dayVis
+// is how opaque a body is where the light on it is k (0 dark .. 1 fully lit); at night all of it is.
+// A planet's shaded colour is brightened by it (unshade), so that its fading edge is tinted with its
+// own colour and not grey.
+float dayVis(float k) { return mix(1.0, smoothstep(0.0, 0.40, k), uDay); }
+vec3 unshade(vec3 c, float vis) { return mix(c, min(c / max(vis, 0.25), vec3(1.0)), uDay); }
 vec3 direction(float az, float el) { return vec3(cos(az) * cos(el), sin(az) * cos(el), sin(el)); }
 
 // How high the light stands over a body, towards the viewer. Lifted to the front (+) the lit part grows
@@ -147,12 +173,17 @@ vec3 direction(float az, float el) { return vec3(cos(az) * cos(el), sin(az) * co
 float sunElevation(float usual) { return clamp(usual + uSunLift, -1.5708, 1.5708); }
 float sunFull(float usual) { return smoothstep(0.55, 1.4, sunElevation(usual)); }
 
+// the light on the moon at normal n, in the units of the ramp above (about 0..218): the sun is the one
+// of the planets (planetDir), only lower, behind the moon; the light rises gently from the terminator
+// (smoothstep: no sharp edge) and is at its full strength well before the light stands straight on
+float moonLit(vec3 n) {
+  vec3 sunDir = direction(0.98 + uSun, sunElevation(-0.55));      // the light may be turned (see the sun in scene.js)
+  float lit = 218.0 * pow(smoothstep(-0.18, 0.62, dot(n, sunDir)), 0.9);
+  return mix(lit, 192.0 * (0.76 + 0.24 * n.z), sunFull(-0.07));      // from the front it is lit all over, like a full moon
+}
+
 vec3 moonSurface(vec3 n, float I) {
-  float tilt = uSun;                            // the light may be turned (see the sun in scene.js)
-  float t1 = max(dot(n, direction(0.93 + tilt, sunElevation(-0.07))) + 0.38, 0.0) / 1.38;
-  float t2 = max(dot(n, direction(2.14 + tilt, sunElevation(-0.19))) + 0.21, 0.0) / 1.21;
-  float lit = 216.0 * pow(t1, 2.51) + 105.0 * pow(t2, 3.64);
-  lit = mix(lit, 192.0 * (0.76 + 0.24 * n.z), sunFull(-0.07));      // from the front it is lit all over, like a full moon
+  float lit = moonLit(n);
 
   // The surface: the photo of the moon says how much lighter or darker each spot is than the average
   // of the photo (seas, craters, rays); this scales the light. Until the photo is there, noise does it.
@@ -348,7 +379,8 @@ vec4 saturnRings(vec2 q, float S, float covGlobe) {
   float d = sqrt(max(dot(P, P) - pl * pl, 0.0));
   float shade = pl < 0.0 ? smoothstep(0.96, 1.04, d) : 1.0;       // the shadow of the globe
   vec3 c = ringColor(rho) * (0.10 + 1.15 * mix(clamp(dot(N, Lh), 0.0, 1.0), 0.9, sunFull(0.45))) * mix(0.10, 1.0, shade);
-  return vec4(c, dens * 0.95 * (1.0 - hidden));
+  float vis = dayVis(0.5 * mix(0.10, 1.0, shade));       // by day the part in the shadow of the globe is transparent
+  return vec4(unshade(c, vis), dens * 0.95 * (1.0 - hidden) * vis);
 }
 
 float bodyScale(int kind) { return kind == 3 ? SATURN_SCALE : 1.0; }
@@ -364,7 +396,15 @@ vec3 body(int kind, vec3 n, float I, float t) {
 vec3 bodyColor(int kind, vec2 q, float S, float I, float t) {
   float Sk = S * bodyScale(kind);
   vec3 n = vec3(q.x, -q.y, sqrt(max(Sk * Sk - dot(q, q), 0.0))) / Sk;
-  return body(kind, n, I, t);
+  vec3 c = body(kind, n, I, t);
+  return kind == 0 ? c : unshade(c, dayVis(planetLight(n)));
+}
+
+// how opaque the body is at this pixel (by day it is transparent where the sun does not light it)
+float bodyVis(int kind, vec2 q, float S) {
+  float Sk = S * bodyScale(kind);
+  vec3 n = vec3(q.x, -q.y, sqrt(max(Sk * Sk - dot(q, q), 0.0))) / Sk;
+  return dayVis(kind == 0 ? moonLit(n) / 216.0 : planetLight(n));
 }
 
 // how much of the disc is there at radius r: the moon has a crisp edge, a planet a fuzzy one that
@@ -373,9 +413,12 @@ const float FEATHER = 0.014;
 // in an eclipse the dark disc stands against a bright rim, where a crisp edge shows its steps: all
 // bodies get a wider fade then
 const float ECLIPSE_FEATHER = 0.03;
-float bodyCover(float r, float S, int kind, float I) {
+float edgeCover(float r, float S, int kind) {
   float soft = mix(kind == 0 ? 0.0 : FEATHER * S, ECLIPSE_FEATHER * S, uEclipse);
-  return (1.0 - smoothstep(S - 0.8 - soft, S + 0.4, r)) * smoothstep(0.0, 0.3, I);
+  return 1.0 - smoothstep(S - 0.8 - soft, S + 0.4, r);
+}
+float bodyCover(float r, float S, int kind, float I) {
+  return edgeCover(r, S, kind) * smoothstep(0.0, 0.3, I);
 }
 
 // the glow of the air round Earth (the moon and Mars have none)
@@ -409,7 +452,8 @@ vec4 marsMoon(vec2 v, float S, float t, int i, bool front) {
   vec3 n = vec3(o.x, -o.y, sqrt(max(1.0 - d * d, 0.0)));
   float k = pow(clamp((dot(n, planetDir()) + 0.05) / 1.05, 0.0, 1.0), 1.1);
   vec3 albedo = i == 0 ? vec3(0.38, 0.34, 0.30) : vec3(0.55, 0.50, 0.45);
-  return vec4(albedo * (0.05 + 1.2 * k), alpha);
+  float vis = dayVis(k);
+  return vec4(unshade(albedo * (0.05 + 1.2 * k), vis), alpha * vis);
 }
 
 // ---- a solar eclipse: the body keeps its picture and its light but is dimmed to ECLIPSE_LEFT of its
@@ -452,7 +496,7 @@ vec4 earthMoon(vec2 v, float S, float t, bool front) {
   float k = pow(clamp((dot(n, planetDir()) + 0.05) / 1.05, 0.0, 1.0), 1.1);
   vec2 uv = vec2(atan(n.x, n.z), asin(clamp(n.y, -1.0, 1.0)));
   float tex = (fbm(uv * 1.6 + 7.0) - 0.5) * 0.9 + craters(uv * 3.0) * 0.25;
-  return vec4(moonRamp(20.0 + 215.0 * k * clamp(1.0 + tex, 0.3, 1.5)), alpha);
+  return vec4(moonRamp(20.0 + 215.0 * k * clamp(1.0 + tex, 0.3, 1.5)), alpha * dayVis(k));
 }
 
 // ---- stars: the few of the picture, a sparse field and one sparkle
@@ -491,10 +535,38 @@ vec3 stars(vec2 v, float S, float t, float I) {
   return add * k;
 }
 
-// ---- the gate: two pillars, a tie beam and a curved roof beam, all in gold light
-vec3 torii(vec2 v, float S, float t, float I) {
+// ---- by day: a few thin streaks of high cloud where the stars were, pale blue on the white of the sky
+float cirrus(vec2 v, float S, float I) {
+  const vec4 STREAK[3] = vec4[3](vec4(-1.15, -1.0, -0.4, -1.06), vec4(0.25, -1.5, 0.8, -1.52), vec4(1.55, -0.2, 2.0, -0.24));
+  float a = 0.0;
+  for (int i = 0; i < 3; i++) a = max(a, cover(sdSeg(v * S, STREAK[i].xy * S, STREAK[i].zw * S), max(0.011 * S, 1.5)));
+  return a * smoothstep(0.25, 0.85, I) * mix(smoothstep(-2.6, -1.3, v.x), 1.0, uClock.z);     // the text keeps its sky quiet
+}
+
+// ---- by day: the sky and the water below it as one mirrored gradient: light blue right at the horizon,
+// fading to white upwards in the sky and downwards in the water (the water mirrors the sky)
+vec3 dayBackdrop(vec2 frag, vec2 v, float S) {
+  float horizon = uMoon.y + WATER_TOP * S;                      // in pixels from the top
+  float up = clamp(frag.y / horizon, 0.0, 1.0);                 // 0 at the top of the page, 1 at the horizon
+  float down = 1.0 - clamp((frag.y - horizon) / max(uRes.y - horizon, 1.0), 0.0, 1.0);      // 1 at the horizon, 0 at the foot of the page
+  float below = (v.y - WATER_TOP) * S;                          // pixels below the horizon; the water layer drifts with the pointer
+  float blue = mix(up, down, smoothstep(-0.7, 0.7, below));
+  return mix(DAY_WHITE, DAY_BLUE, pow(blue, 1.5));
+}
+
+// Puts a line of the scene on the page. At night it is light that is added; by day it is paint
+// (lacquer, ink) that covers the page with the coverage that comes with the line.
+vec3 lay(vec3 col, vec4 line, vec3 paint) {
+  return uDay > 0.5 ? mix(col, paint, clamp(line.a, 0.0, 1.0)) : col + line.rgb;
+}
+
+// ---- the gate: two pillars, a tie beam and a curved roof beam, all in gold light (by day lacquered:
+// the coverage of its lines is the fourth component)
+vec4 torii(vec2 v, float S, float t, float I) {
   vec2 a = vec2(abs(v.x), v.y);
   vec3 acc = vec3(0.0);
+  float cov = 0.0;
+  float bold = 1.7;             // lacquer on a light page wants more body than light on the dark: the covered lines are this much wider
   float lw = max(0.0175 * S, 1.5);
   const float PX = 0.262;       // pillar offset from the centre
   const float BASE = 1.362;     // where the pillars stand
@@ -505,6 +577,7 @@ vec3 torii(vec2 v, float S, float t, float I) {
   float yTop = mix(BASE, TOP, smoothstep(0.2, 0.75, I));
   float dp = sdSeg(a * S, vec2(PX, yTop) * S, vec2(PX, BASE) * S);
   float br = mix(0.45, 1.0, smoothstep(0.55, 1.15, v.y));
+  cov = max(cov, smoothstep(0.08, 0.3, I) * cover(dp, lw * 0.5 * bold));
   acc += smoothstep(0.08, 0.3, I) * br * (GOLD * (0.62 * cover(dp, lw * 0.5) + 0.3 * exp(-dp / (0.028 * S))) + HOT * 0.24 * cover(dp, lw * 0.2));
 
   // the pillars again in the water, fading and swaying
@@ -513,6 +586,7 @@ vec3 torii(vec2 v, float S, float t, float I) {
     float sway = 0.003 * sin(yb * 30.0 - t * 0.5 + a.x * 20.0) * smoothstep(0.0, 0.3, yb);
     float dr = abs(a.x - PX - sway) * S;
     float fade = 0.75 * exp(-yb / 0.26) * (1.0 - smoothstep(0.5, 0.95, yb)) * smoothstep(0.5, 1.0, I);
+    cov = max(cov, 0.3 * fade * cover(dr, lw * (0.5 + 0.8 * yb) * bold));
     acc += fade * (GOLD * (0.6 * cover(dr, lw * (0.5 + 0.8 * yb)) + 0.3 * exp(-dr / (0.03 * S))) + HOT * 0.16 * cover(dr, lw * 0.2));
   }
 
@@ -528,22 +602,26 @@ vec3 torii(vec2 v, float S, float t, float I) {
   float shown = 1.0 - smoothstep(edge - 0.04, edge + 0.02, a.x);
   float ends = mix(0.5, 1.0, 1.0 - u * u);
   float glow = 0.26 * exp(-abs(dy) / (dy > 0.0 ? 0.06 * S : 0.015 * S));
+  cov = max(cov, shown * cover(dk, thick * 0.5 * bold));
   acc += shown * (GOLD * (0.85 * cover(dk, thick * 0.5) + glow * ends) + HOT * 0.5 * cover(dk, thick * 0.2));
 
   // the tie beam
   float dn = sdSeg(a * S, vec2(0.0, 0.699) * S, vec2(0.417, 0.699) * S);
   float tie = smoothstep(0.6, 0.95, I) * 0.76;
+  cov = max(cov, smoothstep(0.6, 0.95, I) * cover(dn, max(0.0155 * S, 1.3) * 0.5 * bold));
   acc += tie * (GOLD * (0.85 * cover(dn, max(0.0155 * S, 1.3) * 0.5) + 0.14 * exp(-dn / (0.02 * S))) + HOT * 0.2 * cover(dn, 0.4));
-  return acc * breath;
+  return vec4(acc * breath, cov);
 }
 
-// ---- the water: a pool of light round the feet and rings that grow slowly and fade
-vec3 water(vec2 v, float S, float t, float I) {
+// ---- the water: a pool of light round the feet and rings that grow slowly and fade (by day only the
+// rings are drawn, as ink: their coverage is the fourth component)
+vec4 water(vec2 v, float S, float t, float I) {
   vec2 w = vec2(v.x, v.y - 1.362);
-  if (w.y < -0.45 || w.y > 1.0) return vec3(0.0);
+  if (w.y < -0.45 || w.y > 1.0) return vec4(0.0);
   float vis = smoothstep(0.5, 1.0, I);
   vec2 e = vec2(w.x / 0.70, (w.y - 0.03) / 0.07);
   vec3 acc = GOLD * 0.32 * exp(-dot(e, e)) * vis;
+  float ink = 0.0;
   float lw = max(0.0055 * S, 1.1);
   // on a wide screen the far ends of the rings reach towards the text: they fade out before they get there
   float clear = mix(mix(0.4, 1.0, smoothstep(-2.8, -1.8, w.x)), 1.0, uClock.z);
@@ -558,16 +636,18 @@ vec3 water(vec2 v, float S, float t, float I) {
     if (d > 24.0) continue;
     float al = smoothstep(0.0, 0.3, ph) * exp(-2.9 * max(ph - 0.3, 0.0)) * (1.0 - smoothstep(0.92, 1.0, ph));
     float side = 0.55 + 0.55 * min(abs(w.x) / a, 1.0);
+    ink += 0.7 * cover(d, lw * 0.5) * al * side * vis * clear;
     acc += GOLD * (1.35 * cover(d, lw * 0.5) + 0.3 * exp(-d / (0.014 * S))) * al * side * vis * clear;
   }
-  return acc;
+  return vec4(acc, ink);
 }
 
 // ---- rings from clicks: two ripples, the second a little behind the first. The water lies in
 // perspective: its horizon is 0.93 moon radii below the moon's centre, so a ring is flatter and
 // smaller further up and rounder and larger further down (at the gate it equals the rings above).
-vec3 taps(vec2 v, float S) {
+vec4 taps(vec2 v, float S) {
   vec3 acc = vec3(0.0);
+  float ink = 0.0;
   float lw = max(0.0055 * S, 1.1);
   for (int k = 0; k < ${TAP_SLOTS}; k++) {
     vec4 tp = uTap[k];
@@ -586,10 +666,11 @@ vec3 taps(vec2 v, float S) {
       if (d > 24.0) continue;
       float al = smoothstep(0.0, 0.08, p) * pow(1.0 - p, 1.5) * (j == 0 ? 0.8 : 0.45);
       float side = 0.55 + 0.55 * min(abs(u.x) / a, 1.0);
+      ink += 0.7 * cover(d, lw * 0.5) * al * side * tp.w;
       acc += GOLD * (1.35 * cover(d, lw * 0.5) + 0.3 * exp(-d / (0.014 * S))) * al * side * tp.w;
     }
   }
-  return acc;
+  return vec4(acc, ink);
 }
 
 void main() {
@@ -603,9 +684,16 @@ void main() {
   vec2 qT = rel + par * 0.012;
   vec2 qB = rel + par * 0.050;
 
-  float lift = 1.0 - smoothstep(0.4, 4.6, length(rel / S - vec2(0.3, 0.9)));
-  vec3 col = mix(BG0, BG1, lift);
-  col += stars(qB / S, S, t, I);
+  vec3 col;
+  vec3 dim = mix(vec3(1.0), DAY_ECLIPSE, uEclipse * uDay);      // by day an eclipse dims the light of the page
+  if (uDay > 0.5) {
+    col = dayBackdrop(frag, qT / S, S) * dim;
+    col = mix(col, CIRRUS * dim, 0.7 * cirrus(qB / S, S, I));
+  } else {
+    float lift = 1.0 - smoothstep(0.4, 4.6, length(rel / S - vec2(0.3, 0.9)));
+    col = mix(BG0, BG1, lift);
+    col += stars(qB / S, S, t, I);
+  }
 
   int from = int(uPlanet.x + 0.5);
   int to = int(uPlanet.y + 0.5);
@@ -627,12 +715,19 @@ void main() {
 
   float r = length(qM);
   float cov = mix(bodyCover(r, S * bodyScale(from), from, I), bodyCover(r, S * bodyScale(to), to, I), swap);
+  // by day the body is transparent where the sun does not light it (in an eclipse it is a dark disc as a whole)
+  float vis = 1.0;
+  if (uDay > 0.5) vis = mix(mix(bodyVis(from, qM, S), bodyVis(to, qM, S), swap), 1.0, uEclipse);
   if (cov > 0.0) {
     vec3 c = bodyColor(to, qM, S, I, t);
     if (swap < 1.0) c = mix(bodyColor(from, qM, S, I, t), c, swap);       // while one body turns into another, both are drawn
-    col = mix(col, c * mix(1.0, ECLIPSE_LEFT, uEclipse), cov);
+    col = mix(col, c * mix(1.0, ECLIPSE_LEFT, uEclipse), cov * vis);
   }
-  col += mix(halo(qM, S, from, I), halo(qM, S, to, I), swap) * (1.0 - uEclipse);       // the corona takes the place of the glow of Earth's air
+  if (uDay > 0.5) {         // a thin ink line round the lit edge of the body, so that its pale edge stands out from the sky
+    float edge = mix(edgeCover(r, S * bodyScale(from), from), edgeCover(r, S * bodyScale(to), to), swap);
+    col = mix(col, DAY_RIM, 4.0 * edge * (1.0 - edge) * 0.6 * vis * (1.0 - uEclipse) * smoothstep(0.0, 0.3, I));
+  }
+  col += mix(halo(qM, S, from, I), halo(qM, S, to, I), swap) * (1.0 - uEclipse) * (1.0 - uDay);       // the corona takes the place of the glow of Earth's air (by day there is none)
   if (uEclipse > 0.0) col += mix(corona(qM, S * bodyScale(from), t), corona(qM, S * bodyScale(to), t), swap) * uEclipse;
   float saturn = ((from == 3 ? 1.0 - swap : 0.0) + (to == 3 ? swap : 0.0)) * moonsIn;
   if (saturn > 0.0) {
@@ -650,9 +745,9 @@ void main() {
     }
   }
 
-  col += torii(qT / S, S, t, I);
-  col += water(qT / S, S, t, I);
-  col += taps(qT / S, S);
+  col = lay(col, torii(qT / S, S, t, I), LACQUER * dim);
+  col = lay(col, water(qT / S, S, t, I), WASH * dim);
+  col = lay(col, taps(qT / S, S), WASH * dim);
 
   col += (hash12(gl_FragCoord.xy + 0.5) - 0.5) * (1.5 / 255.0);
   outColor = vec4(col, 1.0);
@@ -675,6 +770,11 @@ function checkSunMode(mode) {
   return mode;
 }
 
+function checkTheme(theme) {
+  if (!THEMES.includes(theme)) throw new Error(`Unknown theme "${theme}", expected one of ${THEMES.join(', ')}.`);
+  return theme;
+}
+
 function bodyIndex(id) {
   const index = PLANETS.indexOf(id);
   if (index < 0) throw new Error(`Unknown planet "${id}", expected one of ${PLANETS.join(', ')}.`);
@@ -684,9 +784,10 @@ function bodyIndex(id) {
 // Returns false when the device has no WebGL2; shader or link errors throw.
 // `solid` selects the elements of the page that take a click themselves (links, text): a click on
 // them does not drop a ring.
-export function createScene(canvas, { reduceMotion, solid = 'a, button', planet = 'moon', sunMode = SUN_MODES[0] }) {
+export function createScene(canvas, { reduceMotion, solid = 'a, button', planet = 'moon', sunMode = SUN_MODES[0], theme = THEMES[0] }) {
   const gl = canvas.getContext('webgl2', { alpha: false, antialias: false });
   if (!gl) return false;
+  let scheme = checkTheme(theme);       // 'dark' (night) or 'light' (day)
 
   const host = canvas.parentElement;
   const look = { x: 0, y: 0, tx: 0, ty: 0 };
@@ -722,7 +823,7 @@ export function createScene(canvas, { reduceMotion, solid = 'a, button', planet 
     gl.linkProgram(p);
     if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(`Program link failed: ${gl.getProgramInfoLog(p)}`);
     const u = {};
-    const names = ['uRes', 'uMoon', 'uLook', 'uSun', 'uSunLift', 'uEclipse', 'uClock', 'uTap', 'uPlanet', ...PHOTOS.flatMap(({ uniform }) => [uniform, `${uniform}On`])];
+    const names = ['uRes', 'uMoon', 'uLook', 'uSun', 'uSunLift', 'uEclipse', 'uDay', 'uClock', 'uTap', 'uPlanet', ...PHOTOS.flatMap(({ uniform }) => [uniform, `${uniform}On`])];
     for (const n of names) u[n] = gl.getUniformLocation(p, n);
     res = { p, u, vao: gl.createVertexArray(), textures: PHOTOS.map(() => gl.createTexture()) };
     gl.bindVertexArray(res.vao);
@@ -780,6 +881,7 @@ export function createScene(canvas, { reduceMotion, solid = 'a, button', planet 
     gl.uniform1f(res.u.uSun, sun.turn - sun.tilt * 0.12 * look.x);
     gl.uniform1f(res.u.uSunLift, sun.lift);
     gl.uniform1f(res.u.uEclipse, smooth01(eclipse.level));
+    gl.uniform1f(res.u.uDay, scheme === 'light' ? 1 : 0);
     gl.uniform3f(res.u.uClock, time, intro, geo.narrow ? 1 : 0);
     taps.forEach((t, i) => {
       const alive = tapAlive(t);
@@ -901,6 +1003,18 @@ export function createScene(canvas, { reduceMotion, solid = 'a, button', planet 
   }
   update();
   return {
+    // The colour scheme: 'dark' (night) or 'light' (day). It changes at once and is drawn at once, so that
+    // the circle that opens the new scheme (a view transition, see theme.js) finds it on the canvas.
+    setTheme(name) {
+      scheme = checkTheme(name);
+      draw();
+    },
+    // Where the centre of the planet is, in viewport pixels (null until the scene has a size).
+    bodyPosition() {
+      if (!geo) return null;
+      const rect = canvas.getBoundingClientRect();
+      return { x: rect.left + geo.x, y: rect.top + geo.y };
+    },
     // What the sun follows: 'mouse', 'click' (the last click) or 'off'; it never jumps, it turns slowly.
     setSunMode(mode) { sun.mode = checkSunMode(mode); },
     // Turns the body in the sky into `id` ('moon', 'mars' or 'earth'): at once when nothing moves

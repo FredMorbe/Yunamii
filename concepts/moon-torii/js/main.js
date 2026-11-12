@@ -1,8 +1,9 @@
 // Entry point of the "Moon Torii" hero: starts the scene and wires the two pickers (the planet, and
-// the way the sun moves) and the mobile menu.
+// the way the sun moves), the switch between night and day, and the mobile menu.
 
 import { createScene, PLANETS, SUN_MODES } from './scene.js';
 import { createPicker } from './picker.js';
+import { initTheme } from './theme.js';
 
 const PLANET_KEY = 'yunamii-planet';
 const SUN_KEY = 'yunamii-sun';
@@ -25,7 +26,21 @@ try {
 } catch { /* storage blocked: it follows the mouse */ }
 
 // a click on the water drops a ring, except on links, text and the controls
-const scene = createScene(document.getElementById('scene'), { reduceMotion, solid: 'a, button, .eyebrow, .title, .lead, .hero-controls', planet, sunMode });
+const scene = createScene(document.getElementById('scene'), { reduceMotion, solid: 'a, button, .eyebrow, .title, .lead, .hero-controls', planet, sunMode, theme: root.dataset.theme });
+
+// light or dark: the inline script in <head> has set data-theme; the new scheme spreads from the planet
+// while it is on screen, otherwise from the switch
+initTheme({
+  reduceMotion,
+  origin(toggle) {
+    const body = scene && scene.bodyPosition();
+    if (body && body.y > 0 && body.y < innerHeight) return body;
+    const rect = toggle.getBoundingClientRect();
+    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+  },
+  onChange(theme) { if (scene) scene.setTheme(theme); },
+});
+
 if (scene) {
   const remember = (key, value) => {
     try { localStorage.setItem(key, value); } catch { /* storage blocked: the choice lasts for this page view */ }

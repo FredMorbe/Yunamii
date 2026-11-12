@@ -1,6 +1,8 @@
 /* yunamii · concept "Moon Torii" (hero only)
    One idea: a gate of light before a dark moon. The page is night ink with a single warm gold;
-   the moon is lit from its rim, the torii and the water rings are drawn by the scene (js/scene.js). */
+   the moon is lit from its rim, the torii and the water rings are drawn by the scene (js/scene.js).
+   By day (the light scheme) it is white and ink with a single vermilion: the gate is lacquered, the
+   moon a pale one in a sky that is light blue at the horizon and white above. */
 
 @font-face { font-family: "DM Sans"; src: url("../assets/fonts/DMSans-normal-300-700-latin.woff2") format("woff2"); font-weight: 300 700; font-style: normal; font-display: swap; }
 
@@ -13,24 +15,74 @@
   --lead: clamp(1.05rem, min(1.8vw, 3.4vh), 2.1rem);
   --small: clamp(.9rem, 1.14vw, 1.25rem);
 
+  /* night is the default; the script in <head> always sets data-theme */
   color-scheme: dark;
   --bg: #07070e;
   --ink: #f7f4ee;
   --ink-2: rgba(255, 255, 255, .88);
   --ink-3: rgba(255, 255, 255, .7);
-  --gold: #e3bf95;
-  --gold-hot: #f7d4a4;
-  --gold-fill: #cfb083;
-  --gold-fill-2: #ddc298;
-  --on-gold: #231b11;
+  --accent: #e3bf95;                          /* the one warm colour: gold by night, vermilion by day */
+  --accent-hot: #f7d4a4;
+  --accent-wash: rgba(227, 191, 149, .1);     /* what a button or an option takes on under the pointer */
+  --accent-wash-2: rgba(227, 191, 149, .13);
+  --rule: #c8b189;
+  --line: #e3bf95;                            /* the outline button */
+  --cta: var(--ink);                          /* the text of the call to action in the navigation */
+  --hair: rgba(227, 191, 149, .28);
+  --edge: rgba(227, 191, 149, .45);           /* the border of the small controls */
+  --glass: rgba(7, 7, 14, .55);
+  --glass-solid: rgba(9, 9, 17, .92);
+  --glass-menu: rgba(7, 7, 14, .94);
+  --shadow: rgba(0, 0, 0, .8);
+  --dot-ring: rgba(255, 255, 255, .08);
+  --fill: #cfb083;                            /* the solid button */
+  --fill-hover: #ddc298;
+  --on-fill: #231b11;
+  --thumb: #cfb083;                           /* the knob of the colour scheme switch */
+  --on-thumb: #231b11;
+  --mark-1: #fff1cf;                          /* the crescent of the brand mark */
+  --mark-2: #d4b183;
+  --mark-ring: rgba(230, 190, 143, .2);
+  --selection: rgba(227, 191, 149, .35);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #fff;
+  --ink: #1c1b24;
+  --ink-2: #2e2c37;
+  --ink-3: #403e4a;
+  --accent: #c13a24;
+  --accent-hot: #a82f1b;
+  --accent-wash: rgba(193, 58, 36, .08);
+  --accent-wash-2: rgba(193, 58, 36, .1);
+  --rule: #c13a24;
+  --line: #1c1b24;
+  --cta: var(--accent);
+  --hair: rgba(28, 27, 36, .16);
+  --edge: rgba(28, 27, 36, .3);
+  --glass: rgba(255, 255, 255, .72);
+  --glass-solid: rgba(255, 255, 255, .95);
+  --glass-menu: rgba(255, 255, 255, .95);
+  --shadow: rgba(28, 27, 36, .28);
+  --dot-ring: rgba(28, 27, 36, .18);
+  --fill: #1c1b24;
+  --fill-hover: #c13a24;
+  --on-fill: #fff;
+  --thumb: #c9402a;
+  --on-thumb: #fff;
+  --mark-1: #3a3846;
+  --mark-2: #1c1b24;
+  --mark-ring: rgba(193, 58, 36, .3);
+  --selection: rgba(193, 58, 36, .22);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 300 1.0625rem/1.6 var(--sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; overflow-x: clip; }
 button { font: inherit; }
-::selection { background: rgba(227, 191, 149, .35); }
-:focus-visible { outline: 2px solid var(--gold-hot); outline-offset: 4px; border-radius: 6px; }
+::selection { background: var(--selection); }
+:focus-visible { outline: 2px solid var(--accent-hot); outline-offset: 4px; border-radius: 6px; }
 .sprite { position: absolute; }
 .arrow { flex: none; width: 1.15em; height: 1.15em; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; transition: transform .5s var(--ease); }
 
@@ -43,20 +95,21 @@ button { font: inherit; }
 
 .nav { display: flex; align-items: center; gap: clamp(26px, 4vw, 66px); }
 .nav a { position: relative; color: var(--ink); font-size: var(--small); font-weight: 400; text-decoration: none; }
-.nav a:not(.nav-cta)::after { content: ""; position: absolute; inset: auto 0 -6px; height: 1px; background: var(--gold); transform: scaleX(0); transform-origin: right; transition: transform .6s var(--ease); }
+.nav a:not(.nav-cta)::after { content: ""; position: absolute; inset: auto 0 -6px; height: 1px; background: var(--accent); transform: scaleX(0); transform-origin: right; transition: transform .6s var(--ease); }
 .nav a:not(.nav-cta):hover::after { transform: scaleX(1); transform-origin: left; }
-.nav-cta { display: inline-flex; align-items: center; height: clamp(38px, 2.7vw, 48px); padding: 0 clamp(20px, 1.6vw, 28px); border: 1px solid var(--gold-hot); border-radius: 999px; transition: background-color .5s var(--ease), color .5s var(--ease); }
-.nav-cta:hover { background: rgba(247, 212, 164, .12); }
+.nav-cta { display: inline-flex; align-items: center; height: clamp(38px, 2.7vw, 48px); padding: 0 clamp(20px, 1.6vw, 28px); border: 1px solid var(--accent-hot); border-radius: 999px; transition: background-color .5s var(--ease), color .5s var(--ease); }
+.nav a.nav-cta { color: var(--cta); }
+.nav-cta:hover { background: var(--accent-wash); }
 
-.menu-btn, .menu-close { display: none; align-items: center; height: 38px; padding: 0 16px; border: 1px solid var(--gold); border-radius: 999px; background: none; color: var(--ink); font: 500 .68rem var(--mono); letter-spacing: .22em; text-transform: uppercase; cursor: pointer; }
-.menu { width: 100%; max-width: none; height: 100%; max-height: none; margin: 0; padding: 0; border: 0; background: rgba(7, 7, 14, .94); -webkit-backdrop-filter: blur(22px); backdrop-filter: blur(22px); color: var(--ink); }
+.menu-btn, .menu-close { display: none; align-items: center; height: 38px; padding: 0 16px; border: 1px solid var(--accent); border-radius: 999px; background: none; color: var(--ink); font: 500 .68rem var(--mono); letter-spacing: .22em; text-transform: uppercase; cursor: pointer; }
+.menu { width: 100%; max-width: none; height: 100%; max-height: none; margin: 0; padding: 0; border: 0; background: var(--glass-menu); -webkit-backdrop-filter: blur(22px); backdrop-filter: blur(22px); color: var(--ink); }
 .menu::backdrop { background: transparent; }
 .menu[open] { animation: menu-in .5s var(--ease); }
 .menu-in { display: flex; flex-direction: column; height: 100%; padding: 19px var(--gutter) 44px; }
 .menu-close { display: inline-flex; align-self: flex-end; }
 .menu nav { display: grid; margin-top: auto; }
-.menu nav a { display: flex; align-items: baseline; gap: 20px; padding: 16px 0; border-top: 1px solid rgba(227, 191, 149, .28); color: var(--ink); font-size: 2rem; font-weight: 300; line-height: 1.1; letter-spacing: .02em; text-decoration: none; }
-.menu nav a span { color: var(--gold); font: 500 .8rem var(--mono); letter-spacing: .1em; }
+.menu nav a { display: flex; align-items: baseline; gap: 20px; padding: 16px 0; border-top: 1px solid var(--hair); color: var(--ink); font-size: 2rem; font-weight: 300; line-height: 1.1; letter-spacing: .02em; text-decoration: none; }
+.menu nav a span { color: var(--accent); font: 500 .8rem var(--mono); letter-spacing: .1em; }
 @keyframes menu-in { from { opacity: 0; transform: translateY(-10px); } }
 
 /* ---------- hero ---------- */
@@ -65,7 +118,7 @@ button { font: inherit; }
 .hero-main { padding: clamp(104px, 12vh, 150px) var(--gutter) clamp(64px, 9vh, 130px); }
 
 .eyebrow { display: flex; align-items: center; gap: clamp(16px, 1.9vw, 30px); margin: 0 0 clamp(14px, 2.6vh, 30px); color: var(--ink-3); font-size: clamp(.72rem, 1.1vw, 1.2rem); font-weight: 400; letter-spacing: .47em; text-transform: uppercase; }
-.eyebrow-line { flex: none; width: clamp(48px, 5.8vw, 100px); height: 1px; background: linear-gradient(90deg, #c8b189, rgba(200, 177, 137, 0)); }
+.eyebrow-line { flex: none; width: clamp(48px, 5.8vw, 100px); height: 1px; background: linear-gradient(90deg, var(--rule), transparent); }
 
 .title { margin: 0; color: var(--ink); font-size: var(--h1); font-weight: 300; line-height: 1; letter-spacing: .41em; text-transform: uppercase; margin-right: -.41em; }
 .lead { max-width: 21em; margin: clamp(18px, 3.6vh, 38px) 0 clamp(26px, 4.4vh, 50px); color: var(--ink-2); font-size: var(--lead); font-weight: 300; line-height: 1.5; }
@@ -75,34 +128,44 @@ button { font: inherit; }
    a click on the planet would land on the headline (clicks on text do nothing to the scene). */
 .eyebrow, .title, .actions { width: fit-content; max-width: 100%; }
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: .7em; height: clamp(50px, 3.85vw, 68px); padding: 0 clamp(26px, 2.9vw, 50px); border-radius: 999px; font-size: clamp(.95rem, 1.2vw, 1.3rem); font-weight: 500; text-decoration: none; transition: background-color .5s var(--ease), color .5s var(--ease), border-color .5s var(--ease); }
-.btn-solid { background: var(--gold-fill); color: var(--on-gold); }
-.btn-solid:hover { background: var(--gold-fill-2); }
+.btn-solid { background: var(--fill); color: var(--on-fill); }
+.btn-solid:hover { background: var(--fill-hover); }
 .btn-solid:hover .arrow { transform: translateX(4px); }
-.btn-line { border: 1px solid var(--gold); color: var(--ink); }
-.btn-line:hover { background: rgba(227, 191, 149, .1); border-color: var(--gold-hot); }
+.btn-line { border: 1px solid var(--line); color: var(--ink); }
+.btn-line:hover { background: var(--accent-wash); border-color: var(--accent-hot); }
 
 /* ---------- planet picker ---------- */
-/* a small control in the corner of the hero: the body in the sky can be the moon, Mars or Earth */
+/* small controls in the corner of the hero: how the sun moves, and the body in the sky (the moon, Mars, Earth or Saturn) */
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .hero-controls { position: absolute; right: var(--gutter); bottom: clamp(18px, 3.2vh, 32px); z-index: 5; display: flex; align-items: center; gap: 10px; }
 .planet { position: relative; }
-.sun-icon { flex: none; width: 18px; height: 18px; fill: none; stroke: var(--gold-hot); stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
-.planet-btn { display: inline-flex; align-items: center; gap: 10px; height: 40px; padding: 0 14px 0 10px; border: 1px solid rgba(227, 191, 149, .45); border-radius: 999px; background: rgba(7, 7, 14, .55); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: var(--ink); font-size: .9rem; font-weight: 400; letter-spacing: .04em; cursor: pointer; transition: background-color .5s var(--ease), border-color .5s var(--ease); }
-.planet-btn:hover, .planet-btn[aria-expanded="true"] { border-color: var(--gold); background: rgba(227, 191, 149, .1); }
+.sun-icon { flex: none; width: 18px; height: 18px; fill: none; stroke: var(--accent-hot); stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.planet-btn { display: inline-flex; align-items: center; gap: 10px; height: 40px; padding: 0 14px 0 10px; border: 1px solid var(--edge); border-radius: 999px; background: var(--glass); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: var(--ink); font-size: .9rem; font-weight: 400; letter-spacing: .04em; cursor: pointer; transition: background-color .5s var(--ease), border-color .5s var(--ease); }
+.planet-btn:hover, .planet-btn[aria-expanded="true"] { border-color: var(--accent); background: var(--accent-wash); }
 .planet-chev { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; transition: transform .5s var(--ease); }
 .planet-btn[aria-expanded="true"] .planet-chev { transform: rotate(180deg); }
-.planet-dot { flex: none; width: 20px; height: 20px; border-radius: 50%; box-shadow: inset -2px -3px 5px rgba(0, 0, 0, .5), 0 0 0 1px rgba(255, 255, 255, .08); }
+.planet-dot { flex: none; width: 20px; height: 20px; border-radius: 50%; box-shadow: inset -2px -3px 5px rgba(0, 0, 0, .5), 0 0 0 1px var(--dot-ring); }
 .planet-dot[data-planet="moon"] { background: radial-gradient(circle at 68% 26%, #efdcc2 0, #8a7b6f 45%, #2a2830 100%); }
 .planet-dot[data-planet="mars"] { background: radial-gradient(circle at 68% 26%, #f2b088 0, #b4552f 48%, #3a1c14 100%); }
 .planet-dot[data-planet="earth"] { background: radial-gradient(circle at 34% 42%, #3f9a55 0 13%, transparent 14%), radial-gradient(circle at 58% 64%, #4a9a58 0 11%, transparent 12%), radial-gradient(circle at 68% 26%, #9fd4ff 0, #2a62b0 50%, #0b1c3a 100%); }
 .planet-dot[data-planet="saturn"] { position: relative; background: radial-gradient(circle at 68% 26%, #f3e2b4 0, #b99b6c 52%, #2f2418 100%); }
 .planet-dot[data-planet="saturn"]::after { content: ""; position: absolute; left: 50%; top: 50%; width: 31px; height: 10px; border: 1.5px solid rgba(236, 214, 168, .85); border-radius: 50%; translate: -50% -50%; rotate: -16deg; }
-.planet-list { position: absolute; right: 0; bottom: calc(100% + 8px); min-width: 100%; margin: 0; padding: 6px; list-style: none; border: 1px solid rgba(227, 191, 149, .4); border-radius: 18px; background: rgba(9, 9, 17, .92); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 18px 40px -18px rgba(0, 0, 0, .8); outline: none; }
+.planet-list { position: absolute; right: 0; bottom: calc(100% + 8px); min-width: 100%; margin: 0; padding: 6px; list-style: none; border: 1px solid var(--edge); border-radius: 18px; background: var(--glass-solid); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 18px 40px -18px var(--shadow); outline: none; }
 .planet-list:not([hidden]) { animation: pick-in .35s var(--ease); }
 .planet-list li { display: flex; white-space: nowrap; align-items: center; gap: 10px; padding: 8px 14px 8px 8px; border-radius: 12px; color: var(--ink-2); font-size: .9rem; letter-spacing: .04em; cursor: pointer; }
-.planet-list li[data-active] { background: rgba(227, 191, 149, .13); color: var(--ink); }
-.planet-list li[aria-selected="true"] { color: var(--gold-hot); }
+.planet-list li[data-active] { background: var(--accent-wash-2); color: var(--ink); }
+.planet-list li[aria-selected="true"] { color: var(--accent-hot); }
 @keyframes pick-in { from { opacity: 0; transform: translateY(6px); } }
+
+/* ---------- colour scheme switch ---------- */
+/* in the header: the knob sits on the sun by day and on the moon by night */
+.theme { position: relative; display: grid; grid-template-columns: 1fr 1fr; place-items: center; flex: none; width: 68px; height: 38px; padding: 0 3px; border: 1px solid var(--edge); border-radius: 999px; background: var(--glass); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: var(--ink-3); cursor: pointer; transition: border-color .5s var(--ease); }
+.theme:hover { border-color: var(--accent); }
+.theme svg { position: relative; width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; transition: color .3s; }
+.theme-thumb { position: absolute; top: 3px; left: 3px; width: 30px; height: 30px; border-radius: 50%; background: var(--thumb); transition: transform .5s var(--ease), background-color .3s; }
+[data-theme="dark"] .theme-thumb { transform: translateX(30px); }
+[data-theme="light"] .theme svg:first-of-type { color: var(--on-thumb); }
+[data-theme="dark"] .theme svg:last-of-type { color: var(--on-thumb); fill: currentColor; }
 
 /* ---------- intro ---------- */
 /* the text rises in once its font is there, while the scene draws itself */
@@ -116,14 +179,16 @@ button { font: inherit; }
 .js.is-ready .head, .js.is-ready .eyebrow, .js.is-ready .title, .js.is-ready .lead, .js.is-ready .actions, .js.is-ready .hero-controls { opacity: 1; transform: none; }
 
 /* ---------- view transitions ---------- */
-/* designs cross-fade into each other */
+/* designs cross-fade into each other; a change of the colour scheme spreads as a circle from the planet */
 @view-transition { navigation: auto; }
+:root.theme-change::view-transition-old(root), :root.theme-change::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
 
 /* ---------- responsive ---------- */
 @media (max-width: 819px) {
   :root { --h1: clamp(2.3rem, 11.5vw, 4.4rem); --lead: clamp(1.02rem, 4.4vw, 1.4rem); }
   .nav { display: none; }
   .menu-btn { display: inline-flex; }
+  .head-in { gap: 12px; }
   .hero { align-items: end; }
   .actions { width: 100%; }
   .hero-main { padding-top: 0; padding-bottom: clamp(84px, 13vh, 120px); }
@@ -133,6 +198,14 @@ button { font: inherit; }
   .btn { flex: 1 1 auto; }
   /* the design switcher of the concept review sits at the foot: stay above it */
   .hero-controls { bottom: 62px; }
+}
+
+/* on the narrowest phones the brand, the colour scheme switch and the menu button have to share the header */
+@media (max-width: 380px) {
+  .head-in { gap: 10px; }
+  .brand { gap: 8px; }
+  .brand-name { letter-spacing: .24em; }
+  .menu-btn { padding: 0 12px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
