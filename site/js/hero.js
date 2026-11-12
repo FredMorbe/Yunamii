@@ -107,7 +107,6 @@ function mulberry32(seed) {
 }
 const rnd = mulberry32(20240611);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
-const easeOutBack = (x) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
 
 // Loads a picture and hands back an ImageBitmap: it is decoded off the main thread, so the first frame does not
 // stall on decoding 17 pictures. (img.decode() would do the same, but it never settles on a page that is not
@@ -150,7 +149,6 @@ let items = [];
 let petals = [];
 let ripples = [];
 const pointer = { active: false, x: 0, y: 0, vx: 0, vy: 0, lastT: 0 };
-let bloomStart = 0;
 let running = true;
 let lastFrame = 0, fpsEMA = 60;
 
@@ -182,7 +180,6 @@ function buildItems(anchorData) {
       x: a.x + ox, y: a.y + oy,
       s: (0.85 + R() * 0.3) * (extra ? 0.92 : 1),
       d: a.d, tip: a.tip,
-      birth: 0.5 + a.d * 2.8 + R() * 0.6,
       ox: 0, oy: 0, vx: 0, vy: 0, th: 0, vth: 0,
       k: 55 + R() * 45,
       phase: R() * 6.28,
@@ -336,7 +333,7 @@ function drawLayer(t) {
   lctx.setTransform(1, 0, 0, 1, 0, 0); lctx.globalCompositeOperation = 'source-over'; lctx.clearRect(0, 0, W, H);
   lctx.setTransform(1, 0, 0, 1, view.tx, view.ty);
   lctx.drawImage(treeCanvas, 0, 0);
-  drawItems(lctx, t);
+  drawItems(lctx);
   // scene light: teal bounce from the water below, pink window light from the upper right, a touch of haze
   lctx.globalCompositeOperation = 'source-atop';
   lctx.setTransform(S, 0, 0, S, view.tx, view.ty);
@@ -500,7 +497,6 @@ function wind(t, x, y) {
 
 function step(dt, t) {
   const sp = Math.hypot(pointer.vx, pointer.vy);
-  const bloomT = t - bloomStart;
   for (const it of items) {
     const w = reduceMotion ? 0 : wind(t, it.x, it.y);
     const eqx = w * 2.4 * (0.5 + it.d);
@@ -509,7 +505,7 @@ function step(dt, t) {
     let ax = -it.k * (it.ox - eqx) - 2 * 0.22 * Math.sqrt(it.k) * it.vx;
     let ay = -it.k * (it.oy - eqy) - 2 * 0.22 * Math.sqrt(it.k) * it.vy;
     let ath = -80 * (it.th - eqth) - 2 * 0.2 * Math.sqrt(80) * it.vth;
-    if (pointer.active && sp > 20 && bloomT > it.birth) {
+    if (pointer.active && sp > 20) {
       const dx = it.x + it.ox - pointer.x, dy = it.y + it.oy - pointer.y;
       const d = Math.hypot(dx, dy);
       if (d < HAND_RADIUS) {
@@ -530,7 +526,7 @@ function step(dt, t) {
   pointer.vx *= Math.exp(-dt * 9); pointer.vy *= Math.exp(-dt * 9);
 
   // ambient petals
-  if (!reduceMotion && bloomT > 4 && Math.random() < dt * 0.5) {
+  if (!reduceMotion && Math.random() < dt * 0.5) {
     const cand = items[Math.floor(Math.random() * items.length)];
     if (cand.type === 'blossom') spawnPetal(cand);
   }
@@ -565,15 +561,11 @@ function drawRipples() {
   }
 }
 
-function drawItems(ctx, t) {
-  const bloomT = t - bloomStart;
+function drawItems(ctx) {
   const S = view.S;
   for (const it of items) {
-    const gT = clamp((bloomT - it.birth) / 0.9, 0, 1);
-    if (gT <= 0) continue;
-    const g = easeOutBack(gT);
     const spr = sprites[it.name];
-    const sc = it.s * g;
+    const sc = it.s;
     const rot = it.rot0 + it.th;
     const cos = Math.cos(rot), sin = Math.sin(rot);
     const sx = it.flip ? -sc : sc;
@@ -647,7 +639,7 @@ function frame(now) {
 }
 
 function start() {
-  if (reduceMotion) { bloomStart = -100; resize(); render(0); markHero('ready'); return; }
+  if (reduceMotion) { resize(); render(0); markHero('ready'); return; }
   running = true; lastFrame = 0; requestAnimationFrame(frame);
 }
 function stop() { running = false; }
@@ -668,7 +660,6 @@ async function init() {
   layoutScene();
   resize();
   new ResizeObserver(() => { if (placeScene()) scheduleRebuild(); }).observe(hero);
-  bloomStart = performance.now() / 1000;
   start();
   new ResizeObserver(scheduleRebuild).observe(canvas);
   new IntersectionObserver(([e]) => {
