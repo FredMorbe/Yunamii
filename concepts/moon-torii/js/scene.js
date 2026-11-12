@@ -450,9 +450,20 @@ vec3 halo(vec2 q, float S, int kind, float I) {
   return vec3(0.25, 0.5, 1.0) * w * (0.2 + 0.8 * side * side) * smoothstep(0.0, 0.5, I);
 }
 
+// The shadow of the planet: a cylinder of the planet's radius that runs from it away from the sun. A
+// moon inside it (P in planet radii from the planet's centre, x right, y up, z towards the viewer) gets
+// no light at all and is gone; the edge of the cylinder is a little soft.
+float planetShadow(vec3 P) {
+  vec3 L = planetDir();
+  float along = dot(P, L);                       // < 0: on the far side of the planet, away from the sun
+  float across = length(P - along * L);
+  return (1.0 - smoothstep(0.9, 1.15, across)) * (1.0 - smoothstep(-0.2, 0.2, along));
+}
+
 // ---- Phobos and Deimos, the two moons of Mars: small dark lumps on slanted orbits round the planet,
 // lit by the same light as Mars. Behind the planet the planet hides them, in front they cross its
-// disc. Sizes and orbits are made to be seen, not to scale. The flag front picks the half of the orbit.
+// disc; in the shadow of the planet they vanish. Sizes and orbits are made to be seen, not to scale.
+// The flag front picks the half of the orbit.
 vec4 marsMoon(vec2 v, float S, float t, int i, bool front) {
   float a = i == 0 ? 1.55 : 2.25;                 // orbit radius, in planet radii
   float period = i == 0 ? 70.0 : 160.0;           // seconds
@@ -461,6 +472,8 @@ vec4 marsMoon(vec2 v, float S, float t, int i, bool front) {
   vec2 e = vec2(a * cos(ang), a * 0.3 * sin(ang));    // the orbit seen from a little above: the lower half is the near one
   vec2 pos = vec2(cos(tilt) * e.x - sin(tilt) * e.y, sin(tilt) * e.x + cos(tilt) * e.y);
   if ((sin(ang) > 0.0) != front) return vec4(0.0);
+  float shadow = planetShadow(vec3(pos.x, -pos.y, 0.954 * a * sin(ang)));     // the orbit is seen from 17 degrees above (sin 0.3): the near half has z > 0
+  if (shadow >= 1.0) return vec4(0.0);
   float rad = (i == 0 ? 0.05 : 0.036) * S;         // in pixels
   vec2 o = (v - pos) * S / rad;                   // from the moon's centre, in moon radii
   o.x *= 0.82;                                    // a lump, not a ball
@@ -470,7 +483,7 @@ vec4 marsMoon(vec2 v, float S, float t, int i, bool front) {
   vec3 n = vec3(o.x, -o.y, sqrt(max(1.0 - d * d, 0.0)));
   float k = pow(clamp((dot(n, planetDir()) + 0.05) / 1.05, 0.0, 1.0), 1.1);
   vec3 albedo = i == 0 ? vec3(0.38, 0.34, 0.30) : vec3(0.55, 0.50, 0.45);
-  return vec4(albedo * (0.05 + 1.2 * mix(k, 0.65 + 0.35 * k, uDay)), alpha * dayVis(k));      // (by day the colour does not darken towards the terminator, see planetLight)
+  return vec4(albedo * (0.05 + 1.2 * mix(k, 0.65 + 0.35 * k, uDay)), alpha * dayVis(k) * (1.0 - shadow));      // (by day the colour does not darken towards the terminator, see planetLight)
 }
 
 // ---- a solar eclipse: the body keeps its picture and its light but is dimmed to ECLIPSE_LEFT of its
@@ -496,7 +509,8 @@ vec3 corona(vec2 q, float Sk, float t) {
 
 // ---- the Moon of Earth: one small grey sphere on a slanted orbit round the planet, made like the
 // moon of the page (dark seas, craters) and lit by the same light as Earth. It hides behind the
-// planet and crosses its disc in front, like the moons of Mars. Size and orbit are made to be seen.
+// planet and crosses its disc in front, like the moons of Mars, and it vanishes in the shadow of the planet.
+// Size and orbit are made to be seen.
 vec4 earthMoon(vec2 v, float S, float t, bool front) {
   float a = 2.1;                                  // orbit radius, in planet radii
   float ang = -0.5 + 6.2831853 * t / 120.0;       // one round in two minutes
@@ -504,6 +518,8 @@ vec4 earthMoon(vec2 v, float S, float t, bool front) {
   vec2 e = vec2(a * cos(ang), a * 0.3 * sin(ang));
   vec2 pos = vec2(cos(tilt) * e.x - sin(tilt) * e.y, sin(tilt) * e.x + cos(tilt) * e.y);
   if ((sin(ang) > 0.0) != front) return vec4(0.0);
+  float shadow = planetShadow(vec3(pos.x, -pos.y, 0.954 * a * sin(ang)));
+  if (shadow >= 1.0) return vec4(0.0);
   float rad = 0.15 * S;                           // in pixels
   vec2 o = (v - pos) * S / rad;                   // from the moon's centre, in moon radii
   float d = length(o);
@@ -514,7 +530,7 @@ vec4 earthMoon(vec2 v, float S, float t, bool front) {
   vec2 uv = vec2(atan(n.x, n.z), asin(clamp(n.y, -1.0, 1.0)));
   float tex = (fbm(uv * 1.6 + 7.0) - 0.5) * 0.9 + craters(uv * 3.0) * 0.25;
   float kc = mix(k, 0.65 + 0.35 * k, uDay);       // (by day the colour does not darken towards the terminator, see planetLight)
-  return vec4(moonRamp(20.0 + 215.0 * kc * clamp(1.0 + tex, 0.3, 1.5)), alpha * dayVis(k));
+  return vec4(moonRamp(20.0 + 215.0 * kc * clamp(1.0 + tex, 0.3, 1.5)), alpha * dayVis(k) * (1.0 - shadow));
 }
 
 // ---- stars: the few of the picture, a sparse field and one sparkle
@@ -720,19 +736,21 @@ void main() {
   float moonsIn = smoothstep(0.3, 0.8, I);
   float moons = ((from == 1 ? 1.0 - swap : 0.0) + (to == 1 ? swap : 0.0)) * moonsIn;
   float luna = ((from == 2 ? 1.0 - swap : 0.0) + (to == 2 ? swap : 0.0)) * moonsIn;     // and Earth has its Moon
+  float r = length(qM);
+  float cov = mix(bodyCover(r, S * bodyScale(from), from, I), bodyCover(r, S * bodyScale(to), to, I), swap);
+  // behind the planet the whole disc hides the moons, even where it is transparent by day (the shadow side)
+  float hides = mix(1.0, 1.0 - cov, uDay);
   if (luna > 0.0) {
     vec4 m = earthMoon(qM / S, S, t, false);
-    col = mix(col, m.rgb, m.a * luna);
+    col = mix(col, m.rgb, m.a * luna * hides);
   }
   if (moons > 0.0) {
     for (int i = 0; i < 2; i++) {
       vec4 m = marsMoon(qM / S, S, t, i, false);                 // behind the planet: the planet covers them
-      col = mix(col, m.rgb, m.a * moons);
+      col = mix(col, m.rgb, m.a * moons * hides);
     }
   }
 
-  float r = length(qM);
-  float cov = mix(bodyCover(r, S * bodyScale(from), from, I), bodyCover(r, S * bodyScale(to), to, I), swap);
   // by day the body is transparent where the sun does not light it (in an eclipse it is a dark disc as a whole)
   float vis = 1.0;
   if (uDay > 0.5) vis = mix(mix(bodyVis(from, qM, S), bodyVis(to, qM, S), swap), 1.0, uEclipse);
