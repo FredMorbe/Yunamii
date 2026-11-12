@@ -161,8 +161,9 @@ vec3 moonRamp(float l) {
 // By day the atmosphere lies in front of the bodies: where the sun does not light a body, the sky shows
 // through it (the body is transparent there), and only the lit part stands out from the sky. dayVis
 // is how opaque a body is where the light on it is k (0 dark .. 1 fully lit); at night all of it is.
-// A planet's shaded colour is brightened by it (unshade), so that its fading edge is tinted with its
-// own colour and not grey.
+// The colour of a body is not darkened towards its terminator by day (that would be a dark soft band in
+// the fading edge): only the transparency goes. The rings of Saturn have no such lit side, there the
+// shaded colour is brightened by the transparency (unshade), so that the fading part is not grey.
 float dayVis(float k) { return mix(1.0, smoothstep(0.0, 0.40, k), uDay); }
 vec3 unshade(vec3 c, float vis) { return mix(c, min(c / max(vis, 0.25), vec3(1.0)), uDay); }
 vec3 direction(float az, float el) { return vec3(cos(az) * cos(el), sin(az) * cos(el), sin(el)); }
@@ -172,15 +173,28 @@ vec3 direction(float az, float el) { return vec3(cos(az) * cos(el), sin(az) * co
 // the light comes from the front and the body is lit evenly.
 float sunElevation(float usual) { return clamp(usual + uSunLift, -1.5708, 1.5708); }
 float sunFull(float usual) { return smoothstep(0.55, 1.4, sunElevation(usual)); }
+// The light on a ball when the sun stands straight in front of it: brightest in the middle (1), darker
+// towards the rim (0.1 there), so that it is still a ball and not a flat disc. The exponent keeps the
+// middle bright for a long way, the fall-off comes towards the edge.
+float frontLight(vec3 n) { return 0.10 + 0.90 * pow(n.z, 0.6); }
 
-// the light on the moon at normal n, in the units of the ramp above (about 0..218): the sun is the one
-// of the planets (planetDir), only lower, behind the moon; the light rises gently from the terminator
-// (smoothstep: no sharp edge) and is at its full strength well before the light stands straight on
-float moonLit(vec3 n) {
+// the light on the moon at normal n from the sun alone (no front light), in the units of the ramp above
+// (about 0..218): the sun is the one of the planets (planetDir), only lower, behind the moon; the light
+// rises gently from the terminator (smoothstep: no sharp edge) and is at its full strength well before
+// the light stands straight on
+float moonDirect(vec3 n) {
   vec3 sunDir = direction(0.98 + uSun, sunElevation(-0.55));      // the light may be turned (see the sun in scene.js)
-  float lit = 218.0 * pow(smoothstep(-0.18, 0.62, dot(n, sunDir)), 0.9);
-  return mix(lit, 192.0 * (0.76 + 0.24 * n.z), sunFull(-0.07));      // from the front it is lit all over, like a full moon
+  return 218.0 * pow(smoothstep(-0.18, 0.62, dot(n, sunDir)), 0.9);
 }
+// the light that colours the moon: by day the colour does not fall off towards the terminator (see planetLight)
+float moonLit(vec3 n) {
+  float direct = moonDirect(n);
+  direct = mix(direct, 120.0 + 0.45 * direct, uDay);
+  return mix(direct, 190.0 * frontLight(n), sunFull(-0.07));      // (a little less than at most from the side: the seas and craters stay to be seen in the middle)
+}
+// by day the moon is transparent where the sun does not light it; the dark rim of a moon lit from the front
+// is only darker, not see-through, so the front light counts as full here
+float moonSeen(vec3 n) { return dayVis(mix(moonDirect(n) / 218.0, 1.0, sunFull(-0.07))); }
 
 vec3 moonSurface(vec3 n, float I) {
   float lit = moonLit(n);
@@ -224,10 +238,15 @@ vec3 rotY(vec3 n, float a) {
   return vec3(c * n.x + s * n.z, n.y, -s * n.x + c * n.z);
 }
 vec3 planetDir() { return direction(0.98 + uSun, sunElevation(0.45)); }
+float planetLambert(vec3 n) { return pow(clamp((dot(n, planetDir()) + 0.08) / 1.08, 0.0, 1.0), 1.1); }
 float planetLight(vec3 n) {
-  float lambert = pow(clamp((dot(n, planetDir()) + 0.08) / 1.08, 0.0, 1.0), 1.1);
-  return mix(lambert, 0.84 + 0.1 * n.z, sunFull(0.45));      // no shadow when the light comes from the front
+  // By day the shading does not darken the colour towards the terminator (that would be a dark soft band
+  // in the fading edge): the transparency (planetSeen) lets the shadow go, the colour stays that of the lit side.
+  float lambert = mix(planetLambert(n), 0.65 + 0.35 * planetLambert(n), uDay);
+  return mix(lambert, frontLight(n), sunFull(0.45));      // no shadow when the light comes from the front, but a ball: darker towards the rim
 }
+// how opaque a planet is by day (see moonSeen)
+float planetSeen(vec3 n) { return dayVis(mix(planetLambert(n), 1.0, sunFull(0.45))); }
 
 // the colour of Mars made of noise: shown until the photo is there
 vec3 marsGenerated(vec3 n, float t) {
@@ -396,15 +415,14 @@ vec3 body(int kind, vec3 n, float I, float t) {
 vec3 bodyColor(int kind, vec2 q, float S, float I, float t) {
   float Sk = S * bodyScale(kind);
   vec3 n = vec3(q.x, -q.y, sqrt(max(Sk * Sk - dot(q, q), 0.0))) / Sk;
-  vec3 c = body(kind, n, I, t);
-  return kind == 0 ? c : unshade(c, dayVis(planetLight(n)));
+  return body(kind, n, I, t);
 }
 
 // how opaque the body is at this pixel (by day it is transparent where the sun does not light it)
 float bodyVis(int kind, vec2 q, float S) {
   float Sk = S * bodyScale(kind);
   vec3 n = vec3(q.x, -q.y, sqrt(max(Sk * Sk - dot(q, q), 0.0))) / Sk;
-  return dayVis(kind == 0 ? moonLit(n) / 216.0 : planetLight(n));
+  return kind == 0 ? moonSeen(n) : planetSeen(n);
 }
 
 // how much of the disc is there at radius r: the moon has a crisp edge, a planet a fuzzy one that
@@ -452,8 +470,7 @@ vec4 marsMoon(vec2 v, float S, float t, int i, bool front) {
   vec3 n = vec3(o.x, -o.y, sqrt(max(1.0 - d * d, 0.0)));
   float k = pow(clamp((dot(n, planetDir()) + 0.05) / 1.05, 0.0, 1.0), 1.1);
   vec3 albedo = i == 0 ? vec3(0.38, 0.34, 0.30) : vec3(0.55, 0.50, 0.45);
-  float vis = dayVis(k);
-  return vec4(unshade(albedo * (0.05 + 1.2 * k), vis), alpha * vis);
+  return vec4(albedo * (0.05 + 1.2 * mix(k, 0.65 + 0.35 * k, uDay)), alpha * dayVis(k));      // (by day the colour does not darken towards the terminator, see planetLight)
 }
 
 // ---- a solar eclipse: the body keeps its picture and its light but is dimmed to ECLIPSE_LEFT of its
@@ -496,7 +513,8 @@ vec4 earthMoon(vec2 v, float S, float t, bool front) {
   float k = pow(clamp((dot(n, planetDir()) + 0.05) / 1.05, 0.0, 1.0), 1.1);
   vec2 uv = vec2(atan(n.x, n.z), asin(clamp(n.y, -1.0, 1.0)));
   float tex = (fbm(uv * 1.6 + 7.0) - 0.5) * 0.9 + craters(uv * 3.0) * 0.25;
-  return vec4(moonRamp(20.0 + 215.0 * k * clamp(1.0 + tex, 0.3, 1.5)), alpha * dayVis(k));
+  float kc = mix(k, 0.65 + 0.35 * k, uDay);       // (by day the colour does not darken towards the terminator, see planetLight)
+  return vec4(moonRamp(20.0 + 215.0 * kc * clamp(1.0 + tex, 0.3, 1.5)), alpha * dayVis(k));
 }
 
 // ---- stars: the few of the picture, a sparse field and one sparkle
