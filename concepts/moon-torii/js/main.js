@@ -11,12 +11,12 @@ const SUN_KEY = 'yunamii-sun';
 const root = document.documentElement;
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// the body in the sky: the moon, unless the visitor has chosen another one before
-let planet = PLANETS[0];
+// the body in the sky: Mars, unless the visitor has chosen another one before
+let planet = 'mars';
 try {
   const saved = localStorage.getItem(PLANET_KEY);
   if (PLANETS.includes(saved)) planet = saved;
-} catch { /* storage blocked: it is the moon */ }
+} catch { /* storage blocked: it is Mars */ }
 
 // the sun follows the mouse, unless the visitor has chosen another way before
 let sunMode = SUN_MODES[0];

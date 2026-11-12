@@ -12,11 +12,11 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="preload" href="assets/fonts/DMSans-normal-300-700-latin.woff2" as="font" type="font/woff2" crossorigin>
   <script>
-    // theme before first paint: stored choice, otherwise the system setting
+    // theme before first paint: the stored choice, otherwise dark (the system setting does not decide)
     (function () {
       var root = document.documentElement, theme = null;
-      try { theme = localStorage.getItem('yunamii-theme'); } catch (e) { /* storage blocked: fall through to the system setting */ }
-      if (theme !== 'light' && theme !== 'dark') theme = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      try { theme = localStorage.getItem('yunamii-theme'); } catch (e) { /* storage blocked: it is dark */ }
+      if (theme !== 'light' && theme !== 'dark') theme = 'dark';
       root.dataset.theme = theme;
       root.classList.add('js');
     })();
@@ -98,8 +98,8 @@
       </div>
       <div class="planet" id="planet">
         <button class="planet-btn" id="planetBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="planetList">
-          <span class="planet-dot" data-planet="moon" aria-hidden="true"></span>
-          <span class="planet-name">Moon</span>
+          <span class="planet-dot" data-planet="mars" aria-hidden="true"></span>
+          <span class="planet-name">Mars</span>
           <svg class="planet-chev" aria-hidden="true"><use href="#i-chevron"/></svg>
           <span class="visually-hidden">: choose the planet</span>
         </button>
