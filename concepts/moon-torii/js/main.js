@@ -25,12 +25,33 @@ try {
   if (SUN_MODES.includes(saved)) sunMode = saved;
 } catch { /* storage blocked: it follows the mouse */ }
 
+// An eclipse that begins in the light scheme turns the page dark for its length, and its end brings the
+// light back. One that begins in the dark scheme leaves it alone. Using the switch in between is the
+// visitor's own choice: the page does not go back on it.
+let theme = null;
+let restoreLight = false;
+
 // a click on the water drops a ring, except on links, text and the controls
-const scene = createScene(document.getElementById('scene'), { reduceMotion, solid: 'a, button, .eyebrow, .title, .lead, .hero-controls', planet, sunMode, theme: root.dataset.theme });
+const scene = createScene(document.getElementById('scene'), {
+  reduceMotion,
+  solid: 'a, button, .eyebrow, .title, .lead, .hero-controls',
+  planet,
+  sunMode,
+  theme: root.dataset.theme,
+  onEclipse(on) {
+    if (on && theme.current() === 'light') {
+      restoreLight = true;
+      theme.set('dark');
+    } else if (!on && restoreLight) {
+      restoreLight = false;
+      theme.set('light');
+    }
+  },
+});
 
 // light or dark: the inline script in <head> has set data-theme; the new scheme spreads from the planet
 // while it is on screen, otherwise from the switch
-initTheme({
+theme = initTheme({
   reduceMotion,
   origin(toggle) {
     const body = scene && scene.bodyPosition();
@@ -38,7 +59,8 @@ initTheme({
     const rect = toggle.getBoundingClientRect();
     return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
   },
-  onChange(theme) { if (scene) scene.setTheme(theme); },
+  onChange(name) { if (scene) scene.setTheme(name); },
+  onToggle() { restoreLight = false; },
 });
 
 if (scene) {
