@@ -1,29 +1,16 @@
-// Entry point of the "Orbit Mesh" hero: starts the net and wires its readout,
-// the theme switch and the menu.
+// Entry point of the "Orbit Mesh" hero: starts the net and wires the theme switch and the menu.
 
 import { createOrbit } from './orbit.js';
 
 const THEME_KEY = 'yunamii-theme';
-const PAGE = { dark: '#04060b', light: '#f8f5ef' };
+const PAGE = { dark: '#04060b', light: '#ffffff' };
 
 const root = document.documentElement;
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// ---- readout: the net under the pointer
-const outH = document.getElementById('outH');
-const outS = document.getElementById('outS');
-function probe({ height, slope }) {
-  outH.textContent = (height >= 0 ? '+' : '−') + Math.abs(height).toFixed(2);
-  outS.textContent = slope.toFixed(0);
-}
-
-const orbit = createOrbit(document.getElementById('orbit'), { theme: root.dataset.theme, reduceMotion, onProbe: probe });
-if (orbit) {
-  document.getElementById('outNodes').textContent = orbit.nodes.toLocaleString('de-DE');
-} else {
-  // no WebGL2 on this device: the page keeps its plain background
-  console.warn('WebGL2 is not available, the net is not drawn.');
-}
+const orbit = createOrbit(document.getElementById('orbit'), { theme: root.dataset.theme, reduceMotion });
+// no WebGL2 on this device: the page keeps its plain background
+if (!orbit) console.warn('WebGL2 is not available, the net is not drawn.');
 
 // ---- theme: stored choice, otherwise the system setting (see the inline script in <head>)
 const toggle = document.getElementById('themeToggle');

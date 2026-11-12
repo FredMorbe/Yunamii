@@ -7,7 +7,7 @@
 // balls with craters made of formulas, locked to Mars as the real ones are. All three are lit by
 // the same sun, so the moons show phases as they go round. Lines behind a body are hidden by it.
 // The wells are the single source: JavaScript writes them into the shader and reads the same sum
-// for the sphere heights and the live readout.
+// for the sphere heights.
 
 const MAX_PIXEL_RATIO = 2;
 const MAX_PIXELS = 5e6;          // canvas pixel budget for very large screens
@@ -34,8 +34,8 @@ const FOG = [10.5, 23];          // view depth where the net starts to fade, and
 // A well is y = -depth * soft / sqrt(r^2 + soft^2): deepest at the centre, a long shallow tail outside.
 const PLANET = { radius: 1.2, depth: 4.8, soft: 2.0 };       // Mars
 const MOONS = [
-  { orbit: 3.7, radius: 0.4, depth: 1.4, soft: 0.7, period: 38, phase: 2.5 },     // Phobos, the inner one; period in seconds
-  { orbit: 5.7, radius: 0.32, depth: 1.1, soft: 0.58, period: 91, phase: -0.6 },  // Deimos
+  { orbit: 3.7, radius: 0.28, depth: 1.4, soft: 0.7, period: 38, phase: 2.5 },     // Phobos, the inner one; period in seconds
+  { orbit: 5.7, radius: 0.224, depth: 1.1, soft: 0.58, period: 91, phase: -0.6 },  // Deimos
 ];
 const POINTER = { depth: 0.7, soft: 1.1 };    // the pointer is a light mass that dents the net a little
 
@@ -47,10 +47,10 @@ const LOOKS = {
     paper: '#04060b', tone: [1, 0, 0, 0],              // the ground a body is veiled towards (see FS_BODY), and: moon gain, veil overall, in the shadow
   },
   light: {
-    bg0: '#f8f5ef', bg1: '#e6ebec', glow: '#ffffff', line: '#1d3c5b', crest: '#14527f', hot: '#d04d78',
+    bg0: '#ffffff', bg1: '#ffffff', glow: '#ffffff', line: '#1d3c5b', crest: '#14527f', hot: '#d04d78',
     lineA: 0.36, pointA: 0.51, add: false, halo: 0.35,   // 40 % more transparent than it was (0.6, 0.85)
     night: '#4f6078', air: '#c0643a',                  // by day the sky fills the shadow: it is a light blue-grey, not black
-    paper: '#f8f5ef', tone: [1.25, 0.04, 0.22, 0],         // the air lies in front of the bodies: they fade into the page where the sun does not light them
+    paper: '#ffffff', tone: [1.25, 0.04, 0.22, 0],         // the air lies in front of the bodies: they fade into the page where the sun does not light them
   },
 };
 
@@ -568,8 +568,7 @@ function rest(wells, x, z, r, sag) {
 const sagOf = (well) => ((well.depth / (well.soft * well.soft)) * CELL * CELL * 1.3) / 8;
 
 // Returns null when the device has no WebGL2; shader or link errors throw.
-// onProbe({ height, slope }) reports the net under the pointer, or at a resting point.
-export function createOrbit(canvas, { theme, reduceMotion, onProbe }) {
+export function createOrbit(canvas, { theme, reduceMotion }) {
   const gl = canvas.getContext('webgl2', { alpha: false, antialias: false });
   if (!gl) return null;
 
@@ -589,7 +588,6 @@ export function createOrbit(canvas, { theme, reduceMotion, onProbe }) {
   let visible = true;
   let raf = 0;
   let last = 0;
-  let probed = 0;
   let marsPhoto = null;          // the photo of Mars, once it is loaded
 
   function program(vs, fs, names) {
@@ -776,17 +774,6 @@ export function createOrbit(canvas, { theme, reduceMotion, onProbe }) {
     gl.drawArrays(gl.POINTS, 0, NX * NY);
   }
 
-  // the net under the pointer, or under a resting point while the pointer is elsewhere
-  function probe() {
-    const w = canvas.clientWidth;
-    const h = canvas.clientHeight;
-    if (!w || !h || !sys) return;
-    const g = pointer.over && pointer.ground ? pointer.ground : groundPoint(cam, 0.62, 0.8, 0);
-    if (!g) return;
-    const s = surface(frame().wells, g.x, g.z);
-    onProbe({ height: s.y, slope: (Math.atan(Math.hypot(s.gx, s.gz)) * 180) / Math.PI });
-  }
-
   function tick(now) {
     raf = requestAnimationFrame(tick);
     const dt = Math.min((now - last) / 1000, 0.1);
@@ -802,7 +789,6 @@ export function createOrbit(canvas, { theme, reduceMotion, onProbe }) {
     dent.mass += ((pointer.over ? 1 : 0) - dent.mass) * (1 - Math.exp(-dt * 1.6));
     pullSpeed += (-pull * 22 - pullSpeed * 6) * dt;
     pull += pullSpeed * dt;
-    if (now - probed > 110) { probed = now; probe(); }
     draw();
   }
 
@@ -844,10 +830,8 @@ export function createOrbit(canvas, { theme, reduceMotion, onProbe }) {
     }, { passive: true });
   }
   update();
-  probe();
 
   return {
-    nodes: NX * NY,
     setTheme(name) {
       look = LOOKS[name];
       if (!running) draw();
