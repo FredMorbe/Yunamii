@@ -82,9 +82,7 @@ const vec3 GOLD = vec3(0.902, 0.745, 0.561);
 const vec3 HOT  = vec3(1.000, 0.945, 0.780);
 
 // by day
-const float WATER_TOP = ${TAP_WATER.toFixed(2)};                  // the horizon, in moon radii below the moon's centre: where the water begins
-const vec3 DAY_WHITE = vec3(1.0);                  // the page far from the horizon, in the sky and in the water
-const vec3 DAY_BLUE = vec3(0.741, 0.863, 0.957);   // light blue right at the horizon
+const vec3 DAY_WHITE = vec3(1.0);                  // the page: plain white, in the sky and in the water
 const vec3 CIRRUS = vec3(0.78, 0.86, 0.94);        // the streaks of high cloud
 const vec3 LACQUER = vec3(0.788, 0.251, 0.165);    // the gate: vermilion lacquer
 const vec3 WASH = vec3(0.498, 0.573, 0.608);       // the rings: a wash of blue-grey ink
@@ -577,17 +575,6 @@ float cirrus(vec2 v, float S, float I) {
   return a * smoothstep(0.25, 0.85, I) * mix(smoothstep(-2.6, -1.3, v.x), 1.0, uClock.z);     // the text keeps its sky quiet
 }
 
-// ---- by day: the sky and the water below it as one mirrored gradient: light blue right at the horizon,
-// fading to white upwards in the sky and downwards in the water (the water mirrors the sky)
-vec3 dayBackdrop(vec2 frag, vec2 v, float S) {
-  float horizon = uMoon.y + WATER_TOP * S;                      // in pixels from the top
-  float up = clamp(frag.y / horizon, 0.0, 1.0);                 // 0 at the top of the page, 1 at the horizon
-  float down = 1.0 - clamp((frag.y - horizon) / max(uRes.y - horizon, 1.0), 0.0, 1.0);      // 1 at the horizon, 0 at the foot of the page
-  float below = (v.y - WATER_TOP) * S;                          // pixels below the horizon; the water layer drifts with the pointer
-  float blue = mix(up, down, smoothstep(-0.7, 0.7, below));
-  return mix(DAY_WHITE, DAY_BLUE, pow(blue, 1.5));
-}
-
 // Puts a line of the scene on the page. At night it is light that is added; by day it is paint
 // (lacquer, ink) that covers the page with the coverage that comes with the line.
 vec3 lay(vec3 col, vec4 line, vec3 paint) {
@@ -635,7 +622,8 @@ vec4 torii(vec2 v, float S, float t, float I) {
   float edge = smoothstep(0.55, 0.92, I) * (HS + 0.1) - 0.04;
   float shown = 1.0 - smoothstep(edge - 0.04, edge + 0.02, a.x);
   float ends = mix(0.5, 1.0, 1.0 - u * u);
-  float glow = 0.26 * exp(-abs(dy) / (dy > 0.0 ? 0.06 * S : 0.015 * S));
+  float flush = 1.0 - smoothstep(-0.05 * S, thick * 0.5, (a.x - HS) * S);     // the glow dies away towards the tip and is gone where the beam ends, it does not trail on past it
+  float glow = 0.26 * exp(-abs(dy) / (dy > 0.0 ? 0.06 * S : 0.015 * S)) * flush;
   cov = max(cov, shown * cover(dk, thick * 0.5 * bold));
   acc += shown * (GOLD * (0.85 * cover(dk, thick * 0.5) + glow * ends) + HOT * 0.5 * cover(dk, thick * 0.2));
 
@@ -721,7 +709,7 @@ void main() {
   vec3 col;
   vec3 dim = mix(vec3(1.0), DAY_ECLIPSE, uEclipse * uDay);      // by day an eclipse dims the light of the page
   if (uDay > 0.5) {
-    col = dayBackdrop(frag, qT / S, S) * dim;
+    col = DAY_WHITE * dim;
     col = mix(col, CIRRUS * dim, 0.7 * cirrus(qB / S, S, I));
   } else {
     float lift = 1.0 - smoothstep(0.4, 4.6, length(rel / S - vec2(0.3, 0.9)));
