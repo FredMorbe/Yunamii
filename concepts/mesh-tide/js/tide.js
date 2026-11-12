@@ -46,8 +46,8 @@ const RIPPLE_SECONDS = 7;        // water time; a ripple is faint long before th
 const RIPPLE_REUSE = 4;          // water time after which a ripple's slot may be taken by a pointer ripple
 
 const LOOKS = {
-  dark: { bg0: '#04070c', bg1: '#0b2231', glow: '#3f8fb3', line: '#a7c3dc', crest: '#d9eeff', hot: '#ffd6e4', lineA: 0.55, pointA: 0.8, add: true },
-  light: { bg0: '#f8f5ef', bg1: '#e3e9ea', glow: '#ffffff', line: '#1d3c5b', crest: '#14527f', hot: '#d04d78', lineA: 0.6, pointA: 0.85, add: false },
+  dark: { bg0: '#04070c', bg1: '#0b2231', glow: '#3f8fb3', line: '#a7c3dc', crest: '#d9eeff', hot: '#8cf2dd', lineA: 0.55, pointA: 0.8, add: true },
+  light: { bg0: '#f8f5ef', bg1: '#e3e9ea', glow: '#ffffff', line: '#1d3c5b', crest: '#14527f', hot: '#0aa395', lineA: 0.6, pointA: 0.85, add: false },
 };
 
 const f5 = (n) => n.toFixed(5);
