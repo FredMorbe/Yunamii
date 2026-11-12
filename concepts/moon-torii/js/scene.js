@@ -6,10 +6,9 @@
 // perspective as the others.
 // The numbers (proportions of the gate, the rim light of the moon, the spacing of the rings) are
 // measured from the design this concept rebuilds; everything is sized in moon radii.
-// The light colour scheme is the same scene by day: sky and water as one mirrored gradient from light blue
-// at the horizon to white instead of night ink, the gate
-// in vermilion lacquer and the rings in ink instead of gold light, high cloud instead of stars, the
-// bodies whose shadows are the sky showing through (the atmosphere lies in front of them). Light does not glow on a light page, so the lines
+// The light colour scheme is the same scene by day: a plain white page instead of night ink, the gate
+// in vermilion lacquer and the rings in ink instead of gold light, no stars, the
+// bodies whose shadows are the page showing through (the atmosphere lies in front of them). Light does not glow on a light page, so the lines
 // of the gate and the water are returned with a coverage as well (see `lay`).
 
 const MAX_PIXEL_RATIO = 2;
@@ -83,7 +82,6 @@ const vec3 HOT  = vec3(1.000, 0.945, 0.780);
 
 // by day
 const vec3 DAY_WHITE = vec3(1.0);                  // the page: plain white, in the sky and in the water
-const vec3 CIRRUS = vec3(0.78, 0.86, 0.94);        // the streaks of high cloud
 const vec3 LACQUER = vec3(0.788, 0.251, 0.165);    // the gate: vermilion lacquer
 const vec3 WASH = vec3(0.498, 0.573, 0.608);       // the rings: a wash of blue-grey ink
 const vec3 DAY_RIM = vec3(0.55, 0.62, 0.67);       // the thin ink line round a body
@@ -567,14 +565,6 @@ vec3 stars(vec2 v, float S, float t, float I) {
   return add * k;
 }
 
-// ---- by day: a few thin streaks of high cloud where the stars were, pale blue on the white of the sky
-float cirrus(vec2 v, float S, float I) {
-  const vec4 STREAK[3] = vec4[3](vec4(-1.15, -1.0, -0.4, -1.06), vec4(0.25, -1.5, 0.8, -1.52), vec4(1.55, -0.2, 2.0, -0.24));
-  float a = 0.0;
-  for (int i = 0; i < 3; i++) a = max(a, cover(sdSeg(v * S, STREAK[i].xy * S, STREAK[i].zw * S), max(0.011 * S, 1.5)));
-  return a * smoothstep(0.25, 0.85, I) * mix(smoothstep(-2.6, -1.3, v.x), 1.0, uClock.z);     // the text keeps its sky quiet
-}
-
 // Puts a line of the scene on the page. At night it is light that is added; by day it is paint
 // (lacquer, ink) that covers the page with the coverage that comes with the line.
 vec3 lay(vec3 col, vec4 line, vec3 paint) {
@@ -710,7 +700,6 @@ void main() {
   vec3 dim = mix(vec3(1.0), DAY_ECLIPSE, uEclipse * uDay);      // by day an eclipse dims the light of the page
   if (uDay > 0.5) {
     col = DAY_WHITE * dim;
-    col = mix(col, CIRRUS * dim, 0.7 * cirrus(qB / S, S, I));
   } else {
     float lift = 1.0 - smoothstep(0.4, 4.6, length(rel / S - vec2(0.3, 0.9)));
     col = mix(BG0, BG1, lift);
@@ -808,7 +797,8 @@ function bodyIndex(id) {
 // Returns false when the device has no WebGL2; shader or link errors throw.
 // `solid` selects the elements of the page that take a click themselves (links, text): a click on
 // them does not drop a ring.
-export function createScene(canvas, { reduceMotion, solid = 'a, button', planet = 'moon', sunMode = SUN_MODES[0], theme = THEMES[0] }) {
+// onEclipse(on) is called when a click on the planet starts (true) or ends (false) an eclipse.
+export function createScene(canvas, { reduceMotion, solid = 'a, button', planet = 'moon', sunMode = SUN_MODES[0], theme = THEMES[0], onEclipse }) {
   const gl = canvas.getContext('webgl2', { alpha: false, antialias: false });
   if (!gl) return false;
   let scheme = checkTheme(theme);       // 'dark' (night) or 'light' (day)
@@ -988,6 +978,7 @@ export function createScene(canvas, { reduceMotion, solid = 'a, button', planet 
     // a click on the planet is an eclipse, and the next click on it ends the eclipse; neither moves the sun
     if (Math.hypot(x, y) <= BODY_RADIUS[sky.to]) {
       eclipse.on = !eclipse.on;
+      if (onEclipse) onEclipse(eclipse.on);
       return;
     }
     // any other click is where the sun goes when it follows the last click (but not during an eclipse)
