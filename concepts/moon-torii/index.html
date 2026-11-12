@@ -7,11 +7,20 @@
   <meta name="description" content="Yunamii is a software studio: thoughtfully crafted desktop and mobile apps for a more intentional digital life.">
   <!-- design concept (hero only), not the live site -->
   <meta name="robots" content="noindex">
-  <meta name="color-scheme" content="dark">
+  <meta name="color-scheme" content="dark light">
   <meta name="theme-color" content="#07070e">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="preload" href="assets/fonts/DMSans-normal-300-700-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <script>document.documentElement.classList.add('js');</script>
+  <script>
+    // theme before first paint: stored choice, otherwise the system setting
+    (function () {
+      var root = document.documentElement, theme = null;
+      try { theme = localStorage.getItem('yunamii-theme'); } catch (e) { /* storage blocked: fall through to the system setting */ }
+      if (theme !== 'light' && theme !== 'dark') theme = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      root.dataset.theme = theme;
+      root.classList.add('js');
+    })();
+  </script>
   <link rel="stylesheet" href="css/torii.css">
 </head>
 <body>
@@ -19,6 +28,7 @@
   <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M3.5 12h16M13.5 5.5 20 12l-6.5 6.5"/></symbol>
   <symbol id="i-chevron" viewBox="0 0 12 12"><path d="M2.5 4.5 6 8l3.5-3.5"/></symbol>
   <symbol id="i-sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="3.6"/><path d="M10 2v2.4M10 15.6V18M2 10h2.4M15.6 10H18M4.3 4.3 6 6M14 14l1.7 1.7M4.3 15.7 6 14M14 6l1.7-1.7"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 20 20"><path d="M16 11.6A6.6 6.6 0 0 1 8.4 4a6.6 6.6 0 1 0 7.6 7.6Z"/></symbol>
 </svg>
 
 <!-- the navigation has no targets yet: this concept is the hero only -->
@@ -27,10 +37,10 @@
     <a class="brand" href="#top" aria-label="Yunamii, back to the top">
       <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true">
         <defs>
-          <linearGradient id="crescent" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff1cf"/><stop offset="1" stop-color="#d4b183"/></linearGradient>
+          <linearGradient id="crescent" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color: var(--mark-1)"/><stop offset="1" style="stop-color: var(--mark-2)"/></linearGradient>
           <mask id="crescent-cut"><rect width="48" height="48" fill="#fff"/><circle cx="31" cy="21" r="18" fill="#000"/></mask>
         </defs>
-        <circle cx="24" cy="24" r="19.5" fill="none" stroke="#e6be8f" stroke-opacity=".2"/>
+        <circle cx="24" cy="24" r="19.5" fill="none" style="stroke: var(--mark-ring)"/>
         <circle cx="24" cy="24" r="21" fill="url(#crescent)" mask="url(#crescent-cut)"/>
       </svg>
       <span class="brand-name">Yunamii</span>
@@ -42,6 +52,12 @@
       <a href="#top">Support</a>
       <a class="nav-cta" href="#top">Get Apps</a>
     </nav>
+    <!-- night or day: the dark or the light colour scheme -->
+    <button class="theme" id="themeToggle" type="button" role="switch" aria-checked="true" aria-label="Dark mode">
+      <span class="theme-thumb" aria-hidden="true"></span>
+      <svg aria-hidden="true"><use href="#i-sun"/></svg>
+      <svg aria-hidden="true"><use href="#i-moon"/></svg>
+    </button>
     <button class="menu-btn" id="menuBtn" type="button" aria-haspopup="dialog" aria-controls="menu">Menu</button>
   </div>
 </header>
