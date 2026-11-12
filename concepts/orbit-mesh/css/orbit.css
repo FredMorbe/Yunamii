@@ -25,6 +25,7 @@
   --thumb: #eef3f8;
   --on-thumb: #0a1119;
   --accent: #6ee7d4;
+  --logo-filter: hue-rotate(-16deg) saturate(.9);       /* the logo is cyan: turned towards the teal of the page */
   --on-accent: #04201c;
 }
 
@@ -40,6 +41,7 @@
   --thumb: #ffffff;
   --on-thumb: #0e1a28;
   --accent: #0b7f78;
+  --logo-filter: hue-rotate(-12deg) saturate(1.05) brightness(.88);
   --on-accent: #ffffff;
 }
 
@@ -58,7 +60,7 @@ button { font: inherit; }
 .head-in { display: flex; align-items: center; gap: clamp(16px, 3vw, 36px); height: 76px; }
 .wordmark { margin-right: auto; color: var(--ink); font-size: 1.55rem; font-weight: 700; letter-spacing: -.045em; text-decoration: none; }
 .head .wordmark { --wm-h: clamp(11px, 3vw, 16px); display: flex; align-items: center; }
-.wordmark-mark { flex: none; width: auto; height: 1.25em; margin-right: .4em; }
+.wordmark-mark { flex: none; width: auto; height: 1.25em; margin-right: .4em; filter: var(--logo-filter, none); }
 /* the lettering of the logo, in the colour of the text: the image is the mask, the text colour fills it */
 .wordmark-text { flex: none; display: block; width: calc(var(--wm-h) * 9.6); height: var(--wm-h); background: currentColor; -webkit-mask: url("../../shared/wordmark.webp") center / contain no-repeat; mask: url("../../shared/wordmark.webp") center / contain no-repeat; }
 .nav { display: flex; gap: clamp(22px, 3vw, 40px); }
