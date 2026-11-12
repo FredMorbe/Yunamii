@@ -21,6 +21,7 @@
   --ink: #f7f4ee;
   --ink-2: rgba(255, 255, 255, .88);
   --ink-3: rgba(255, 255, 255, .7);
+  --logo-filter: hue-rotate(-157deg) saturate(.6) brightness(1.05);     /* the logo is cyan: turned to the gold of the night */
   --accent: #e3bf95;                          /* the one warm colour: gold by night, vermilion by day */
   --accent-hot: #f7d4a4;
   --accent-wash: rgba(227, 191, 149, .1);     /* what a button or an option takes on under the pointer */
@@ -49,6 +50,7 @@
   --ink: #1c1b24;
   --ink-2: #2e2c37;
   --ink-3: #403e4a;
+  --logo-filter: hue-rotate(172deg) saturate(1.15) brightness(.85);      /* and to the vermilion of the day */
   --accent: #c13a24;
   --accent-hot: #a82f1b;
   --accent-wash: rgba(193, 58, 36, .08);
@@ -84,7 +86,7 @@ button { font: inherit; }
 .head { position: fixed; inset: 0 0 auto; z-index: 50; }
 .head-in { display: flex; align-items: center; gap: 24px; padding: clamp(18px, 3.1vw, 30px) calc(var(--gutter) * .85) clamp(18px, 3.1vw, 30px) var(--gutter); }
 .brand { --wm-h: clamp(13px, 1.45vw, 21px); display: flex; align-items: center; gap: clamp(10px, 1.1vw, 16px); margin-right: auto; color: var(--ink); text-decoration: none; }
-.brand-mark { flex: none; width: clamp(46px, 3.9vw, 66px); height: auto; }
+.brand-mark { flex: none; width: clamp(46px, 3.9vw, 66px); height: auto; filter: var(--logo-filter, none); }
 /* the lettering of the logo, in the colour of the text: the image is the mask, the text colour fills it */
 .brand-name { flex: none; display: block; width: calc(var(--wm-h) * 9.6); height: var(--wm-h); background: currentColor; -webkit-mask: url("../../shared/wordmark.webp") center / contain no-repeat; mask: url("../../shared/wordmark.webp") center / contain no-repeat; }
 
