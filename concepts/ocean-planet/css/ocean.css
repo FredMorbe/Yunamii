@@ -85,6 +85,10 @@ a:hover .arrow { transform: translate(2px, -2px); }
 .head.is-scrolled { background: color-mix(in srgb, var(--bg) 78%, transparent); -webkit-backdrop-filter: blur(16px) saturate(1.2); backdrop-filter: blur(16px) saturate(1.2); border-bottom-color: var(--hair); }
 .head-in { display: flex; align-items: center; gap: clamp(16px, 3vw, 36px); height: 76px; }
 .wordmark { margin-right: auto; color: var(--ink); font-size: 1.45rem; font-weight: 700; letter-spacing: -.04em; text-decoration: none; }
+.head .wordmark { --wm-h: clamp(11px, 3vw, 16px); display: flex; align-items: center; }
+.wordmark-mark { flex: none; width: auto; height: 1.25em; margin-right: .4em; }
+/* the lettering of the logo, in the colour of the text: the image is the mask, the text colour fills it */
+.wordmark-text { flex: none; display: block; width: calc(var(--wm-h) * 9.6); height: var(--wm-h); background: currentColor; -webkit-mask: url("../../shared/wordmark.webp") center / contain no-repeat; mask: url("../../shared/wordmark.webp") center / contain no-repeat; }
 .nav { display: flex; gap: clamp(22px, 3vw, 40px); }
 .nav a { position: relative; padding: 10px 0; color: var(--ink); font-size: .95rem; font-weight: 500; text-decoration: none; }
 .nav a::after { content: ""; position: absolute; inset: auto 0 5px; height: 1px; background: currentColor; transform: scaleX(0); transform-origin: right; transition: transform .45s var(--ease); }
@@ -318,6 +322,14 @@ a:hover .arrow { transform: translate(2px, -2px); }
     .hero-copy { animation: hero-out linear both; animation-timeline: scroll(root); animation-range: 0 62vh; }
     @keyframes hero-out { to { opacity: 0; transform: translateY(-36px); } }
   }
+}
+
+/* very narrow screens: the logo, the switch and the menu button have to fit side by side */
+@media (max-width: 380px) {
+  .head-in { gap: 8px; }
+  .head .wordmark { --wm-h: clamp(9px, calc(4.5vw - 5px), 14px); }
+  .wordmark-mark { height: .9em; margin-right: .3em; }
+  .menu-btn { padding: 0 12px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
