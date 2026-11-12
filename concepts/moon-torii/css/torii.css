@@ -40,9 +40,6 @@
   --on-fill: #231b11;
   --thumb: #cfb083;                           /* the knob of the colour scheme switch */
   --on-thumb: #231b11;
-  --mark-1: #fff1cf;                          /* the crescent of the brand mark */
-  --mark-2: #d4b183;
-  --mark-ring: rgba(230, 190, 143, .2);
   --selection: rgba(227, 191, 149, .35);
 }
 
@@ -71,9 +68,6 @@
   --on-fill: #fff;
   --thumb: #c9402a;
   --on-thumb: #fff;
-  --mark-1: #3a3846;
-  --mark-2: #1c1b24;
-  --mark-ring: rgba(193, 58, 36, .3);
   --selection: rgba(193, 58, 36, .22);
 }
 
@@ -89,9 +83,10 @@ button { font: inherit; }
 /* ---------- header ---------- */
 .head { position: fixed; inset: 0 0 auto; z-index: 50; }
 .head-in { display: flex; align-items: center; gap: 24px; padding: clamp(18px, 3.1vw, 30px) calc(var(--gutter) * .85) clamp(18px, 3.1vw, 30px) var(--gutter); }
-.brand { display: flex; align-items: center; gap: clamp(10px, 1.1vw, 16px); margin-right: auto; color: var(--ink); text-decoration: none; }
-.brand-mark { width: clamp(32px, 2.8vw, 48px); height: auto; aspect-ratio: 1; }
-.brand-name { font-size: clamp(1.05rem, 1.7vw, 1.75rem); font-weight: 300; letter-spacing: .42em; text-transform: uppercase; }
+.brand { --wm-h: clamp(13px, 1.45vw, 21px); display: flex; align-items: center; gap: clamp(10px, 1.1vw, 16px); margin-right: auto; color: var(--ink); text-decoration: none; }
+.brand-mark { flex: none; width: clamp(46px, 3.9vw, 66px); height: auto; }
+/* the lettering of the logo, in the colour of the text: the image is the mask, the text colour fills it */
+.brand-name { flex: none; display: block; width: calc(var(--wm-h) * 9.6); height: var(--wm-h); background: currentColor; -webkit-mask: url("../../shared/wordmark.webp") center / contain no-repeat; mask: url("../../shared/wordmark.webp") center / contain no-repeat; }
 
 .nav { display: flex; align-items: center; gap: clamp(26px, 4vw, 66px); }
 .nav a { position: relative; color: var(--ink); font-size: var(--small); font-weight: 400; text-decoration: none; }
@@ -203,8 +198,8 @@ button { font: inherit; }
 /* on the narrowest phones the brand, the colour scheme switch and the menu button have to share the header */
 @media (max-width: 380px) {
   .head-in { gap: 10px; }
-  .brand { gap: 8px; }
-  .brand-name { letter-spacing: .24em; }
+  .brand { --wm-h: clamp(9px, calc((100vw - 229px) / 9.6), 14px); gap: 8px; }
+  .brand-mark { width: 36px; }
   .menu-btn { padding: 0 12px; }
 }
 
