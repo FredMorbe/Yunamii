@@ -14,11 +14,16 @@ const TYPE_SCALE = { blossom: 0.25, cluster: 0.3, leaf: 0.2, petal: 0.17 };
 // ---- hero layout: code-drawn backdrop, island placed at 70% / 80% of the hero ----------
 import { makeBackdrop, makeShimmer } from './backdrop.js';
 const hero = document.getElementById('hero');
+// Two layers: #bg is the backdrop, soft shapes that never move (drawn once per layout, at one pixel per css
+// pixel because it is out of focus anyway), #bg-fx is only the water below the horizon with the shimmer and the
+// ripples, the one part that moves. Redrawing the whole backdrop every frame cost far more than all the rest.
 const bgc = document.getElementById('bg');
+const fxc = document.getElementById('bg-fx');
 const bgx = bgc.getContext('2d');
+const fxx = fxc.getContext('2d');
 const ISLAND = { fx: (630 - WORLD.x0) / WORLD.w, fy: (1120 - WORLD.y0) / WORLD.w }; // island footprint centre inside the canvas
 const WIDE = 900;
-let bgStatic = null, shimmer = [], bgInfo = null;
+let shimmer = [], bgInfo = null;
 
 // cheap: runs on every resize event (moves the tree canvas, nothing is redrawn)
 function placeScene() {
@@ -43,14 +48,21 @@ function buildBackdrop() {
   const hr = hero.getBoundingClientRect(), cr = canvas.getBoundingClientRect();
   const ix = cr.left - hr.left + ISLAND.fx * cr.width, iy = cr.top - hr.top + ISLAND.fy * cr.height;
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const k = cr.width / WORLD.w; // css px per world unit
   const W = Math.round(vw * dpr), H = Math.round(vh * dpr);
-  if (bgInfo && bgInfo.W === W && bgInfo.H === H && bgInfo.px === ix * dpr && bgInfo.py === iy * dpr && bgInfo.k === (cr.width / WORLD.w) * dpr) return;
-  const yH = Math.max(Math.round(H * 0.15), Math.round((iy - 0.33 * vh) * dpr));
-  bgc.width = W; bgc.height = H;
-  bgStatic = makeBackdrop(W, H, dpr, yH, wide, { x: ix * dpr, y: (iy + 40 * (cr.width / WORLD.w)) * dpr });
+  if (bgInfo && bgInfo.W === W && bgInfo.H === H && bgInfo.px === ix * dpr && bgInfo.py === iy * dpr && bgInfo.k === k * dpr) return;
+  const yH = Math.max(Math.round(H * 0.15), Math.round((iy - 0.33 * vh) * dpr)); // horizon, in device px of the water layer
+  // the backdrop at one pixel per css pixel: everything in it is blurred by several pixels, so a sharper bitmap shows nothing more
+  const sd = Math.min(dpr, 1);
+  bgc.width = Math.round(vw * sd); bgc.height = Math.round(vh * sd);
+  bgx.setTransform(1, 0, 0, 1, 0, 0);
+  bgx.drawImage(makeBackdrop(bgc.width, bgc.height, sd, yH * sd / dpr, wide, { x: ix * sd, y: (iy + 40 * k) * sd }), 0, 0);
+  // the water layer at full resolution (thin lines), from the horizon down
+  fxc.width = W; fxc.height = H - yH;
+  fxc.style.top = `${yH / dpr}px`; fxc.style.height = `${(H - yH) / dpr}px`;
   shimmer = makeShimmer(W, H, dpr, yH);
-  bgInfo = { W, H, dpr, px: ix * dpr, py: iy * dpr, k: (cr.width / WORLD.w) * dpr };
-  if (reduceMotion) drawBg(0);
+  bgInfo = { W, H, yH, dpr, px: ix * dpr, py: iy * dpr, k: k * dpr };
+  if (reduceMotion) drawFx(0);
 }
 
 function layoutScene() { if (placeScene()) buildBackdrop(); }
@@ -63,22 +75,24 @@ function scheduleRebuild() {
   rebuildTimer = setTimeout(() => { buildBackdrop(); resize(); if (reduceMotion) render(0); }, 150);
 }
 
-function drawBg(t) {
-  if (!bgStatic) return;
-  const { px, py, k, dpr } = bgInfo;
-  bgx.setTransform(1, 0, 0, 1, 0, 0);
-  bgx.drawImage(bgStatic, 0, 0);
+// the moving part of the backdrop; the layer starts at the horizon, so everything is drawn shifted up by it
+function drawFx(t) {
+  if (!bgInfo) return;
+  const { px, py, k, dpr, yH, W } = bgInfo;
+  fxx.setTransform(1, 0, 0, 1, 0, 0);
+  fxx.clearRect(0, 0, W, fxc.height);
+  fxx.setTransform(1, 0, 0, 1, 0, -yH);
   for (const s of shimmer) { // slow shimmer streaks
     const a = 0.03 + 0.1 * Math.max(0, Math.sin(t * s.sp + s.ph));
-    bgx.fillStyle = s.pink ? `rgba(255,210,235,${a})` : `rgba(215,250,255,${a})`;
-    bgx.fillRect(s.x, s.y, s.w, s.h);
+    fxx.fillStyle = s.pink ? `rgba(255,210,235,${a})` : `rgba(215,250,255,${a})`;
+    fxx.fillRect(s.x, s.y, s.w, s.h);
   }
-  bgx.lineWidth = 1.6 * dpr; // ripple rings spreading around the island
+  fxx.lineWidth = 1.6 * dpr; // ripple rings spreading around the island
   for (let i = 0; i < 4; i++) {
     const f = reduceMotion ? 0.35 + i * 0.15 : ((t * 0.045 + i / 4) % 1);
     const r = (520 + f * 600) * k;
-    bgx.strokeStyle = `rgba(215,252,255,${(0.2 * Math.sin(f * Math.PI)).toFixed(3)})`;
-    bgx.beginPath(); bgx.ellipse(px, py + 40 * k, r, r * 0.17, 0, 0, Math.PI * 2); bgx.stroke();
+    fxx.strokeStyle = `rgba(215,252,255,${(0.2 * Math.sin(f * Math.PI)).toFixed(3)})`;
+    fxx.beginPath(); fxx.ellipse(px, py + 40 * k, r, r * 0.17, 0, 0, Math.PI * 2); fxx.stroke();
   }
 }
 
@@ -95,13 +109,17 @@ const rnd = mulberry32(20240611);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const easeOutBack = (x) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
 
-function loadImage(src) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error('Image failed to load: ' + src));
-    img.src = src;
+// Loads a picture and hands back an ImageBitmap: it is decoded off the main thread, so the first frame does not
+// stall on decoding 17 pictures. (img.decode() would do the same, but it never settles on a page that is not
+// being drawn, such as a tab opened in the background; createImageBitmap does not wait for a frame.)
+async function loadImage(src) {
+  const img = await new Promise((resolve, reject) => {
+    const el = new Image();
+    el.onload = () => resolve(el);
+    el.onerror = () => reject(new Error('Image failed to load: ' + src));
+    el.src = src;
   });
+  return createImageBitmap(img);
 }
 async function loadJSON(src) {
   const r = await fetch(src);
@@ -216,7 +234,7 @@ function buildSprites() {
     const m = spriteMeta[name];
     sprites[name] = { c, px: m.pivot[0] * F, py: m.pivot[1] * F, cx: (type === 'blossom' || type === 'petal') ? c.width / 2 : m.pivot[0] * F, cy: (type === 'blossom' || type === 'petal') ? c.height / 2 : m.pivot[1] * F };
   }
-  treeCanvas = prescale(treeGraded, view.S);
+  treeCanvas = prescale(treeImg, view.S);
   buildWater();
 }
 
@@ -234,44 +252,27 @@ function resize() {
   if (treeImg) buildSprites();
 }
 
-// ---- integration: colour grade, waterline, reflection, glow ----------------
+// ---- integration: waterline, reflection, glow --------------------------------
 // The tree is a separate render; these passes make it share light, colour and water with the scene.
+// (Its colour grade, calmer moss, cooler shadows, a little less saturation, is baked into tree.webp by
+// tools/optimize-assets.py; the browser used to grade 1.5 million pixels at start-up.)
 const SINK = 30;        // world px of the island base that sit below the water surface
 const REFLECT_H = 120;  // world px of mirrored island below the waterline
-let treeGraded = null; // tree.webp after the one-time colour grade
+const WATER_ROW = 1060; // the waterline is searched for from the bottom of tree.webp up to this row
 let waterY = null, wlMin = 0, wlMax = 0; // waterline (world y) per tree column, valid column range
 let layer, lctx, refl, rctx, bloomC, bctx, subMask, fadeMask, reflFade;
 
 function mkCanvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
 
-// one-time colour pass on the bare tree: calmer moss, cooler shadows, a little less saturation
-function gradeTree(img) {
-  const c = mkCanvas(img.width, img.height), g = c.getContext('2d', { willReadFrequently: true });
-  g.drawImage(img, 0, 0);
-  const im = g.getImageData(0, 0, c.width, c.height), d = im.data;
-  for (let i = 0; i < d.length; i += 4) {
-    if (d[i + 3] === 0) continue;
-    let r = d[i], gr = d[i + 1], b = d[i + 2];
-    const lum = 0.3 * r + 0.59 * gr + 0.11 * b;
-    r = lum + (r - lum) * 0.82; gr = lum + (gr - lum) * 0.82; b = lum + (b - lum) * 0.88;
-    const m = Math.min(1, Math.max(0, (gr - Math.max(r, b)) / 70)); // how mossy-green this pixel is
-    r *= 1 - 0.3 * m; gr *= 1 - 0.1 * m; b += (gr - b) * 0.2 * m;
-    const dk = 1 - lum / 255;
-    r *= 1 - 0.1 * dk; b *= 1 + 0.1 * dk;
-    d[i] = r; d[i + 1] = gr; d[i + 2] = b;
-  }
-  g.putImageData(im, 0, 0);
-  return c;
-}
-
 // lowest opaque pixel of every column of the island, smoothed, minus SINK = the waterline
+// (only the rows from WATER_ROW down are read: a fifth of the picture)
 function computeWaterline() {
-  const w = treeImg.width, h = treeImg.height;
-  const g = mkCanvas(w, h).getContext('2d', { willReadFrequently: true });
-  g.drawImage(treeImg, 0, 0);
-  const d = g.getImageData(0, 0, w, h).data;
+  const w = treeImg.width, h = treeImg.height, rows = h - WATER_ROW;
+  const g = mkCanvas(w, rows).getContext('2d', { willReadFrequently: true });
+  g.drawImage(treeImg, 0, WATER_ROW, w, rows, 0, 0, w, rows);
+  const d = g.getImageData(0, 0, w, rows).data;
   const bot = new Float32Array(w).fill(NaN);
-  for (let x = 0; x < w; x++) for (let y = h - 1; y >= 1060; y--) if (d[(y * w + x) * 4 + 3] > 140) { bot[x] = y; break; }
+  for (let x = 0; x < w; x++) for (let y = h - 1; y >= WATER_ROW; y--) if (d[((y - WATER_ROW) * w + x) * 4 + 3] > 140) { bot[x] = y; break; }
   const sm = new Float32Array(w).fill(NaN);
   for (let x = 0; x < w; x++) {
     let s = 0, n = 0;
@@ -598,7 +599,8 @@ function drawPetals() {
 }
 
 function render(t) {
-  drawBg(t);
+  if (!layer) return; // not laid out yet: nothing to draw on (the rebuild after the first resize draws it)
+  drawFx(t);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawContactShadow();
@@ -614,32 +616,54 @@ function render(t) {
 }
 
 // ---- loop ----------------------------------------------------------------
+// The hero moves slowly and softly, so a very fast display gets no faster hero: frames closer together than
+// this are skipped. Displays up to about 100 Hz draw every frame; 120 Hz draws every second one (60 fps),
+// 144 Hz every second one as well (72 fps). The gap is a little under 1/100 s so that timer noise never skips
+// a frame on a 100 Hz display.
+const FRAME_GAP = 1 / 110;
+
+// Tells the rest of the page that the hero is on screen (or that it failed): js/site.js starts the petals then,
+// so that they do not compete with the hero for the network and the main thread.
+let heroDone = false;
+function markHero(state) {
+  if (heroDone) return;
+  heroDone = true;
+  document.documentElement.dataset.hero = state;
+  document.dispatchEvent(new Event('hero:done'));
+}
+
 function frame(now) {
   if (!running) return;
   const t = now / 1000;
+  // the canvas has no size yet (a hidden page, a hero that is not laid out): there is nothing to draw on, so wait
+  if (!layer || (lastFrame && t - lastFrame < FRAME_GAP)) { requestAnimationFrame(frame); return; }
   const dt = clamp(t - lastFrame, 0, 1 / 30);
   if (lastFrame) fpsEMA += (1 / Math.max(t - lastFrame, 0.001) - fpsEMA) * 0.05;
   lastFrame = t;
   step(dt, t);
   render(t);
+  markHero('ready');
   requestAnimationFrame(frame);
 }
 
 function start() {
-  if (reduceMotion) { bloomStart = -100; resize(); render(0); return; }
+  if (reduceMotion) { bloomStart = -100; resize(); render(0); markHero('ready'); return; }
   running = true; lastFrame = 0; requestAnimationFrame(frame);
 }
 function stop() { running = false; }
 
+// Everything the hero needs is fetched at once (index.html preloads the same files, so by the time this runs
+// they are usually there already): the tree, the two small JSON files and, as soon as the first of them says
+// which sprites exist, all sprites. Nothing waits for something it does not depend on.
 async function init() {
-  const [tree, meta, anchors] = await Promise.all([
-    loadImage('assets/hero/tree.webp'),
-    loadJSON('assets/hero/sprites.json'),
+  const metaLoad = loadJSON('assets/hero/sprites.json');
+  const [meta, anchors, tree, sprites] = await Promise.all([
+    metaLoad,
     loadJSON('assets/hero/anchors.json'),
+    loadImage('assets/hero/tree.webp'),
+    metaLoad.then((m) => Promise.all(Object.keys(m).map(async (n) => [n, await loadImage(`assets/hero/sprites/${n}.webp`)]))),
   ]);
-  treeImg = tree; spriteMeta = meta;
-  treeGraded = gradeTree(tree);
-  await Promise.all(Object.keys(meta).map(async (n) => { spriteImgs[n] = await loadImage(`assets/hero/sprites/${n}.png`); }));
+  treeImg = tree; spriteMeta = meta; spriteImgs = Object.fromEntries(sprites);
   items = buildItems(anchors);
   layoutScene();
   resize();
@@ -655,4 +679,4 @@ async function init() {
   document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); else if (!reduceMotion && !running) { running = true; lastFrame = 0; requestAnimationFrame(frame); } });
 }
 
-init().catch((err) => { console.error(err); document.getElementById('hero').classList.add('hero--static'); });
+init().catch((err) => { console.error(err); hero.classList.add('hero--static'); markHero('static'); });

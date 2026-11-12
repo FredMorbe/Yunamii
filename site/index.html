@@ -10,8 +10,40 @@
   <meta property="og:description" content="A small software studio making games, learning apps and useful digital products.">
   <meta property="og:type" content="website">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <!-- Everything the first screen needs is announced up front, so that it is fetched in parallel instead of
+       one file after the other (a module only names the modules it imports once it has arrived, and the hero
+       only names its pictures once its own module has run). Fonts: the headline uses both Fraunces files. -->
   <link rel="preload" href="assets/fonts/Fraunces-normal-300-640-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/Fraunces-italic-300-640-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/DMSans-normal-300-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <!-- the hero: the tree first, then its two data files and the sprites that bloom on it (js/hero.js asks for exactly these) -->
+  <link rel="preload" href="assets/hero/tree.webp" as="image" type="image/webp" fetchpriority="high">
+  <link rel="preload" href="assets/hero/sprites.json" as="fetch" crossorigin>
+  <link rel="preload" href="assets/hero/anchors.json" as="fetch" crossorigin>
+  <link rel="modulepreload" href="js/hero.js">
+  <link rel="modulepreload" href="js/backdrop.js">
+  <link rel="modulepreload" href="js/site.js">
+  <link rel="modulepreload" href="js/ui.js">
+  <link rel="modulepreload" href="js/petals.js">
+  <link rel="modulepreload" href="js/showcase.js">
+  <link rel="modulepreload" href="js/process.js">
+  <link rel="modulepreload" href="js/waves.js">
+  <link rel="preload" href="assets/hero/sprites/blossom1.webp" as="image" type="image/webp">
+  <link rel="preload" href="assets/hero/sprites/blossom2.webp" as="image" type="image/webp">
+  <link rel="preload" href="assets/hero/sprites/blossom3.webp" as="image" type="image/webp">
+  <link rel="preload" href="assets/hero/sprites/blossom4.webp" as="image" type="image/webp">
+  <link rel="preload" href="assets/hero/sprites/cluster1.webp" as="image" type="image/webp">
+  <link rel="preload" href="assets/hero/sprites/cluster2.webp" as="image" type="image/webp">
+  <link rel="preload" href="assets/hero/sprites/cluster3.webp" as="image" type="image/webp">
+  <link rel="preload" href="assets/hero/sprites/cluster4.webp" as="image" type="image/webp">
+  <link rel="preload" href="assets/hero/sprites/leaf1.webp" as="image" type="image/webp">
+  <link rel="preload" href="assets/hero/sprites/leaf2.webp" as="image" type="image/webp">
+  <link rel="preload" href="assets/hero/sprites/leaf3.webp" as="image" type="image/webp">
+  <link rel="preload" href="assets/hero/sprites/leaf4.webp" as="image" type="image/webp">
+  <link rel="preload" href="assets/hero/sprites/petal1.webp" as="image" type="image/webp">
+  <link rel="preload" href="assets/hero/sprites/petal2.webp" as="image" type="image/webp">
+  <link rel="preload" href="assets/hero/sprites/petal3.webp" as="image" type="image/webp">
+  <link rel="preload" href="assets/hero/sprites/petal4.webp" as="image" type="image/webp">
   <link rel="stylesheet" href="css/site.css">
   <script>document.documentElement.classList.add('js');</script>
 </head>
@@ -63,6 +95,7 @@
     <!-- ============ HERO ============ -->
     <section class="hero" id="hero" aria-labelledby="heroTitle">
       <canvas class="hero-bg" id="bg" aria-hidden="true"></canvas>
+      <canvas class="hero-bg" id="bg-fx" aria-hidden="true"></canvas>
       <span class="hero-vert" aria-hidden="true">Yunamii Studio — Games · Learning · Products</span>
       <div class="hero-inner">
         <div class="hero-copy">
@@ -119,11 +152,11 @@
           <div class="panel" role="tabpanel" id="panel-cubamii" aria-labelledby="tab-cubamii" tabindex="0">
             <div class="panel-visual panel-visual--cubamii">
               <div class="phones" data-phones role="group" aria-roledescription="carousel" aria-label="Cubamii screenshots">
-                <figure class="phone" data-caption="Puzzle · a 7×7×7 fox waiting to be carved"><img src="assets/products/cubamii-start.webp" alt="Cubamii puzzle screen: a 7×7×7 cube with row numbers and chisel, paint and inspect tools" width="540" height="898" loading="lazy"></figure>
-                <figure class="phone" data-caption="Woodland collection · the fox, revealed"><img src="assets/products/cubamii-fox.webp" alt="Cubamii result screen with the finished voxel fox from the Woodland collection" width="540" height="898" loading="lazy"></figure>
-                <figure class="phone" data-caption="Fairy Tale collection · the castle"><img src="assets/products/cubamii-castle.webp" alt="Cubamii result screen with a voxel fairy-tale castle and a swan lake" width="540" height="898" loading="lazy"></figure>
-                <figure class="phone" data-caption="Shore collection · the lighthouse"><img src="assets/products/cubamii-lighthouse.webp" alt="Cubamii result screen with a red and white voxel lighthouse" width="540" height="898" loading="lazy"></figure>
-                <figure class="phone" data-caption="Japan collection · a quiet garden"><img src="assets/products/cubamii-garden.webp" alt="Cubamii result screen with a voxel Japanese garden: cherry tree, stone lantern and red bridge" width="540" height="898" loading="lazy"></figure>
+                <figure class="phone" data-caption="Puzzle · a 7×7×7 fox waiting to be carved"><img src="assets/products/cubamii-start.webp" alt="Cubamii puzzle screen: a 7×7×7 cube with row numbers and chisel, paint and inspect tools" width="540" height="898" loading="lazy" decoding="async"></figure>
+                <figure class="phone" data-caption="Woodland collection · the fox, revealed"><img src="assets/products/cubamii-fox.webp" alt="Cubamii result screen with the finished voxel fox from the Woodland collection" width="540" height="898" loading="lazy" decoding="async"></figure>
+                <figure class="phone" data-caption="Fairy Tale collection · the castle"><img src="assets/products/cubamii-castle.webp" alt="Cubamii result screen with a voxel fairy-tale castle and a swan lake" width="540" height="898" loading="lazy" decoding="async"></figure>
+                <figure class="phone" data-caption="Shore collection · the lighthouse"><img src="assets/products/cubamii-lighthouse.webp" alt="Cubamii result screen with a red and white voxel lighthouse" width="540" height="898" loading="lazy" decoding="async"></figure>
+                <figure class="phone" data-caption="Japan collection · a quiet garden"><img src="assets/products/cubamii-garden.webp" alt="Cubamii result screen with a voxel Japanese garden: cherry tree, stone lantern and red bridge" width="540" height="898" loading="lazy" decoding="async"></figure>
               </div>
               <div class="phones-ui">
                 <button type="button" class="round" data-phones-prev aria-label="Previous screenshot">‹</button>
@@ -149,7 +182,7 @@
             <div class="panel-visual panel-visual--katsumii" data-tilt>
               <figure class="window window--main">
                 <div class="window-bar" aria-hidden="true"><i></i><i></i><i></i></div>
-                <img src="assets/products/katsumii-dashboard.webp" alt="Katsumii dashboard showing net profit and loss, win rate, profit factor, edge drivers and a daily P&amp;L heatmap" width="1500" height="938" loading="lazy">
+                <img src="assets/products/katsumii-dashboard.webp" alt="Katsumii dashboard showing net profit and loss, win rate, profit factor, edge drivers and a daily P&amp;L heatmap" width="1500" height="938" loading="lazy" decoding="async">
               </figure>
             </div>
             <div class="panel-copy">
@@ -172,11 +205,11 @@
               <div class="windows">
                 <figure class="window window--main">
                   <div class="window-bar" aria-hidden="true"><i></i><i></i><i></i></div>
-                  <img src="assets/products/mediacenter-start.webp" alt="Media Center home screen with a large featured film and a row of continue-watching posters" width="1600" height="929" loading="lazy">
+                  <img src="assets/products/mediacenter-start.webp" alt="Media Center home screen with a large featured film and a row of continue-watching posters" width="1600" height="929" loading="lazy" decoding="async">
                 </figure>
                 <figure class="window window--second">
                   <div class="window-bar" aria-hidden="true"><i></i><i></i><i></i></div>
-                  <img src="assets/products/mediacenter-library.webp" alt="Media Center film library with genre filters and a grid of posters" width="1600" height="602" loading="lazy">
+                  <img src="assets/products/mediacenter-library.webp" alt="Media Center film library with genre filters and a grid of posters" width="1600" height="602" loading="lazy" decoding="async">
                 </figure>
               </div>
             </div>
@@ -202,19 +235,19 @@
         </div>
         <div class="buds-grid reveal" id="cards">
           <article class="card" aria-label="Gravity Merge, coming soon" data-glow>
-            <img src="assets/cards/gravity-merge.webp" alt="Colorful floating numbered game tiles" width="712" height="268" loading="lazy">
+            <img src="assets/cards/gravity-merge.webp" alt="Colorful floating numbered game tiles" width="712" height="268" loading="lazy" decoding="async">
             <span class="tag-icon" aria-hidden="true"><svg viewBox="0 0 40 40"><path d="M10 14c-4 1-6 6-6 13 0 5 3 7 7 4l6-5h6l6 5c4 3 7 1 7-4 0-7-2-12-6-13-4-1-7 1-10 1s-6-2-10-1Z"/><path d="M13 18v9m-4-4.5h9"/></svg></span>
             <span class="soon">Coming soon</span>
             <div class="card-info"><strong>Gravity Merge</strong><small>A fresh twist on the 2048 puzzle.</small></div>
           </article>
           <article class="card" aria-label="Yunamii Language, coming soon" data-glow>
-            <img src="assets/cards/yunamii-language.webp" alt="Dreamlike Japanese mountains and cherry blossoms" width="726" height="268" loading="lazy">
+            <img src="assets/cards/yunamii-language.webp" alt="Dreamlike Japanese mountains and cherry blossoms" width="726" height="268" loading="lazy" decoding="async">
             <span class="tag-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m2 9 10-5 10 5-10 5L2 9Zm4 2.5V16c0 1.5 3 3 6 3s6-1.5 6-3v-4.5M22 9v6"/></svg></span>
             <span class="soon">Coming soon</span>
             <div class="card-info"><strong>Yunamii Language</strong><small>Learn languages through stories and play.</small></div>
           </article>
           <article class="card" aria-label="Next project, coming soon" data-glow>
-            <img src="assets/cards/next-project.webp" alt="Tiny glowing sprout emerging from a mossy floor" width="672" height="268" loading="lazy">
+            <img src="assets/cards/next-project.webp" alt="Tiny glowing sprout emerging from a mossy floor" width="672" height="268" loading="lazy" decoding="async">
             <span class="tag-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h12M6 21h12M7 3c0 5 5 6 5 9s-5 4-5 9m10-18c0 5-5 6-5 9s5 4 5 9"/></svg></span>
             <div class="card-info"><strong>Next Project</strong><small>Something new is growing…</small></div>
           </article>
@@ -225,7 +258,7 @@
     <!-- ============ OPEN SOURCE ============ -->
     <section class="open-wrap" id="open-source" aria-labelledby="osTitle">
       <div class="branch-wrap branch-wrap--open" aria-hidden="true">
-        <img class="branch" src="assets/branches/branch-2.webp" alt="" width="574" height="1000" loading="lazy">
+        <img class="branch" src="assets/branches/branch-2.webp" alt="" width="574" height="1000" loading="lazy" decoding="async">
       </div>
       <div class="open shell reveal">
         <div>
@@ -256,16 +289,16 @@
         </div>
         <ol class="steps" data-steps>
           <li class="step" data-detail="Every project starts with a small question: what would be fun, useful or calming to have? We look for the idea worth building.">
-            <button type="button" class="step-btn"><span class="bloom" aria-hidden="true"><img class="bloom-leaf bloom-leaf--a" src="assets/hero/sprites/leaf2.png" alt="" width="237" height="175"><img class="bloom-leaf bloom-leaf--b" src="assets/hero/sprites/leaf4.png" alt="" width="135" height="194"><img class="bloom-flower" src="assets/hero/sprites/blossom1.png" alt="" width="242" height="228"></span><span class="step-ja" lang="ja" aria-hidden="true">発見</span><strong>Discover</strong><small>Find the right idea</small></button>
+            <button type="button" class="step-btn"><span class="bloom" aria-hidden="true"><img class="bloom-leaf bloom-leaf--a" src="assets/hero/sprites/leaf2.webp" loading="lazy" decoding="async" alt="" width="237" height="175"><img class="bloom-leaf bloom-leaf--b" src="assets/hero/sprites/leaf4.webp" loading="lazy" decoding="async" alt="" width="135" height="194"><img class="bloom-flower" src="assets/hero/sprites/blossom1.webp" loading="lazy" decoding="async" alt="" width="242" height="228"></span><span class="step-ja" lang="ja" aria-hidden="true">発見</span><strong>Discover</strong><small>Find the right idea</small></button>
           </li>
           <li class="step" data-detail="We sketch the feel before the features: rhythm, colour, sound and the first ten seconds. Small and honest beats big and loud.">
-            <button type="button" class="step-btn"><span class="bloom" aria-hidden="true"><img class="bloom-leaf bloom-leaf--a" src="assets/hero/sprites/leaf3.png" alt="" width="243" height="145"><img class="bloom-leaf bloom-leaf--b" src="assets/hero/sprites/leaf1.png" alt="" width="212" height="217"><img class="bloom-flower" src="assets/hero/sprites/blossom2.png" alt="" width="221" height="201"></span><span class="step-ja" lang="ja" aria-hidden="true">設計</span><strong>Design</strong><small>Shape the experience</small></button>
+            <button type="button" class="step-btn"><span class="bloom" aria-hidden="true"><img class="bloom-leaf bloom-leaf--a" src="assets/hero/sprites/leaf3.webp" loading="lazy" decoding="async" alt="" width="243" height="145"><img class="bloom-leaf bloom-leaf--b" src="assets/hero/sprites/leaf1.webp" loading="lazy" decoding="async" alt="" width="212" height="217"><img class="bloom-flower" src="assets/hero/sprites/blossom2.webp" loading="lazy" decoding="async" alt="" width="221" height="201"></span><span class="step-ja" lang="ja" aria-hidden="true">設計</span><strong>Design</strong><small>Shape the experience</small></button>
           </li>
           <li class="step" data-detail="Short loops, clean code, real devices. We play the thing early and often, and keep what feels right.">
-            <button type="button" class="step-btn"><span class="bloom" aria-hidden="true"><img class="bloom-leaf bloom-leaf--a" src="assets/hero/sprites/leaf1.png" alt="" width="212" height="217"><img class="bloom-leaf bloom-leaf--b" src="assets/hero/sprites/leaf2.png" alt="" width="237" height="175"><img class="bloom-flower" src="assets/hero/sprites/blossom3.png" alt="" width="226" height="211"></span><span class="step-ja" lang="ja" aria-hidden="true">開発</span><strong>Build</strong><small>Bring it to life</small></button>
+            <button type="button" class="step-btn"><span class="bloom" aria-hidden="true"><img class="bloom-leaf bloom-leaf--a" src="assets/hero/sprites/leaf1.webp" loading="lazy" decoding="async" alt="" width="212" height="217"><img class="bloom-leaf bloom-leaf--b" src="assets/hero/sprites/leaf2.webp" loading="lazy" decoding="async" alt="" width="237" height="175"><img class="bloom-flower" src="assets/hero/sprites/blossom3.webp" loading="lazy" decoding="async" alt="" width="226" height="211"></span><span class="step-ja" lang="ja" aria-hidden="true">開発</span><strong>Build</strong><small>Bring it to life</small></button>
           </li>
           <li class="step" data-detail="We ship it, listen, and keep tending it. Good software keeps growing long after the first release.">
-            <button type="button" class="step-btn"><span class="bloom" aria-hidden="true"><img class="bloom-leaf bloom-leaf--a" src="assets/hero/sprites/leaf4.png" alt="" width="135" height="194"><img class="bloom-leaf bloom-leaf--b" src="assets/hero/sprites/leaf3.png" alt="" width="243" height="145"><img class="bloom-flower" src="assets/hero/sprites/blossom4.png" alt="" width="238" height="214"></span><span class="step-ja" lang="ja" aria-hidden="true">公開</span><strong>Launch</strong><small>Share with the world</small></button>
+            <button type="button" class="step-btn"><span class="bloom" aria-hidden="true"><img class="bloom-leaf bloom-leaf--a" src="assets/hero/sprites/leaf4.webp" loading="lazy" decoding="async" alt="" width="135" height="194"><img class="bloom-leaf bloom-leaf--b" src="assets/hero/sprites/leaf3.webp" loading="lazy" decoding="async" alt="" width="243" height="145"><img class="bloom-flower" src="assets/hero/sprites/blossom4.webp" loading="lazy" decoding="async" alt="" width="238" height="214"></span><span class="step-ja" lang="ja" aria-hidden="true">公開</span><strong>Launch</strong><small>Share with the world</small></button>
           </li>
           <li class="vine" aria-hidden="true"><span class="vine-track"></span><span class="vine-fill"></span></li>
         </ol>
@@ -276,7 +309,7 @@
     <section class="about-wrap" id="about" aria-labelledby="aboutTitle">
       <span class="ghost-kanji" lang="ja" aria-hidden="true" data-parallax="-0.04">間</span>
       <div class="branch-wrap branch-wrap--about" aria-hidden="true">
-        <img class="branch" src="assets/branches/branch-1.webp" alt="" width="438" height="1000" loading="lazy">
+        <img class="branch" src="assets/branches/branch-1.webp" alt="" width="438" height="1000" loading="lazy" decoding="async">
       </div>
       <div class="about shell">
         <div class="about-copy reveal">
@@ -305,7 +338,7 @@
     <!-- ============ CONTACT ============ -->
     <section class="bottom-cta" id="contact">
       <div class="branch-wrap branch-wrap--cta" aria-hidden="true">
-        <img class="branch" src="assets/branches/branch-4.webp" alt="" width="760" height="648" loading="lazy">
+        <img class="branch" src="assets/branches/branch-4.webp" alt="" width="760" height="648" loading="lazy" decoding="async">
       </div>
       <div class="cta-panel shell reveal">
         <div class="cta-copy">

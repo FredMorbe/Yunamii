@@ -7,9 +7,12 @@ Static site for [yunamii.com](https://yunamii.com). Plain HTML, CSS and JavaScri
 | Path | What |
 |---|---|
 | `site/` | The website that gets deployed (landing page, Impressum, Datenschutz) |
-| `site/js/hero.js`, `site/js/backdrop.js` | Interactive hero: tree image with code-driven blossoms, code-drawn blurred backdrop |
+| `site/js/hero.js`, `site/js/backdrop.js` | Interactive hero: tree image with code-driven blossoms, code-drawn blurred backdrop. The backdrop (`#bg`) is drawn once per layout at one pixel per css pixel (it is out of focus anyway); only the water below the horizon (`#bg-fx`: shimmer and ripples) is redrawn every frame. Frames are limited to about 100 per second, and the loop waits instead of failing while the canvas has no size |
 | `site/js/site.js` + `ui.js`, `petals.js`, `showcase.js`, `process.js`, `waves.js` | Page behaviour (ES modules): menu/header/reveal/section index, site-wide petal layer (a few petals, some behind the page items, some landing on card/panel/button edges for 4–9 s, see the constants at the top of `petals.js`), project showcase, scroll-driven process vine, seigaiha footer |
-| `site/assets/branches/` | Static cropped WebP cherry branches at the window edge (made from `hero/sprites/ast*.png`, which the page no longer loads; `ast3` is unused) |
+| `site/assets/branches/` | Static cropped WebP cherry branches at the window edge (built by `tools/optimize-assets.py` from `source-assets/branches/`) |
+| `site/assets/hero/` | The tree (`tree.webp`, with its colour grade baked in), the sprites (`sprites/*.webp`) and the two small data files; all built by `tools/optimize-assets.py` from `source-assets/hero/` |
+| `source-assets/` | The lossless sources of the images above (the tree and the sprites as PNG, the branches before their alpha was compressed, the uncropped branch originals `ast*.png`). Not deployed |
+| `tools/optimize-assets.py` | Rebuilds the optimised images in `site/assets/` from `source-assets/` (Pillow only): `python tools/optimize-assets.py` |
 | `site/assets/products/` | Screenshots for the showcase (Cubamii, Katsumii, Media Center) |
 | `site/assets/fonts/` | Self-hosted Fraunces (display) and DM Sans (text), latin subset |
 | `concepts/` | Design concepts, published under `/concepts/` while they are under review (the workflow copies them next to the site). `shared/switcher.js` adds a bar to switch between the main page and the concepts, `shared/logo.webp` is the Yunamii mark (transparent, works on dark and light pages) and `shared/wordmark.webp` the lettering of the logo (used as a CSS mask, so it takes the text colour); all concepts show both in their header (the cyan mark is turned to the colour of a concept by the `--logo-filter` token of its stylesheet: teal in Orbit Mesh and Mesh Tide, gold or vermilion in Moon Torii; Ink Atom and Ocean Planet keep the cyan, which is their accent); `site/index.html` loads it too. Run with `python tools/dev-server.py concepts 5176`, or open them through the site's dev server, which serves them under `/concepts/` |
@@ -21,6 +24,10 @@ Static site for [yunamii.com](https://yunamii.com). Plain HTML, CSS and JavaScri
 | `prototype/`, `prototype-code/` | Earlier hero experiments (not deployed) |
 | `reference/` | Approved design mockup |
 | `tools/dev-server.py` | Local static server without caching; also serves `concepts/` under `/concepts/` (the `PORT` environment variable overrides the port) |
+
+## Loading the first screen
+
+`site/index.html` announces everything the first screen needs in its `<head>` (the three fonts, the tree, the two data files, the sprites, and every script as `modulepreload`), so the browser fetches all of it at once instead of discovering one file after the other; `js/hero.js` then asks for exactly those files, all at the same time. Pictures are decoded off the main thread (`createImageBitmap`). The petals (two full-window canvases) start only after the hero is on screen. The images are WebP: the sprites with a lossless alpha channel, the tree and the branches with a lossy one (the settings and the checks against the lossless sources are in `tools/optimize-assets.py`). Measured on GitHub Pages before the change: 33 requests, 1.9 MB, the hero ready after about 2.3 s, in three steps one after the other; afterwards all 37 requests start together and add up to about 0.9 MB (measured locally, uncompressed).
 
 ## Run locally
 
@@ -44,4 +51,3 @@ The custom domain (DNS at Cloudflare, `CNAME` file) is not set up yet.
 - Gravity Merge and Yunamii Language are shown as "Coming soon" concepts; link them once they exist.
 - Media Center is shown as "In development" under its working title; check the name and whether it should be public yet.
 - Check the project copy in the showcase (Cubamii, Katsumii, Media Center) and the process step texts: they were written from the screenshots and READMEs.
-- `site/assets/hero/sprites/ast1-4.png` (about 3 MB) are the uncropped originals of `assets/branches/*.webp`; remove them from `site/` if you do not want to deploy them.

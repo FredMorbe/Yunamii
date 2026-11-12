@@ -204,7 +204,7 @@ export function initPetals({ reduceMotion }) {
   document.addEventListener('visibilitychange', () => { if (document.hidden) running = false; else start(); });
 
   resize();
-  Promise.all([...PETALS, ...LEAVES].map((n) => loadImage(`${BASE}${n}.png`))).then((imgs) => {
+  Promise.all([...PETALS, ...LEAVES].map((n) => loadImage(`${BASE}${n}.webp`))).then((imgs) => {
     petalSprites = imgs.slice(0, 4).map((im) => prescale(im, Math.round(30 * dpr)));
     leafSprites = imgs.slice(4).map((im) => prescale(im, Math.round(40 * dpr)));
     ready = true;
