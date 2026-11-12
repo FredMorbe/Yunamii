@@ -1,6 +1,6 @@
 /* yunamii · concept "Orbit Mesh" (hero only)
    One idea: weight bends space. A net of light is pressed into wells by a planet and two moons that
-   circle on their orbits; the page itself stays dark ink (or paper) with one soft sakura light. */
+   circle on their orbits; the page itself stays dark ink (or paper) with one soft teal light. */
 
 @font-face { font-family: "DM Sans"; src: url("../assets/fonts/DMSans-normal-300-700-latin.woff2") format("woff2"); font-weight: 300 700; font-style: normal; font-display: swap; }
 @font-face { font-family: "Fraunces"; src: url("../assets/fonts/Fraunces-italic-300-640-latin.woff2") format("woff2"); font-weight: 300 640; font-style: italic; font-display: swap; }
@@ -24,8 +24,8 @@
   --on-button: #0a1119;
   --thumb: #eef3f8;
   --on-thumb: #0a1119;
-  --accent: #f8c7da;
-  --on-accent: #1b0d14;
+  --accent: #6ee7d4;
+  --on-accent: #04201c;
 }
 
 :root[data-theme="light"] {
@@ -39,7 +39,7 @@
   --on-button: #ffffff;
   --thumb: #ffffff;
   --on-thumb: #0e1a28;
-  --accent: #b8325f;
+  --accent: #0b7f78;
   --on-accent: #ffffff;
 }
 

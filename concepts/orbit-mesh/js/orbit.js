@@ -41,13 +41,13 @@ const POINTER = { depth: 0.7, soft: 1.1 };    // the pointer is a light mass tha
 
 const LOOKS = {
   dark: {
-    bg0: '#04060b', bg1: '#0a1b29', glow: '#3b86ad', line: '#9db8d0', crest: '#d2e8fa', hot: '#ffd6e4',
+    bg0: '#04060b', bg1: '#0a1b29', glow: '#3b86ad', line: '#9db8d0', crest: '#d2e8fa', hot: '#8cf2dd',
     lineA: 0.3, pointA: 0.48, add: true, halo: 1,      // the net is 40 % more transparent than it was (0.5, 0.8)
     night: '#04070d', air: '#e89a6a',                  // what a body keeps in its shadow, and the colour of the dust haze round Mars
     paper: '#04060b', tone: [1, 0, 0, 0],              // the ground a body is veiled towards (see FS_BODY), and: moon gain, veil overall, in the shadow
   },
   light: {
-    bg0: '#ffffff', bg1: '#ffffff', glow: '#ffffff', line: '#1d3c5b', crest: '#14527f', hot: '#d04d78',
+    bg0: '#ffffff', bg1: '#ffffff', glow: '#ffffff', line: '#1d3c5b', crest: '#14527f', hot: '#0aa395',
     lineA: 0.36, pointA: 0.51, add: false, halo: 0.35,   // 40 % more transparent than it was (0.6, 0.85)
     night: '#4f6078', air: '#c0643a',                  // by day the sky fills the shadow: it is a light blue-grey, not black
     paper: '#ffffff', tone: [1.25, 0.04, 0.22, 0],         // the air lies in front of the bodies: they fade into the page where the sun does not light them
