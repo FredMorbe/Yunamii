@@ -28,6 +28,9 @@ try {
 // An eclipse that begins in the light scheme turns the page dark for its length, and its end brings the
 // light back. One that begins in the dark scheme leaves it alone. Using the switch in between is the
 // visitor's own choice: the page does not go back on it.
+// The page changes its scheme as slowly as the eclipse comes in and goes out (see scene.js).
+const ECLIPSE_IN = 3.5;
+const ECLIPSE_OUT = 5;
 let theme = null;
 let restoreLight = false;
 
@@ -41,10 +44,10 @@ const scene = createScene(document.getElementById('scene'), {
   onEclipse(on) {
     if (on && theme.current() === 'light') {
       restoreLight = true;
-      theme.set('dark');
+      theme.set('dark', ECLIPSE_IN);
     } else if (!on && restoreLight) {
       restoreLight = false;
-      theme.set('light');
+      theme.set('light', ECLIPSE_OUT);
     }
   },
 });

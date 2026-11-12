@@ -19,7 +19,7 @@ const TAP_SLOTS = 3;             // rings from clicks that can exist at once (on
 const TAP_LIFE = 11;             // seconds a click ring lives
 const TAP_FADE = 1.2;            // seconds an older click ring needs to give way when a new one comes
 const TAP_WATER = 1.25;          // the water starts this many moon radii below the moon's centre
-export const PLANETS = ['moon', 'mars', 'earth', 'saturn'];
+export const PLANETS = ['moon', 'mars', 'earth'];
 export const THEMES = ['dark', 'light'];     // night, day
 // The sun is the direction the light comes from. It may follow the mouse, or the last click: it turns
 // towards the side of the planet where that is, but takes seconds to get there and never turns fast.
@@ -34,7 +34,6 @@ const SUN_LIFT_SPEED = 0.16;     // the fastest it rises or sinks, radians per s
 const SUN_AZIMUTH = 0.98;        // where the light comes from when the sun is not turned: the upper right
 const SUN_FRONT = 1.64;          // lifted this much the light comes from the front: no shadow
 const SUN_BEHIND = -0.65;        // far from the planet the sun is behind it
-const BODY_RADIUS = [1, 1, 1, 0.72];     // the radius of each body in radii of the page's planet (Saturn's globe is smaller)
 const wrap = (angle) => Math.atan2(Math.sin(angle), Math.cos(angle));
 const clamp = (x, low, high) => Math.min(high, Math.max(low, x));
 const smooth01 = (x) => { const t = clamp(x, 0, 1); return t * t * (3 - 2 * t); };
@@ -84,7 +83,6 @@ const vec3 HOT  = vec3(1.000, 0.945, 0.780);
 const vec3 DAY_WHITE = vec3(1.0);                  // the page: plain white, in the sky and in the water
 const vec3 LACQUER = vec3(0.788, 0.251, 0.165);    // the gate: vermilion lacquer
 const vec3 WASH = vec3(0.498, 0.573, 0.608);       // the rings: a wash of blue-grey ink
-const vec3 DAY_RIM = vec3(0.55, 0.62, 0.67);       // the thin ink line round a body
 const vec3 DAY_ECLIPSE = vec3(0.78, 0.74, 0.76);   // how much of its light the day keeps in an eclipse (the dark text on it stays legible)
 
 float hash12(vec2 p) {
@@ -157,11 +155,10 @@ vec3 moonRamp(float l) {
 // By day the atmosphere lies in front of the bodies: where the sun does not light a body, the sky shows
 // through it (the body is transparent there), and only the lit part stands out from the sky. dayVis
 // is how opaque a body is where the light on it is k (0 dark .. 1 fully lit); at night all of it is.
+// (The small moons are the exception: they are opaque by day too, so that a moon crossing the planet hides it.)
 // The colour of a body is not darkened towards its terminator by day (that would be a dark soft band in
-// the fading edge): only the transparency goes. The rings of Saturn have no such lit side, there the
-// shaded colour is brightened by the transparency (unshade), so that the fading part is not grey.
+// the fading edge): only the transparency goes.
 float dayVis(float k) { return mix(1.0, smoothstep(0.0, 0.40, k), uDay); }
-vec3 unshade(vec3 c, float vis) { return mix(c, min(c / max(vis, 0.25), vec3(1.0)), uDay); }
 vec3 direction(float az, float el) { return vec3(cos(az) * cos(el), sin(az) * cos(el), sin(el)); }
 
 // How high the light stands over a body, towards the viewer. Lifted to the front (+) the lit part grows
@@ -330,94 +327,21 @@ vec3 earthSurface(vec3 n, float I, float t) {
   return c * smoothstep(0.0, 0.5, I);
 }
 
-// ---- Saturn: a globe of soft bands and its rings, all made of formulas. The globe is drawn smaller
-// than the other bodies (SATURN_SCALE of the page radius) so that the rings have room; sizes in the
-// functions below are in globe radii. The rings lie in a plane seen from 24 degrees above it and
-// turned a little on the screen; they cast a shadow on the globe, and the globe one on them.
-const float SATURN_SCALE = 0.72;
-vec3 ringNormal() {
-  const float TURN = -0.28;                       // how the rings are turned on the screen
-  return vec3(-sin(TURN) * 0.9135, cos(TURN) * 0.9135, 0.4067);
-}
-
-// how much of the light the rings stop at distance rho from Saturn: the faint C ring, the dense B
-// ring, the dark Cassini division, the A ring with its narrow Encke gap, and a thin F ring
-float ringDensity(float rho, float w) {
-  float c = smoothstep(1.24 - w, 1.29 + w, rho) * (1.0 - smoothstep(1.52 - w, 1.54 + w, rho)) * 0.2;
-  float b = smoothstep(1.52 - w, 1.54 + w, rho) * (1.0 - smoothstep(1.94 - w, 1.96 + w, rho)) * (0.78 + 0.3 * (vnoise(vec2(rho * 70.0, 3.0)) - 0.5));
-  float a = smoothstep(2.03 - w, 2.05 + w, rho) * (1.0 - smoothstep(2.27 - w, 2.27 + w, rho)) * 0.62
-          * (1.0 - 0.9 * (1.0 - smoothstep(0.0, 0.012 + w, abs(rho - 2.215))));
-  float f = (1.0 - smoothstep(0.0, 0.008 + w, abs(rho - 2.32))) * 0.14;
-  return clamp(c + b + a + f, 0.0, 1.0);
-}
-vec3 ringColor(float rho) {
-  vec3 c = vec3(0.42, 0.36, 0.30);                                          // C ring
-  c = mix(c, vec3(0.90, 0.80, 0.62), smoothstep(1.48, 1.58, rho));          // B ring
-  return mix(c, vec3(0.74, 0.66, 0.54), smoothstep(1.97, 2.06, rho));       // A ring
-}
-
-vec3 saturnSurface(vec3 n, float I, float t) {
-  vec3 Lh = planetDir();
-  vec3 N = ringNormal();
-  float k = planetLight(n);
-  vec3 p = rotY(n, t * 0.012);
-  float lat = asin(clamp(p.y, -1.0, 1.0));
-  float warp = fbm3(vec3(p.x * 2.2, p.y * 7.0, p.z * 2.2)) - 0.5;                  // the bands wander a little
-  float band = 0.5 + 0.26 * sin(lat * 24.0 + warp * 6.0) + 0.2 * sin(lat * 9.0 + 1.3 + warp * 3.0);
-  vec3 cream = vec3(0.93, 0.85, 0.66), sand = vec3(0.76, 0.62, 0.43), brown = vec3(0.60, 0.48, 0.34);
-  vec3 a = mix(sand, cream, smoothstep(0.25, 0.8, band));
-  a = mix(a, brown, (1.0 - smoothstep(0.1, 0.45, band)) * 0.5);
-  a = mix(a, vec3(0.58, 0.55, 0.47), smoothstep(1.05, 1.35, abs(lat)) * 0.55);      // greyer towards the poles
-  a *= 0.93 + 0.14 * fbm3(p * vec3(6.0, 16.0, 6.0));
-  // the shadow of the rings: follow the ray to the light until it meets the plane of the rings
-  float tau = -dot(n, N) / dot(Lh, N);
-  float shade = 1.0;
-  if (tau > 0.0) shade = 1.0 - 0.85 * ringDensity(length(n + tau * Lh), 0.01);
-  vec3 c = a * (0.03 + 1.25 * k * shade);
-  c *= 1.0 + 0.08 * (hash12(gl_FragCoord.xy) - 0.5);
-  return c * smoothstep(0.0, 0.5, I);
-}
-
-// the rings at this pixel: colour and opacity. covGlobe is how much the globe covers the pixel; the
-// part of the rings behind the globe is hidden by it, the part in front crosses it.
-vec4 saturnRings(vec2 q, float S, float covGlobe) {
-  vec2 s = vec2(q.x, -q.y) / (S * SATURN_SCALE);
-  vec3 N = ringNormal();
-  float zr = -(s.x * N.x + s.y * N.y) / N.z;       // where the line of sight meets the plane of the rings
-  vec3 P = vec3(s, zr);
-  float rho = length(P);
-  float dens = ringDensity(rho, max(fwidth(rho), 0.003));
-  float zs = sqrt(max(1.0 - dot(s, s), 0.0));
-  float hidden = zr < zs ? covGlobe : 0.0;
-  vec3 Lh = planetDir();
-  float pl = dot(P, Lh);
-  float d = sqrt(max(dot(P, P) - pl * pl, 0.0));
-  float shade = pl < 0.0 ? smoothstep(0.96, 1.04, d) : 1.0;       // the shadow of the globe
-  vec3 c = ringColor(rho) * (0.10 + 1.15 * mix(clamp(dot(N, Lh), 0.0, 1.0), 0.9, sunFull(0.45))) * mix(0.10, 1.0, shade);
-  float vis = dayVis(0.5 * mix(0.10, 1.0, shade));       // by day the part in the shadow of the globe is transparent
-  return vec4(unshade(c, vis), dens * 0.95 * (1.0 - hidden) * vis);
-}
-
-float bodyScale(int kind) { return kind == 3 ? SATURN_SCALE : 1.0; }
-
 vec3 body(int kind, vec3 n, float I, float t) {
   if (kind == 1) return marsSurface(n, I, t);
   if (kind == 2) return earthSurface(n, I, t);
-  if (kind == 3) return saturnSurface(n, I, t);
   return moonSurface(n, I);
 }
 
 // the colour of one body at this pixel (q in pixels from the centre of the planet, S the page radius)
 vec3 bodyColor(int kind, vec2 q, float S, float I, float t) {
-  float Sk = S * bodyScale(kind);
-  vec3 n = vec3(q.x, -q.y, sqrt(max(Sk * Sk - dot(q, q), 0.0))) / Sk;
+  vec3 n = vec3(q.x, -q.y, sqrt(max(S * S - dot(q, q), 0.0))) / S;
   return body(kind, n, I, t);
 }
 
 // how opaque the body is at this pixel (by day it is transparent where the sun does not light it)
 float bodyVis(int kind, vec2 q, float S) {
-  float Sk = S * bodyScale(kind);
-  vec3 n = vec3(q.x, -q.y, sqrt(max(Sk * Sk - dot(q, q), 0.0))) / Sk;
+  vec3 n = vec3(q.x, -q.y, sqrt(max(S * S - dot(q, q), 0.0))) / S;
   return kind == 0 ? moonSeen(n) : planetSeen(n);
 }
 
@@ -479,7 +403,9 @@ vec4 marsMoon(vec2 v, float S, float t, int i, bool front) {
   vec3 n = vec3(o.x, -o.y, sqrt(max(1.0 - d * d, 0.0)));
   float k = pow(clamp((dot(n, planetDir()) + 0.05) / 1.05, 0.0, 1.0), 1.1);
   vec3 albedo = i == 0 ? vec3(0.38, 0.34, 0.30) : vec3(0.55, 0.50, 0.45);
-  return vec4(albedo * (0.05 + 1.2 * mix(k, 0.65 + 0.35 * k, uDay)), alpha * dayVis(k) * (1.0 - shadow));      // (by day the colour does not darken towards the terminator, see planetLight)
+  // a small moon is opaque, by day too: a shadow that was the colour of the page would let the planet show through it
+  // as it crosses the planet's disc. By day the sky fills its shadow a little.
+  return vec4(albedo * (mix(0.05, 0.22, uDay) + 1.2 * k), alpha * (1.0 - shadow));
 }
 
 // ---- a solar eclipse: the body keeps its picture and its light but is dimmed to ECLIPSE_LEFT of its
@@ -525,8 +451,10 @@ vec4 earthMoon(vec2 v, float S, float t, bool front) {
   float k = pow(clamp((dot(n, planetDir()) + 0.05) / 1.05, 0.0, 1.0), 1.1);
   vec2 uv = vec2(atan(n.x, n.z), asin(clamp(n.y, -1.0, 1.0)));
   float tex = (fbm(uv * 1.6 + 7.0) - 0.5) * 0.9 + craters(uv * 3.0) * 0.25;
-  float kc = mix(k, 0.65 + 0.35 * k, uDay);       // (by day the colour does not darken towards the terminator, see planetLight)
-  return vec4(moonRamp(20.0 + 215.0 * kc * clamp(1.0 + tex, 0.3, 1.5)), alpha * dayVis(k) * (1.0 - shadow));
+  vec3 c = moonRamp(20.0 + 215.0 * k * clamp(1.0 + tex, 0.3, 1.5));
+  // opaque, by day too (see marsMoon): the shadow side is a darker slate, not the colour of the page
+  c *= mix(1.0, mix(0.45, 1.0, smoothstep(0.0, 0.6, k)), uDay);
+  return vec4(c, alpha * (1.0 - shadow));
 }
 
 // ---- stars: the few of the picture, a sparse field and one sparkle
@@ -714,7 +642,7 @@ void main() {
   float moons = ((from == 1 ? 1.0 - swap : 0.0) + (to == 1 ? swap : 0.0)) * moonsIn;
   float luna = ((from == 2 ? 1.0 - swap : 0.0) + (to == 2 ? swap : 0.0)) * moonsIn;     // and Earth has its Moon
   float r = length(qM);
-  float cov = mix(bodyCover(r, S * bodyScale(from), from, I), bodyCover(r, S * bodyScale(to), to, I), swap);
+  float cov = mix(bodyCover(r, S, from, I), bodyCover(r, S, to, I), swap);
   // behind the planet the whole disc hides the moons, even where it is transparent by day (the shadow side)
   float hides = mix(1.0, 1.0 - cov, uDay);
   if (luna > 0.0) {
@@ -736,17 +664,8 @@ void main() {
     if (swap < 1.0) c = mix(bodyColor(from, qM, S, I, t), c, swap);       // while one body turns into another, both are drawn
     col = mix(col, c * mix(1.0, ECLIPSE_LEFT, uEclipse), cov * vis);
   }
-  if (uDay > 0.5) {         // a thin ink line round the lit edge of the body, so that its pale edge stands out from the sky
-    float edge = mix(edgeCover(r, S * bodyScale(from), from), edgeCover(r, S * bodyScale(to), to), swap);
-    col = mix(col, DAY_RIM, 4.0 * edge * (1.0 - edge) * 0.6 * vis * (1.0 - uEclipse) * smoothstep(0.0, 0.3, I));
-  }
   col += mix(halo(qM, S, from, I), halo(qM, S, to, I), swap) * (1.0 - uEclipse) * (1.0 - uDay);       // the corona takes the place of the glow of Earth's air (by day there is none)
-  if (uEclipse > 0.0) col += mix(corona(qM, S * bodyScale(from), t), corona(qM, S * bodyScale(to), t), swap) * uEclipse;
-  float saturn = ((from == 3 ? 1.0 - swap : 0.0) + (to == 3 ? swap : 0.0)) * moonsIn;
-  if (saturn > 0.0) {
-    vec4 ring = saturnRings(qM, S, bodyCover(r, S * SATURN_SCALE, 3, 1.0));
-    col = mix(col, ring.rgb * mix(1.0, ECLIPSE_LEFT, uEclipse), ring.a * saturn);
-  }
+  if (uEclipse > 0.0) col += corona(qM, S, t) * uEclipse;
   if (luna > 0.0) {
     vec4 m = earthMoon(qM / S, S, t, true);
     col = mix(col, m.rgb, m.a * luna);
@@ -976,7 +895,7 @@ export function createScene(canvas, { reduceMotion, solid = 'a, button', planet 
     const x = (e.clientX - rect.left - geo.x) / geo.R;
     const y = (e.clientY - rect.top - geo.y) / geo.R;
     // a click on the planet is an eclipse, and the next click on it ends the eclipse; neither moves the sun
-    if (Math.hypot(x, y) <= BODY_RADIUS[sky.to]) {
+    if (Math.hypot(x, y) <= 1) {
       eclipse.on = !eclipse.on;
       if (onEclipse) onEclipse(eclipse.on);
       return;
