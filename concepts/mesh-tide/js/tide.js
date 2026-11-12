@@ -3,8 +3,7 @@
 // and pull the nodes towards the crests. The vertex shader does all of it, so one frame is a few
 // draw calls: the background, the lattice lines (instanced quads, so their width is exact) and
 // the nodes (soft point sprites that blur close to the camera).
-// The wave table below is the single source: it is written into the shader and read by the
-// sampler that serves the live readout.
+// The wave table below is the single source: it is written into the shader.
 
 const MAX_PIXEL_RATIO = 2;
 const MAX_PIXELS = 5e6;          // canvas pixel budget for very large screens
@@ -317,25 +316,8 @@ function groundPoint(cam, nx, ny) {
   return { x: dir[0] * t, z: dir[2] * t };
 }
 
-// The surface at a point, for the readout: the same sum as in the shader, without the sideways
-// pull of the crests and without ripples. Returns the height and the slope in degrees.
-function sample(x, z, time, strength) {
-  let h = 0;
-  let gx = 0;
-  let gz = 0;
-  for (const w of WAVES) {
-    const a = w.amp * strength * (0.78 + 0.22 * Math.sin((x * w.dz - z * w.dx) * SWELL + time * 0.09 + w.phase * 2.3));
-    const ph = w.k * (w.dx * x + w.dz * z) - w.omega * time + w.phase;
-    h += a * Math.sin(ph);
-    gx += w.dx * a * w.k * Math.cos(ph);
-    gz += w.dz * a * w.k * Math.cos(ph);
-  }
-  return { height: h, slope: (Math.atan(Math.hypot(gx, gz)) * 180) / Math.PI };
-}
-
 // Returns null when the device has no WebGL2; shader or link errors throw.
-// onProbe({ height, slope }) reports the water under the pointer, or at a resting point.
-export function createTide(canvas, { theme, reduceMotion, onProbe }) {
+export function createTide(canvas, { theme, reduceMotion }) {
   const gl = canvas.getContext('webgl2', { alpha: false, antialias: false });
   if (!gl) return null;
 
@@ -354,7 +336,6 @@ export function createTide(canvas, { theme, reduceMotion, onProbe }) {
   let visible = true;
   let raf = 0;
   let last = 0;
-  let probed = 0;
 
   function program(vs, fs, names) {
     const p = gl.createProgram();
@@ -447,15 +428,6 @@ export function createTide(canvas, { theme, reduceMotion, onProbe }) {
     ripples.set([x, z, time, strength], oldest * 4);
   }
 
-  // the water under the pointer, or under a resting point while the pointer is elsewhere
-  function probe() {
-    const w = canvas.clientWidth;
-    const h = canvas.clientHeight;
-    if (!w || !h) return;
-    const g = groundPoint(cam, pointer.over ? pointer.x / w : 0.7, pointer.over ? pointer.y / h : 0.78);
-    if (g) onProbe(sample(g.x, g.z, time, 0.25 + 0.75 * (1 - (1 - intro) ** 3)));
-  }
-
   function tick(now) {
     raf = requestAnimationFrame(tick);
     const dt = Math.min((now - last) / 1000, 0.1);
@@ -463,7 +435,6 @@ export function createTide(canvas, { theme, reduceMotion, onProbe }) {
     time += dt * FLOW;
     intro = Math.min(1, intro + dt / INTRO_SECONDS);
     light.x += (light.target - light.x) * (1 - Math.exp(-dt * 0.9));
-    if (now - probed > 110) { probed = now; probe(); }
     draw();
   }
 
@@ -507,10 +478,8 @@ export function createTide(canvas, { theme, reduceMotion, onProbe }) {
     }, { passive: true });
   }
   update();
-  probe();
 
   return {
-    nodes: NX * NY,
     setTheme(name) {
       look = LOOKS[name];
       if (!running) draw();

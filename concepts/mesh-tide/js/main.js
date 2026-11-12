@@ -1,5 +1,4 @@
-// Entry point of the "Mesh Tide" hero: starts the water and wires its readout,
-// the theme switch and the menu.
+// Entry point of the "Mesh Tide" hero: starts the water and wires the theme switch and the menu.
 
 import { createTide } from './tide.js';
 
@@ -9,21 +8,9 @@ const PAGE = { dark: '#04070c', light: '#f8f5ef' };
 const root = document.documentElement;
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// ---- readout: the water under the pointer
-const outH = document.getElementById('outH');
-const outS = document.getElementById('outS');
-function probe({ height, slope }) {
-  outH.textContent = (height >= 0 ? '+' : '−') + Math.abs(height).toFixed(2);
-  outS.textContent = slope.toFixed(0);
-}
-
-const tide = createTide(document.getElementById('tide'), { theme: root.dataset.theme, reduceMotion, onProbe: probe });
-if (tide) {
-  document.getElementById('outNodes').textContent = tide.nodes.toLocaleString('de-DE');
-} else {
-  // no WebGL2 on this device: the page keeps its plain background
-  console.warn('WebGL2 is not available, the water is not drawn.');
-}
+const tide = createTide(document.getElementById('tide'), { theme: root.dataset.theme, reduceMotion });
+// no WebGL2 on this device: the page keeps its plain background
+if (!tide) console.warn('WebGL2 is not available, the water is not drawn.');
 
 // ---- theme: stored choice, otherwise the system setting (see the inline script in <head>)
 const toggle = document.getElementById('themeToggle');
