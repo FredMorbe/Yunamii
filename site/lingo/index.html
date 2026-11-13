@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Yunamii Lingo — Learn Mandarin, Japanese and Korean</title>
+  <meta name="description" content="Yunamii Lingo teaches Mandarin, Japanese and Korean with pictures, short exercises and a little fox. Works offline, no account, no ads. Coming soon.">
+  <meta name="theme-color" content="#0a3b52">
+  <meta property="og:title" content="Yunamii Lingo — Learn Mandarin, Japanese and Korean">
+  <meta property="og:description" content="Learn languages one picture at a time: Mandarin, Japanese and Korean with short exercises and a little fox. Coming soon.">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <!-- This page lives one folder below the main site and shares its stylesheet, hero and page scripts (../css, ../js, ../assets).
+       Everything the first screen needs is announced up front, as on the main page: the fonts, the tree with its data and sprites,
+       and the scripts. -->
+  <link rel="preload" href="../assets/fonts/Fraunces-normal-300-640-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../assets/fonts/Fraunces-italic-300-640-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../assets/fonts/DMSans-normal-300-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../assets/hero/tree.webp" as="image" type="image/webp" fetchpriority="high">
+  <link rel="preload" href="../assets/hero/sprites.json" as="fetch" crossorigin>
+  <link rel="preload" href="../assets/hero/anchors.json" as="fetch" crossorigin>
+  <link rel="modulepreload" href="../js/hero.js">
+  <link rel="modulepreload" href="../js/backdrop.js">
+  <link rel="modulepreload" href="../js/site.js">
+  <link rel="modulepreload" href="../js/ui.js">
+  <link rel="modulepreload" href="../js/petals.js">
+  <link rel="modulepreload" href="../js/showcase.js">
+  <link rel="modulepreload" href="../js/process.js">
+  <link rel="modulepreload" href="../js/waves.js">
+  <link rel="modulepreload" href="lingo.js">
+  <link rel="preload" href="../assets/hero/sprites/blossom1.webp" as="image" type="image/webp">
+  <link rel="preload" href="../assets/hero/sprites/blossom2.webp" as="image" type="image/webp">
+  <link rel="preload" href="../assets/hero/sprites/blossom3.webp" as="image" type="image/webp">
+  <link rel="preload" href="../assets/hero/sprites/blossom4.webp" as="image" type="image/webp">
+  <link rel="preload" href="../assets/hero/sprites/cluster1.webp" as="image" type="image/webp">
+  <link rel="preload" href="../assets/hero/sprites/cluster2.webp" as="image" type="image/webp">
+  <link rel="preload" href="../assets/hero/sprites/cluster3.webp" as="image" type="image/webp">
+  <link rel="preload" href="../assets/hero/sprites/cluster4.webp" as="image" type="image/webp">
+  <link rel="preload" href="../assets/hero/sprites/leaf1.webp" as="image" type="image/webp">
+  <link rel="preload" href="../assets/hero/sprites/leaf2.webp" as="image" type="image/webp">
+  <link rel="preload" href="../assets/hero/sprites/leaf3.webp" as="image" type="image/webp">
+  <link rel="preload" href="../assets/hero/sprites/leaf4.webp" as="image" type="image/webp">
+  <link rel="preload" href="../assets/hero/sprites/petal1.webp" as="image" type="image/webp">
+  <link rel="preload" href="../assets/hero/sprites/petal2.webp" as="image" type="image/webp">
+  <link rel="preload" href="../assets/hero/sprites/petal3.webp" as="image" type="image/webp">
+  <link rel="preload" href="../assets/hero/sprites/petal4.webp" as="image" type="image/webp">
+  <link rel="stylesheet" href="../css/site.css">
+  <link rel="stylesheet" href="lingo.css">
+  <script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<!-- shared SVG filters: "ink" roughens the edges of seals, "brush" roughens the enso stroke -->
+<svg class="defs" width="0" height="0" aria-hidden="true" focusable="false">
+  <defs>
+    <filter id="ink" x="-8%" y="-8%" width="116%" height="116%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="4" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="2.4"/>
+    </filter>
+    <filter id="ink-sm" x="-8%" y="-8%" width="116%" height="116%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="2" seed="4" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="1"/>
+    </filter>
+    <filter id="brush" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035 0.05" numOctaves="3" seed="11" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="7"/>
+    </filter>
+  </defs>
+</svg>
+
+<div class="site">
+  <canvas class="petals petals--back" id="petals-back" aria-hidden="true"></canvas>
+  <canvas class="petals" id="petals" aria-hidden="true"></canvas>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="head head--fixed" id="head">
+    <div class="shell head-in">
+      <a href="../" class="logo" aria-label="Yunamii Studio — home"><span class="logomark" aria-hidden="true"><i></i><i></i><i></i></span>Yunamii</a>
+      <nav class="desktop-nav" aria-label="Main navigation">
+        <a href="#languages">Languages</a><a href="#app">The App</a><a href="#path">The Path</a><a href="#privacy">Privacy</a>
+      </nav>
+      <div class="head-actions"><a href="../impressum.html#kontakt" class="pill">Notify me <span aria-hidden="true">↗</span></a></div>
+      <button type="button" class="hamburger" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="mobileOverlay"><svg width="22" height="22" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9" fill="none"><path d="M3 7h18M3 12h18M3 17h18"/></svg></button>
+    </div>
+  </header>
+
+  <nav class="spy" id="spy" aria-label="Page sections">
+    <a href="#top" data-spy="top"><span class="spy-l">Home</span><span class="spy-n" lang="ja" aria-hidden="true">一</span></a>
+    <a href="#languages" data-spy="languages"><span class="spy-l">Languages</span><span class="spy-n" lang="ja" aria-hidden="true">二</span></a>
+    <a href="#app" data-spy="app"><span class="spy-l">The App</span><span class="spy-n" lang="ja" aria-hidden="true">三</span></a>
+    <a href="#path" data-spy="path"><span class="spy-l">The Path</span><span class="spy-n" lang="ja" aria-hidden="true">四</span></a>
+    <a href="#privacy" data-spy="privacy"><span class="spy-l">Privacy</span><span class="spy-n" lang="ja" aria-hidden="true">五</span></a>
+    <a href="#contact" data-spy="contact"><span class="spy-l">Contact</span><span class="spy-n" lang="ja" aria-hidden="true">六</span></a>
+  </nav>
+
+  <main id="top">
+    <!-- ============ HERO: the cherry bonsai of the main page, with the app on a phone floating by the island ============ -->
+    <section class="hero hero--lingo" id="hero" aria-labelledby="heroTitle">
+      <canvas class="hero-bg" id="bg" aria-hidden="true"></canvas>
+      <canvas class="hero-bg" id="bg-fx" aria-hidden="true"></canvas>
+      <span class="hero-vert" aria-hidden="true">Yunamii Lingo — Mandarin · Japanese · Korean</span>
+      <div class="hero-inner">
+        <div class="hero-copy">
+          <div class="eyebrow"><span class="hanko hanko--sm stamp" lang="ja" aria-hidden="true">語</span>YUNAMII LINGO<span class="badge">Coming soon</span></div>
+          <h1 id="heroTitle"><span>Learn languages</span><span><em>one picture at a time.</em></span></h1>
+          <p>Mandarin, Japanese and Korean with pictures, short exercises and a little fox. From your first word to your first sentences.</p>
+          <div class="hero-buttons"><a href="../impressum.html#kontakt" class="pill magnetic">Notify me <span aria-hidden="true">↗</span></a><a href="#app" class="outline">See the app</a></div>
+        </div>
+        <div class="hero-stage">
+          <canvas id="scene" role="img" aria-label="Interactive cherry blossom bonsai on a mossy island. Move the cursor or finger through the blossoms."></canvas>
+        </div>
+      </div>
+      <!-- Foreground of the scene: blossoms, petals and leaves close to the viewer, some out of focus. They are placed against the island
+           (js/hero.js sets --island-x, --island-y and --island-k on .hero, see lingo.css) and lie in front of the tree. -->
+      <div class="hero-fore" aria-hidden="true">
+        <img class="fore-item" src="../assets/hero/sprites/petal1.webp" alt="" width="189" height="170" decoding="async" style="--x:-330; --y:-62; --w:58; --r:24deg">
+        <img class="fore-item" src="../assets/hero/sprites/petal3.webp" alt="" width="195" height="163" decoding="async" style="--x:-250; --y:-34; --w:50; --r:-38deg">
+        <img class="fore-item" src="../assets/hero/sprites/leaf2.webp" alt="" width="237" height="175" decoding="async" style="--x:-455; --y:-30; --w:118; --r:-22deg">
+        <img class="fore-item fore-item--sway" src="../assets/hero/sprites/blossom1.webp" alt="" width="242" height="228" decoding="async" style="--x:-392; --y:-118; --w:84; --r:12deg; --t:7s">
+        <img class="fore-item fore-item--sway fore-item--blur" src="../assets/hero/sprites/blossom3.webp" alt="" width="226" height="211" decoding="async" style="--x:-585; --y:105; --w:210; --r:16deg; --t:9s; --d:-2s; --b:3.5px">
+        <img class="fore-item fore-item--sway fore-item--blur" src="../assets/hero/sprites/cluster2.webp" alt="" width="229" height="260" decoding="async" style="--x:540; --y:115; --w:190; --r:-20deg; --t:11s; --d:-5s; --b:4.5px">
+      </div>
+      <div class="scroll-cue" aria-hidden="true"><span class="scroll-line"></span>scroll</div>
+      <div class="hero-hint" aria-hidden="true"><span>✦</span> move · explore · bloom</div>
+    </section>
+
+    <!-- ============ THREE LANGUAGES (strip) ============ -->
+    <section class="what what--3 shell reveal" aria-label="Languages">
+      <a href="#languages" data-glow><span class="glyph" lang="zh-Hant" aria-hidden="true">字</span><div><strong>Mandarin</strong><small>Taiwan or mainland China</small></div><span class="ja" lang="zh-Hant" aria-hidden="true">中文</span></a>
+      <a href="#languages" data-glow><span class="glyph" lang="ja" aria-hidden="true">あ</span><div><strong>Japanese</strong><small>Kanji, kana and furigana</small></div><span class="ja" lang="ja" aria-hidden="true">日本語</span></a>
+      <a href="#languages" data-glow><span class="glyph" lang="ko" aria-hidden="true">가</span><div><strong>Korean</strong><small>Hangul and Romaja</small></div><span class="ja" lang="ko" aria-hidden="true">한국어</span></a>
+    </section>
+
+    <!-- ============ LANGUAGES ============ -->
+    <section class="langs shell" id="languages" aria-labelledby="langTitle">
+      <span class="ghost-kanji" lang="ja" aria-hidden="true" data-parallax="-0.05">言葉</span>
+      <div class="section-head reveal">
+        <div><div class="section-kicker">THREE LANGUAGES</div><h2 class="section-title" id="langTitle">Pick an <em>island</em>.</h2></div>
+        <p class="section-note">Each language has its own painted map, path and words. Your streak travels with you.</p>
+      </div>
+      <div class="buds-grid reveal">
+        <article class="card card--lang" aria-label="Mandarin, nine chapters" data-glow>
+          <img src="assets/art/card_zh.webp" alt="Taipei 101 rising over green hills at sunset, with pink azaleas in the foreground" width="497" height="686" loading="lazy" decoding="async">
+          <span class="tag-icon tag-glyph" lang="zh-Hant" aria-hidden="true">字</span>
+          <span class="soon">9 chapters</span>
+          <div class="card-info"><strong>Mandarin</strong><small>Traditional characters and Taiwan vocabulary, or simplified characters for mainland China. Pinyin or Zhuyin, about 460 words.</small></div>
+        </article>
+        <article class="card card--lang" aria-label="Japanese, nine chapters" data-glow>
+          <img src="assets/art/card_ja.webp" alt="Mount Fuji and a red pagoda behind cherry blossoms, on a lake at sunset" width="496" height="686" loading="lazy" decoding="async">
+          <span class="tag-icon tag-glyph" lang="ja" aria-hidden="true">あ</span>
+          <span class="soon">9 chapters</span>
+          <div class="card-info"><strong>Japanese</strong><small>Kanji and kana with Rōmaji or furigana beside them. Hiragana and Katakana trained row by row, over 250 words.</small></div>
+        </article>
+        <article class="card card--lang" aria-label="Korean, five chapters so far" data-glow>
+          <img src="assets/art/card_ko.webp" alt="A Korean palace hall with red pillars beside a lake and cherry blossoms, the Seoul tower in the distance" width="497" height="686" loading="lazy" decoding="async">
+          <span class="tag-icon tag-glyph" lang="ko" aria-hidden="true">가</span>
+          <span class="soon">5 chapters, growing</span>
+          <div class="card-info"><strong>Korean</strong><small>Hangul taught as the little system it is: letters, blocks, sound changes. Romaja to lean on, about 200 words so far.</small></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ THE APP ============ -->
+    <section class="work shell lingo-app" id="app" aria-labelledby="appTitle">
+      <span class="ghost-kanji" lang="ja" aria-hidden="true" data-parallax="-0.05">画面</span>
+      <div class="section-head reveal">
+        <div><div class="section-kicker">A LOOK INSIDE</div><h2 class="section-title" id="appTitle">Calm screens, <em>small steps</em>.</h2></div>
+        <p class="section-note">Light as morning, dark as dusk. Tap a screen or use the arrows.</p>
+      </div>
+
+      <div class="showcase reveal" data-showcase>
+        <div class="showcase-tabs" role="tablist" aria-label="Parts of the app" aria-orientation="vertical">
+          <button type="button" class="tab" role="tab" id="tab-learn" aria-controls="panel-learn" aria-selected="true" data-tab="learn">
+            <span class="num" lang="ja" aria-hidden="true">壱</span>
+            <span class="tab-t"><strong>Learn</strong><small>Pictures, sentences, an island</small></span>
+            <span class="tab-arrow" aria-hidden="true">→</span>
+          </button>
+          <button type="button" class="tab" role="tab" id="tab-practice" aria-controls="panel-practice" aria-selected="false" tabindex="-1" data-tab="practice">
+            <span class="num" lang="ja" aria-hidden="true">弐</span>
+            <span class="tab-t"><strong>Practice</strong><small>Games, review, dictionary</small></span>
+            <span class="tab-arrow" aria-hidden="true">→</span>
+          </button>
+          <button type="button" class="tab" role="tab" id="tab-stay" aria-controls="panel-stay" aria-selected="false" tabindex="-1" data-tab="stay">
+            <span class="num" lang="ja" aria-hidden="true">参</span>
+            <span class="tab-t"><strong>Stay with it</strong><small>A buddy, a streak, quests</small></span>
+            <span class="tab-arrow" aria-hidden="true">→</span>
+          </button>
+        </div>
+
+        <div class="showcase-stage">
+          <!-- Learn -->
+          <div class="panel" role="tabpanel" id="panel-learn" aria-labelledby="tab-learn" tabindex="0">
+            <div class="panel-visual panel-visual--lingo panel-visual--learn">
+              <div class="phones" data-phones role="group" aria-roledescription="carousel" aria-label="Learn screenshots">
+                <figure class="phone" data-caption="The island · every part is a signboard on the path"><img src="assets/screens/map-dark.webp" alt="The painted island map of the Chinese course with signboards for Part 1, 2 and 3 along a winding path, a torii and a pagoda at dusk" width="375" height="812" loading="lazy" decoding="async"></figure>
+                <figure class="phone" data-caption="Part 1 · a card for every chapter"><img src="assets/screens/part-dark.webp" alt="Part 1, Start with the basics: cards for the chapters First Words, Sentences and Real Life with their progress bars" width="375" height="812" loading="lazy" decoding="async"></figure>
+                <figure class="phone" data-caption="A lesson · tap the matching picture"><img src="assets/screens/lesson-light.webp" alt="A lesson: the word 貓 with its reading mao and a grid of pictures to choose from, with the fox beside it" width="375" height="812" loading="lazy" decoding="async"></figure>
+                <figure class="phone" data-caption="Three languages · switch whenever you like"><img src="assets/screens/languages-light.webp" alt="The language picker offering Chinese, Japanese and Korean, each with its own picture" width="375" height="812" loading="lazy" decoding="async"></figure>
+              </div>
+              <div class="phones-ui">
+                <button type="button" class="round" data-phones-prev aria-label="Previous screenshot">‹</button>
+                <p class="phones-cap" data-phones-cap aria-live="polite"></p>
+                <button type="button" class="round" data-phones-next aria-label="Next screenshot">›</button>
+              </div>
+            </div>
+            <div class="panel-copy">
+              <div>
+                <h3><img class="app-icon" src="assets/icon.webp" alt="" width="46" height="46">Learn on an island</h3>
+                <p>Concrete words arrive as pictures, every other word on a small card with an example. Then you build sentences from words you already know. The course is a painted island: each part a signboard on a winding path, each chapter a stop along the way.</p>
+              </div>
+              <ul class="facts">
+                <li><b>9 chapters</b><span>of Mandarin and of Japanese, five of Korean so far</span></li>
+                <li><b>Level quiz</b><span>starts you where you really are, or at the first word if you are new</span></li>
+                <li><b>Reading aid</b><span>Pinyin or Zhuyin, Rōmaji or furigana, Romaja, or none</span></li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Practice -->
+          <div class="panel" role="tabpanel" id="panel-practice" aria-labelledby="tab-practice" tabindex="0" hidden>
+            <div class="panel-visual panel-visual--lingo panel-visual--practice">
+              <div class="phones" data-phones role="group" aria-roledescription="carousel" aria-label="Practice screenshots">
+                <figure class="phone" data-caption="Practice · games, review and script trainers"><img src="assets/screens/practice-light.webp" alt="The Practice tab: Review, Speed round, Match madness, Lantern festival, Tone swipe and Daily quests" width="375" height="812" loading="lazy" decoding="async"></figure>
+                <figure class="phone" data-caption="Library · dictionary, word book, seal book"><img src="assets/screens/library-light.webp" alt="The Library tab: Everyday topics, Dictionary, Word book, Seal book and the Zhuyin chart" width="375" height="812" loading="lazy" decoding="async"></figure>
+                <figure class="phone" data-caption="Daily quests · three a day, then a chest"><img src="assets/screens/quests-light.webp" alt="Daily quests: answer 15 questions right, earn 30 XP, finish 2 lessons, with a quest chest and a monthly challenge" width="375" height="812" loading="lazy" decoding="async"></figure>
+              </div>
+              <div class="phones-ui">
+                <button type="button" class="round" data-phones-prev aria-label="Previous screenshot">‹</button>
+                <p class="phones-cap" data-phones-cap aria-live="polite"></p>
+                <button type="button" class="round" data-phones-next aria-label="Next screenshot">›</button>
+              </div>
+            </div>
+            <div class="panel-copy">
+              <div>
+                <h3>Practice that feels like play</h3>
+                <p>Short games keep words fresh: a speed round, a match round, paper lanterns that rise over a field of characters, a tone swipe for Mandarin. Review brings back the words that are due, and the dictionary finds a word by its script, its reading or its meaning, even if all you can do is draw the character.</p>
+              </div>
+              <ul class="facts">
+                <li><b>Spaced review</b><span>words come back after 1, 2, 4, 8 … days until they stay</span></li>
+                <li><b>Dictionary</b><span>search by script, reading or meaning, or write with your finger</span></li>
+                <li><b>Word book</b><span>every word grows as a plant, from seed to blossom</span></li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Stay with it -->
+          <div class="panel" role="tabpanel" id="panel-stay" aria-labelledby="tab-stay" tabindex="0" hidden>
+            <div class="panel-visual panel-visual--lingo panel-visual--stay">
+              <div class="phones" data-phones role="group" aria-roledescription="carousel" aria-label="Habit screenshots">
+                <figure class="phone" data-caption="Home · continue where you stopped"><img src="assets/screens/home-dark.webp" alt="The home screen at dusk: continue learning, review, daily quests, progress, the daily goal and the study buddy fox" width="375" height="812" loading="lazy" decoding="async"></figure>
+                <figure class="phone" data-caption="The streak · a calendar and two freezes"><img src="assets/screens/streak-dark.webp" alt="The streak sheet with a calendar of practice days, streak freezes, a streak wager and the next milestone" width="375" height="812" loading="lazy" decoding="async"></figure>
+                <figure class="phone" data-caption="My progress · level, medals and awards"><img src="assets/screens/progress-light.webp" alt="My progress: the fox buddy, level 10 Sentence Builder, day streak, words and lessons learned, the next medal and the part awards" width="375" height="812" loading="lazy" decoding="async"></figure>
+              </div>
+              <div class="phones-ui">
+                <button type="button" class="round" data-phones-prev aria-label="Previous screenshot">‹</button>
+                <p class="phones-cap" data-phones-cap aria-live="polite"></p>
+                <button type="button" class="round" data-phones-next aria-label="Next screenshot">›</button>
+              </div>
+            </div>
+            <div class="panel-copy">
+              <div>
+                <h3>A buddy that keeps you going</h3>
+                <p>Pick a daily goal from 10 to 50 XP and watch the ring fill. Keep a streak, with freezes for the days life gets in the way, finish three quests for a chest, and collect medals and seals as you go. A gentle reminder if you want one, and nothing shouty.</p>
+              </div>
+              <ul class="facts">
+                <li><b>60 levels</b><span>from the first word to sentence builder and beyond</span></li>
+                <li><b>88 medals</b><span>in 25 ladders, for habits as much as for scores</span></li>
+                <li><b>2 freezes</b><span>cover the days you cannot practise</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ THE PATH ============ -->
+    <section class="process-panel" id="path" aria-labelledby="pathTitle">
+      <span class="ghost-kanji ghost-kanji--right" lang="ja" aria-hidden="true" data-parallax="-0.05">道</span>
+      <div class="process shell">
+        <div class="process-intro reveal">
+          <div class="section-kicker">THE PATH</div>
+          <h2 id="pathTitle">From first word to<br><em>first sentence</em></h2>
+          <p>Small steps, in an order that makes sense. Open a blossom to read more.</p>
+          <p class="step-detail" id="stepDetail" aria-live="polite"></p>
+        </div>
+        <ol class="steps" data-steps>
+          <li class="step" data-detail="Concrete words come as pictures, so you learn the thing and not a translation. Everything else gets a small card with a note and an example sentence.">
+            <button type="button" class="step-btn"><span class="bloom" aria-hidden="true"><img class="bloom-leaf bloom-leaf--a" src="../assets/hero/sprites/leaf2.webp" loading="lazy" decoding="async" alt="" width="237" height="175"><img class="bloom-leaf bloom-leaf--b" src="../assets/hero/sprites/leaf4.webp" loading="lazy" decoding="async" alt="" width="135" height="194"><img class="bloom-flower" src="../assets/hero/sprites/blossom1.webp" loading="lazy" decoding="async" alt="" width="242" height="228"></span><span class="step-ja" lang="ja" aria-hidden="true">単語</span><strong>Meet the words</strong><small>Pictures first</small></button>
+          </li>
+          <li class="step" data-detail="You pick, build and complete sentences made only of words you have already met. In Japanese and Korean the first sentence lessons end with a small chat.">
+            <button type="button" class="step-btn"><span class="bloom" aria-hidden="true"><img class="bloom-leaf bloom-leaf--a" src="../assets/hero/sprites/leaf3.webp" loading="lazy" decoding="async" alt="" width="243" height="145"><img class="bloom-leaf bloom-leaf--b" src="../assets/hero/sprites/leaf1.webp" loading="lazy" decoding="async" alt="" width="212" height="217"><img class="bloom-flower" src="../assets/hero/sprites/blossom2.webp" loading="lazy" decoding="async" alt="" width="221" height="201"></span><span class="step-ja" lang="ja" aria-hidden="true">文章</span><strong>Build sentences</strong><small>From words you know</small></button>
+          </li>
+          <li class="step" data-detail="Checkpoints and part exams need 70 % right to pass, so a star means something. A level quiz finds where you stand, and nobody has to start at the very beginning.">
+            <button type="button" class="step-btn"><span class="bloom" aria-hidden="true"><img class="bloom-leaf bloom-leaf--a" src="../assets/hero/sprites/leaf1.webp" loading="lazy" decoding="async" alt="" width="212" height="217"><img class="bloom-leaf bloom-leaf--b" src="../assets/hero/sprites/leaf2.webp" loading="lazy" decoding="async" alt="" width="237" height="175"><img class="bloom-flower" src="../assets/hero/sprites/blossom3.webp" loading="lazy" decoding="async" alt="" width="226" height="211"></span><span class="step-ja" lang="ja" aria-hidden="true">確認</span><strong>Check yourself</strong><small>Honest checkpoints</small></button>
+          </li>
+          <li class="step" data-detail="A daily goal, a streak and a study buddy make tomorrow easier than today. Words come back for review at growing intervals, so they stay.">
+            <button type="button" class="step-btn"><span class="bloom" aria-hidden="true"><img class="bloom-leaf bloom-leaf--a" src="../assets/hero/sprites/leaf4.webp" loading="lazy" decoding="async" alt="" width="135" height="194"><img class="bloom-leaf bloom-leaf--b" src="../assets/hero/sprites/leaf3.webp" loading="lazy" decoding="async" alt="" width="243" height="145"><img class="bloom-flower" src="../assets/hero/sprites/blossom4.webp" loading="lazy" decoding="async" alt="" width="238" height="214"></span><span class="step-ja" lang="ja" aria-hidden="true">継続</span><strong>Keep going</strong><small>A little every day</small></button>
+          </li>
+          <li class="vine" aria-hidden="true"><span class="vine-track"></span><span class="vine-fill"></span></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ============ PRIVACY ============ -->
+    <section class="about-wrap quiet" id="privacy" aria-labelledby="privacyTitle">
+      <span class="ghost-kanji" lang="ja" aria-hidden="true" data-parallax="-0.04">静</span>
+      <div class="branch-wrap branch-wrap--about" aria-hidden="true">
+        <img class="branch" src="../assets/branches/branch-1.webp" alt="" width="438" height="1000" loading="lazy" decoding="async">
+      </div>
+      <div class="about shell">
+        <div class="about-copy reveal">
+          <div class="section-kicker">QUIET BY DESIGN</div>
+          <h2 id="privacyTitle">Your progress stays <em>on your phone.</em></h2>
+          <p>Yunamii Lingo works offline. There is no account to make, there are no ads and nothing tracks you: what you learn, and how often, is nobody’s business but yours.</p>
+          <ul class="facts">
+            <li><b>Offline</b><span>no internet needed to learn, review or practise</span></li>
+            <li><b>No account</b><span>open it and start, with a name for your buddy and nothing else</span></li>
+            <li><b>Backup code</b><span>a new phone? One code brings your progress along</span></li>
+          </ul>
+        </div>
+        <figure class="enso reveal" data-enso aria-hidden="true">
+          <svg viewBox="0 0 280 280" focusable="false">
+            <defs>
+              <linearGradient id="ensoGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#ffd6e6"/><stop offset=".55" stop-color="#f6c0d6"/><stop offset="1" stop-color="#9eeef6"/>
+              </linearGradient>
+            </defs>
+            <g filter="url(#brush)" fill="none" stroke-linecap="round">
+              <path class="enso-stroke" pathLength="100" d="M 196 46 A 104 104 0 1 1 66 52" stroke="url(#ensoGrad)" stroke-width="13"/>
+              <path class="enso-dry" pathLength="100" d="M 192 58 A 92 92 0 1 1 74 62" stroke="url(#ensoGrad)" stroke-width="2.6" opacity=".55"/>
+            </g>
+          </svg>
+          <span class="enso-y" lang="ja">語</span>
+          <span class="hanko hanko--lg stamp" lang="ja">ゆ</span>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ============ CONTACT ============ -->
+    <section class="bottom-cta" id="contact">
+      <div class="branch-wrap branch-wrap--cta" aria-hidden="true">
+        <img class="branch" src="../assets/branches/branch-4.webp" alt="" width="760" height="648" loading="lazy" decoding="async">
+      </div>
+      <div class="cta-panel shell reveal">
+        <div class="cta-copy">
+          <img class="app-icon app-icon--lg" src="assets/icon.webp" alt="" width="56" height="56">
+          <h2>Lingo opens <em>soon.</em></h2>
+          <p>Want to hear when it does? Get in touch and we will let you know.</p>
+        </div>
+        <!-- TODO: swap for a mailto: link once the public contact address is decided (the same placeholder as the main page) -->
+        <a href="../impressum.html#kontakt" class="pill pill--lg magnetic">Notify me <span aria-hidden="true">↗</span></a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer-wrap">
+    <div class="waves" data-seigaiha aria-hidden="true"></div>
+    <div class="footer shell">
+      <a href="../" class="logo" aria-label="Yunamii Studio, back to the main page"><span class="logomark" aria-hidden="true"><i></i><i></i><i></i></span>Yunamii</a>
+      <span class="footer-note">Made with imagination, intention &amp; care.</span>
+      <span class="footer-links"><a href="../">Yunamii Studio</a><a href="../impressum.html">Impressum</a><a href="../datenschutz.html">Datenschutz</a><span>© 2026 Yunamii Studio</span></span>
+    </div>
+  </footer>
+</div>
+
+<div class="mobile-overlay" id="mobileOverlay" aria-hidden="true">
+  <nav class="mobile-menu" aria-label="Mobile navigation">
+    <button class="close-menu" id="closeMenu" type="button" aria-label="Close menu">✕</button>
+    <a href="#languages">Languages</a><a href="#app">The App</a><a href="#path">The Path</a><a href="#privacy">Privacy</a><a href="../impressum.html#kontakt">Notify me</a>
+  </nav>
+</div>
+
+<script type="module" src="../js/hero.js"></script>
+<script type="module" src="../js/site.js"></script>
+<script type="module" src="lingo.js"></script>
+</body>
+</html>

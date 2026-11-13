@@ -4,6 +4,8 @@
 const canvas = document.getElementById('scene');
 const ctx = canvas.getContext('2d');
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+// the pictures are found from this file, not from the page, so that a page in a folder (lingo/) can use the hero as well
+const HERO_ASSETS = new URL('../assets/hero/', import.meta.url).href;
 
 // ---- World (tree.png coordinate space, 1254 x 1254, plus margin) ----------
 const WORLD = { x0: -60, y0: -60, w: 1380 };
@@ -49,6 +51,10 @@ function buildBackdrop() {
   const ix = cr.left - hr.left + ISLAND.fx * cr.width, iy = cr.top - hr.top + ISLAND.fy * cr.height;
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const k = cr.width / WORLD.w; // css px per world unit
+  // where the island is, for things that are set against it (the phone on the product page): CSS px in the hero, and CSS px per world unit
+  hero.style.setProperty('--island-x', `${ix.toFixed(1)}px`);
+  hero.style.setProperty('--island-y', `${iy.toFixed(1)}px`);
+  hero.style.setProperty('--island-k', k.toFixed(4));
   const W = Math.round(vw * dpr), H = Math.round(vh * dpr);
   if (bgInfo && bgInfo.W === W && bgInfo.H === H && bgInfo.px === ix * dpr && bgInfo.py === iy * dpr && bgInfo.k === k * dpr) return;
   const yH = Math.max(Math.round(H * 0.15), Math.round((iy - 0.33 * vh) * dpr)); // horizon, in device px of the water layer
@@ -648,12 +654,12 @@ function stop() { running = false; }
 // they are usually there already): the tree, the two small JSON files and, as soon as the first of them says
 // which sprites exist, all sprites. Nothing waits for something it does not depend on.
 async function init() {
-  const metaLoad = loadJSON('assets/hero/sprites.json');
+  const metaLoad = loadJSON(`${HERO_ASSETS}sprites.json`);
   const [meta, anchors, tree, sprites] = await Promise.all([
     metaLoad,
-    loadJSON('assets/hero/anchors.json'),
-    loadImage('assets/hero/tree.webp'),
-    metaLoad.then((m) => Promise.all(Object.keys(m).map(async (n) => [n, await loadImage(`assets/hero/sprites/${n}.webp`)]))),
+    loadJSON(`${HERO_ASSETS}anchors.json`),
+    loadImage(`${HERO_ASSETS}tree.webp`),
+    metaLoad.then((m) => Promise.all(Object.keys(m).map(async (n) => [n, await loadImage(`${HERO_ASSETS}sprites/${n}.webp`)]))),
   ]);
   treeImg = tree; spriteMeta = meta; spriteImgs = Object.fromEntries(sprites);
   items = buildItems(anchors);
