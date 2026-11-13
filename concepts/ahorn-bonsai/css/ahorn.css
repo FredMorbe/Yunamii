@@ -22,8 +22,8 @@
   --glass: rgba(255, 250, 246, .72);
   --pop: rgba(255, 251, 248, .94);
   --logo-filter: hue-rotate(172deg) saturate(1.15) brightness(.85);   /* the logo is cyan: turned to the vermilion of the maple */
-  --branch-filter: none;
-  --fore-filter: none;
+  --branch-filter: brightness(1) saturate(1);
+  --fore-filter: brightness(1) saturate(1);
   --grain: .05;
 }
 :root[data-theme="dark"] {
@@ -129,7 +129,7 @@ body::after { content: ""; position: fixed; inset: 0; z-index: 40; pointer-event
 @keyframes drift-sway { from { transform: translateX(calc(var(--sw) * -1)); } to { transform: translateX(var(--sw)); } }
 @keyframes drift-tumble { from { transform: rotate3d(1, .5, 0, -62deg) rotate(var(--r0)); } to { transform: rotate3d(1, .35, 0, 68deg) rotate(var(--r1)); } }
 
-.branch { position: absolute; z-index: 4; height: auto; pointer-events: none; filter: var(--branch-filter); transition: filter 1s; transform: rotate(var(--rot)); transform-origin: var(--ox) var(--oy); animation: branch-sway 9s ease-in-out infinite alternate; }
+.branch { position: absolute; z-index: 4; height: auto; pointer-events: none; filter: blur(3px) var(--branch-filter); transition: filter 1s; transform: rotate(var(--rot)); transform-origin: var(--ox) var(--oy); animation: branch-sway 9s ease-in-out infinite alternate; }
 .branch--left { --ox: 0%; --oy: 12%; --rot: -17deg; top: 1.2vw; left: -1.6vw; width: 28vw; }
 .branch--right { --ox: 100%; --oy: 12%; --rot: 0deg; top: 3.4vw; right: -1.4vw; width: 33vw; animation-duration: 11s; animation-delay: -4s; }
 @keyframes branch-sway { from { transform: rotate(calc(var(--rot) - .55deg)); } to { transform: rotate(calc(var(--rot) + .7deg)); } }

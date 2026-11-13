@@ -30,8 +30,12 @@ const TYPE_SCALE = { leaf: 0.25, side: 0.25, fall: 0.15 };
 const NODE_SHARE = [0.5, 0.95]; // how many of the nodes carry leaves: near the trunk, at the edge of the crown
 const NODE_ALONE = [70, 3];     // a node with fewer than [1] others within [0] world px is a knot on the trunk, not a twig: it stays bare
 const PAIR_OPEN = [0.7, 1.5];   // rad between the twig and a leaf of a pair
-const LEAF_DROOP = 0.25;        // how far the blades hang down under their weight (0 = they follow the twig only)
-const EDGE_SHARE = 0.07;        // share of leaves seen edge-on (side1..4); all others show their blade (leaf1..12)
+const LEAF_FLAT = [0.5, 0.82];  // the blades lie nearly level, in layers, and are looked at from the side: their picture is this much lower than wide
+const LEAF_DROOP = [0.05, 0.4]; // rad a blade hangs down from the level, to the side it points to
+const EDGE_LEVEL = 0.85;        // how far a leaf seen edge-on is turned to the horizontal (0 = as the twig has it, 1 = it lies flat)
+const EDGE_DROOP = 0.25;        // how far it hangs down
+const EDGE_SHARE = [0.07, 0.65]; // share of leaves seen edge-on (side1..4), inside the crown and on the underside of a pad; all others show their blade (leaf1..12)
+const UNDER = [60, 110, 4];     // a node is on the underside of a pad when no other node lies below it, up to [0] world px to the side and [1] down; with [2] of them it is inside the pad
 const BACK = 0.45;              // a leaf with a depth below this is behind the twigs, the others are in front of them
 
 // Light: the sun is up on the left. A leaf with many leaves between it and the sun is in their shade; the tones
@@ -267,26 +271,34 @@ function buildItems(anchors) {
   const blades = Object.keys(data.sprites).filter((n) => n.startsWith('leaf'));
   const edges = Object.keys(data.sprites).filter((n) => n.startsWith('side'));
   const mix = (r) => r[0] + rnd() * (r[1] - r[0]);
-  // the blades hang a little, whatever way the twig points
-  const droop = (dir) => Math.atan2(Math.sin(dir) + LEAF_DROOP, Math.cos(dir));
-  const add = (a, dir, z) => {
-    const edge = rnd() < EDGE_SHARE;
+  const add = (a, twig, z, under) => {
+    const edge = rnd() < EDGE_SHARE[0] + (EDGE_SHARE[1] - EDGE_SHARE[0]) * under;
     const names = edge ? edges : blades;
     const name = names[Math.floor(rnd() * names.length)];
     const m = data.sprites[name];
-    const flip = rnd() < 0.5, f = flip ? -1 : 1;
+    const side = Math.cos(twig) < 0 ? -1 : 1; // the leaf points to the left or to the right of its node
+    // a blade lies in its layer the way the twig has it; the layer is seen from the side (`flat`) and hangs a little (`tilt`).
+    // A leaf seen edge-on is such a picture already: it is only turned to the horizontal
+    const dir = edge ? Math.atan2(Math.sin(twig) * (1 - EDGE_LEVEL) + EDGE_DROOP, Math.cos(twig) + side * EDGE_LEVEL) : twig;
+    const flat = edge ? 1 : mix(LEAF_FLAT);
+    const tilt = edge ? 0 : side * mix(LEAF_DROOP);
+    // a leaf seen edge-on keeps its upper side up: it is mirrored to the side it points to
+    const flip = edge ? (side > 0) !== (m.centroid[0] > m.pivot[0]) : rnd() < 0.5, f = flip ? -1 : 1;
     const s = 0.78 + rnd() * 0.4;
-    // a blade is seldom seen square on: it is a little shorter (it leans to or from the eye) and narrower; one in four leans far
-    const fl = edge ? 1 : rnd() < 0.25 ? 0.55 + rnd() * 0.2 : 0.78 + rnd() * 0.22;
+    // no two blades are alike: a little shorter, a little narrower
+    const fl = edge ? 1 : 0.8 + rnd() * 0.2;
     const fw = edge ? 1 : 0.85 + rnd() * 0.15;
     const phi = spriteDirAngle(m, flip), cp = Math.cos(phi), sp = Math.sin(phi);
     const x = a.x + (rnd() - 0.5) * 8, y = a.y + (rnd() - 0.5) * 8;
     const reach = Math.hypot(m.centroid[0] - m.pivot[0], m.centroid[1] - m.pivot[1]) * TYPE_SCALE[edge ? 'side' : 'leaf'] * s * fl;
+    const ct = Math.cos(tilt), st = Math.sin(tilt);
+    const rx = Math.cos(dir) * reach, ry = Math.sin(dir) * reach * flat;
     out.push({
       name, x, y, z, dir0: dir,
       // sprite px (from the end of the stem) -> the leaf lying along +x, flipped, foreshortened and scaled
       b: [fl * s * cp * f, fl * s * sp, -fw * s * sp * f, fw * s * cp],
-      cx: x + Math.cos(dir) * reach, cy: y + Math.sin(dir) * reach, // the middle of the blade
+      flat, ct, st,
+      cx: x + ct * rx - st * ry, cy: y + st * rx + ct * ry, // the middle of the blade
       tone: 0,
       d: a.d, tip: a.tip,
       ox: 0, oy: 0, vx: 0, vy: 0, th: 0, vth: 0,
@@ -298,11 +310,13 @@ function buildItems(anchors) {
     if (anchors.filter((q) => q !== a && Math.hypot(q.x - a.x, q.y - a.y) < NODE_ALONE[0]).length < NODE_ALONE[1]) continue;
     if (!a.tip && rnd() > NODE_SHARE[0] + (NODE_SHARE[1] - NODE_SHARE[0]) * a.d) continue;
     // a pair: one leaf on each side of the twig, one of them behind it and one in front
+    const below = anchors.filter((q) => Math.abs(q.x - a.x) < UNDER[0] && q.y > a.y + 20 && q.y < a.y + UNDER[1]).length;
+    const under = Math.max(0, 1 - below / UNDER[2]);
     const near = rnd() < 0.5 ? 1 : -1;
-    add(a, droop(a.ang + near * mix(PAIR_OPEN)), 0.5 + rnd() * 0.5);
-    add(a, droop(a.ang - near * mix(PAIR_OPEN)), rnd() * 0.5);
+    add(a, a.ang + near * mix(PAIR_OPEN), 0.5 + rnd() * 0.5, under);
+    add(a, a.ang - near * mix(PAIR_OPEN), rnd() * 0.5, under);
     // the end of a twig carries one more, pointing on the way the twig grows
-    if (a.tip) add(a, droop(a.ang + (rnd() - 0.5) * 0.6), 0.55 + rnd() * 0.45);
+    if (a.tip) add(a, a.ang + (rnd() - 0.5) * 0.6, 0.55 + rnd() * 0.45, under);
   }
   // the shade: how much foliage lies between a leaf and the sun
   for (const p of out) {
@@ -741,7 +755,9 @@ function drawItems(g, from, to) {
     const spr = sprites[it.name];
     const rot = it.dir0 + it.th;
     const cos = Math.cos(rot), sin = Math.sin(rot), b = it.b;
-    const ma = cos * b[0] - sin * b[2], mb = sin * b[0] + cos * b[2], mc = cos * b[1] - sin * b[3], md = sin * b[1] + cos * b[3];
+    // the leaf in its layer, the layer seen from the side, the layer hanging
+    const pa = cos * b[0] - sin * b[2], pb = (sin * b[0] + cos * b[2]) * it.flat, pc = cos * b[1] - sin * b[3], pd = (sin * b[1] + cos * b[3]) * it.flat;
+    const ma = it.ct * pa - it.st * pb, mb = it.st * pa + it.ct * pb, mc = it.ct * pc - it.st * pd, md = it.st * pc + it.ct * pd;
     const X = (it.x + it.ox) * S + view.tx, Y = (it.y + it.oy) * S + view.ty;
     const off = (SHADOW_OFF[0] + (SHADOW_OFF[1] - SHADOW_OFF[0]) * it.z) * S;
     // the shadow of the leaf falls on what lies behind it (twigs, trunk, laptop, the leaves drawn before), and only there
