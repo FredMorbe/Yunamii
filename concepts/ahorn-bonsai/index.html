@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Yunamii — Software für klare Entscheidungen</title>
+  <meta name="description" content="Yunamii entwickelt Software für klare Entscheidungen: ein Trading-Journal und weitere Tools für Disziplin, Analyse und Performance.">
+  <!-- design concept (hero only), not the live site -->
+  <meta name="robots" content="noindex">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f6ebe3">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preload" href="assets/fonts/DMSans-normal-300-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <!-- the hero needs these at once: the data file, the slab with the tree, the laptop -->
+  <link rel="preload" href="assets/scene/scene.json" as="fetch" crossorigin>
+  <link rel="preload" href="assets/scene/platform.webp" as="image" type="image/webp" fetchpriority="high">
+  <link rel="preload" href="assets/scene/laptop.webp" as="image" type="image/webp">
+  <link rel="modulepreload" href="js/scene.js">
+  <link rel="modulepreload" href="js/backdrop.js">
+  <script>
+    // theme before the first paint: the stored choice, otherwise the light page of the design
+    (function () {
+      var root = document.documentElement, theme = null;
+      try { theme = localStorage.getItem('yunamii-ahorn-theme'); } catch (e) { /* storage blocked: the light page */ }
+      root.dataset.theme = theme === 'dark' ? 'dark' : 'light';
+      root.classList.add('js');
+    })();
+  </script>
+  <link rel="stylesheet" href="css/ahorn.css">
+</head>
+<body>
+<svg width="0" height="0" class="sprite" aria-hidden="true" focusable="false">
+  <symbol id="i-arrow" viewBox="0 0 12 12"><path d="M2.5 9.5 9.5 2.5M4 2.5h5.5V8"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 12 12"><path d="m2.5 4.5 3.5 3.5 3.5-3.5"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="3.4"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.3 4.3l1.5 1.5M14.2 14.2l1.5 1.5M4.3 15.7l1.5-1.5M14.2 5.8l1.5-1.5"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 20 20"><path d="M16 11.6A6.6 6.6 0 0 1 8.4 4a6.6 6.6 0 1 0 7.6 7.6Z"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 40 40"><path d="m20 6 14 7-14 7-14-7 14-7Z"/><path d="m6 20 14 7 14-7"/><path d="m6 27 14 7 14-7"/></symbol>
+  <symbol id="i-atom" viewBox="0 0 40 40"><circle cx="20" cy="20" r="2.6"/><ellipse cx="20" cy="20" rx="15" ry="6.2"/><ellipse cx="20" cy="20" rx="15" ry="6.2" transform="rotate(60 20 20)"/><ellipse cx="20" cy="20" rx="15" ry="6.2" transform="rotate(120 20 20)"/></symbol>
+  <symbol id="i-infinity" viewBox="0 0 40 40"><path d="M20 20c-3-4.4-6-7-9.6-7C6.4 13 4 16 4 20s2.4 7 6.4 7c3.6 0 6.6-2.6 9.6-7Zm0 0c3-4.4 6-7 9.6-7 4 0 6.4 3 6.4 7s-2.4 7-6.4 7c-3.6 0-6.6-2.6-9.6-7Z"/></symbol>
+</svg>
+
+<!-- the navigation has no targets yet: this concept is the hero only -->
+<header class="head" id="head">
+  <div class="head-in">
+    <a class="brand" href="#top" aria-label="Yunamii, zum Seitenanfang"><img class="brand-mark" src="../shared/logo.webp" alt="" width="160" height="95"><span class="brand-name" aria-hidden="true"></span></a>
+    <nav class="nav" aria-label="Hauptnavigation">
+      <div class="nav-drop" id="navDrop">
+        <button class="nav-btn" id="dropBtn" type="button" aria-expanded="false" aria-controls="dropList" aria-haspopup="true">Produkte<svg aria-hidden="true"><use href="#i-chevron"/></svg></button>
+        <ul class="drop-list" id="dropList">
+          <li><a href="#top"><strong>Trading-Journal</strong><small>Analysieren. Verstehen. Verbessern.</small></a></li>
+          <li><a href="#top"><strong>Quantitative Tools</strong><small>Datengetriebene Einblicke</small></a></li>
+          <li><a href="#top"><strong>Weitere Software</strong><small>Modulare Tools für Trading</small></a></li>
+        </ul>
+      </div>
+      <a href="#top">Technologie</a>
+      <a href="#top">Warum Yunamii</a>
+      <a href="#top">Unternehmen</a>
+    </nav>
+    <div class="head-actions">
+      <button class="theme" id="themeToggle" type="button" role="switch" aria-checked="false" aria-label="Dunkles Farbschema">
+        <svg aria-hidden="true"><use href="#i-sun"/></svg>
+        <svg aria-hidden="true"><use href="#i-moon"/></svg>
+      </button>
+      <span class="head-sep" aria-hidden="true"></span>
+      <a class="btn btn-solid btn-head" href="#top">Trading-Journal<svg class="arrow" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+    </div>
+    <button class="menu-btn" id="menuBtn" type="button" aria-haspopup="dialog" aria-controls="menu">Menü</button>
+  </div>
+</header>
+
+<dialog class="menu" id="menu" aria-label="Navigation">
+  <div class="menu-in">
+    <button class="menu-close" type="button" data-close>Schließen</button>
+    <nav aria-label="Mobile Navigation">
+      <a href="#top">Produkte</a>
+      <a href="#top">Technologie</a>
+      <a href="#top">Warum Yunamii</a>
+      <a href="#top">Unternehmen</a>
+      <a href="#top" class="menu-cta">Trading-Journal<svg class="arrow" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+    </nav>
+  </div>
+</dialog>
+
+<main id="top">
+  <!-- a maple bonsai on a stone slab on still water, a laptop beside it; the leaves are drawn on the twigs by code
+       (js/scene.js), the sky, the mountains and the sun by js/backdrop.js -->
+  <section class="hero" id="hero" aria-labelledby="heroTitle">
+    <canvas class="hero-bg" id="bg" aria-hidden="true"></canvas>
+    <svg class="orbits" id="orbits" aria-hidden="true" focusable="false"></svg>
+    <canvas class="hero-bg" id="bg-fx" aria-hidden="true"></canvas>
+    <div class="drift" id="drift" aria-hidden="true"></div>
+
+    <div class="hero-stage"><canvas id="scene" role="img" aria-label="Ein Ahorn-Bonsai auf einer Steinplatte im Wasser, daneben ein Laptop mit der Software. Bewege den Zeiger durch das Laub."></canvas></div>
+
+    <img class="branch branch--left" src="assets/branches/left.webp" alt="" width="1089" height="866" decoding="async">
+    <img class="branch branch--right" src="assets/branches/right.webp" alt="" width="1202" height="833" decoding="async">
+    <div class="fore" aria-hidden="true">
+      <img class="fore-leaf fore-leaf--a" src="assets/scene/leaves/leaf3.webp" alt="" width="354" height="360" decoding="async">
+      <img class="fore-leaf fore-leaf--b" src="assets/scene/leaves/leaf1.webp" alt="" width="354" height="360" decoding="async">
+      <img class="fore-leaf fore-leaf--c" src="assets/scene/leaves/leaf6.webp" alt="" width="318" height="278" decoding="async">
+    </div>
+
+    <div class="hero-copy">
+      <p class="eyebrow"><span>Software</span><i aria-hidden="true">×</i><span>Trading</span><i aria-hidden="true">×</i><span>Quantenphysik</span></p>
+      <h1 class="title" id="heroTitle"><span>Software für</span> <span>klare Entscheidungen</span></h1>
+      <p class="lead">Trading-Journal und weitere Tools, die Disziplin, Analyse und Performance auf ein neues Level bringen.</p>
+      <div class="actions">
+        <a class="btn btn-solid" href="#top">Trading-Journal entdecken<svg class="arrow" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        <a class="btn btn-line" href="#top">Alle Produkte</a>
+      </div>
+    </div>
+
+    <ul class="features">
+      <li><svg aria-hidden="true"><use href="#i-layers"/></svg><div><strong>Trading-Journal</strong><small>Analysieren. Verstehen. Verbessern.</small></div></li>
+      <li><svg aria-hidden="true"><use href="#i-atom"/></svg><div><strong>Quantitative Tools</strong><small>Datengetriebene Einblicke in deine Performance.</small></div></li>
+      <li><svg aria-hidden="true"><use href="#i-infinity"/></svg><div><strong>Weitere Software</strong><small>Modulare Tools für diszipliniertes Trading.</small></div></li>
+    </ul>
+  </section>
+</main>
+
+<script type="module" src="js/main.js"></script>
+<!-- design switcher for the concept review, not part of the final site -->
+<script type="module" src="../shared/switcher.js"></script>
+</body>
+</html>

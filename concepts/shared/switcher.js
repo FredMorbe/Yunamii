@@ -10,6 +10,7 @@ const DESIGNS = [
   { id: 'mesh-tide', name: 'Mesh Tide' },
   { id: 'orbit-mesh', name: 'Orbit Mesh' },
   { id: 'moon-torii', name: 'Moon Torii' },
+  { id: 'ahorn-bonsai', name: 'Ahorn Bonsai' },
 ];
 
 const STYLE = `
