@@ -4,7 +4,7 @@
 // there for a few seconds before lifting off again. They fall slowly, get swept along by scrolling,
 // part around the pointer, and burst() releases a few more. Sprites are the hero's petal/leaf images.
 
-const BASE = 'assets/hero/sprites/';
+const BASE = new URL('../assets/hero/sprites/', import.meta.url).href; // from this file, not from the page: lingo/ uses it too
 const PETALS = ['petal1', 'petal2', 'petal3', 'petal4'];
 const LEAVES = ['leaf1', 'leaf2', 'leaf3', 'leaf4'];
 

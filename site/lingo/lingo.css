@@ -1,0 +1,88 @@
+/* Yunamii Lingo — product page. Loaded after ../css/site.css and only adds to it: the cherry bonsai, the glass, the seals,
+   the kanji numerals, the vine and the footer waves are the main page's. What is new here is the foreground of the hero,
+   the three language cards, the screens of the app and the quiet section. */
+
+/* ---- hero: the bonsai is the hero, with blossoms, petals and leaves in front of it ---- */
+.hero--lingo .eyebrow::after { display: none; }
+.hero--lingo .eyebrow .badge { margin-left: 6px; }
+.hero--lingo p { max-width: 440px; }
+@media (min-width: 431px) {
+  .hero--lingo h1 { font-size: clamp(38px, 4.15vw, 64px); }
+}
+
+/* js/hero.js sets --island-x, --island-y (the island's footprint in the hero, in css px) and --island-k (css px per world unit, the
+   unit of the tree picture) on .hero. What belongs to the scene is placed in those units, so it keeps its place at every size.
+   Layers, from the back: the water (#bg, #bg-fx) 0, the scene (tree, island, mist) 2, the foreground 3, the text 4. */
+.hero-fore { --k: var(--island-k, .45); --ix: var(--island-x, 70%); --iy: var(--island-y, 80%); }
+
+/* It fades in with the scene (html[data-hero], set by js/hero.js); lingo.js shows it anyway after a few seconds, whatever happens to the hero. */
+.js .hero-fore { opacity: 0; transition: opacity .8s ease .3s; }
+html[data-hero] .hero-fore, .js .hero-fore.is-shown { opacity: 1; }
+/* a hero that failed to load has no tree to lie in front of */
+.hero--static .hero-fore { display: none; }
+
+/* foreground: close to the viewer, so some of it is out of focus. Placed in world units from the island's centre:
+   --x and --y are the offset of the picture's centre, --w its width, --r its turn. Petals and leaves that lie on the moss do not move. */
+.hero-fore { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+.fore-item {
+  position: absolute; display: block; height: auto; translate: -50% -50%; rotate: var(--r, 0deg);
+  left: calc(var(--ix) + var(--k) * var(--x) * 1px); top: calc(var(--iy) + var(--k) * var(--y) * 1px); width: calc(var(--k) * var(--w) * 1px);
+  filter: drop-shadow(0 3px 5px rgba(2, 28, 42, .35));
+}
+.fore-item--sway { animation: fore-sway var(--t, 7s) ease-in-out var(--d, 0s) infinite alternate; }
+.fore-item--blur { filter: blur(var(--b, 3px)) drop-shadow(0 4px 8px rgba(2, 28, 42, .3)); }
+@keyframes fore-sway { from { rotate: calc(var(--r) - 3.5deg); } to { rotate: calc(var(--r) + 3.5deg); } }
+
+/* ---- strip: the three languages ---- */
+.what--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.glyph {
+  flex: 0 0 auto; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%;
+  border: 1px solid rgba(156, 236, 245, .45); font: 400 21px/1 var(--mincho); color: #9cecf5;
+  transition: color .3s, border-color .3s, transform .5s var(--ease);
+}
+.what a:hover .glyph { color: var(--sakura-2); border-color: rgba(255, 220, 233, .65); transform: rotate(-8deg) scale(1.08); }
+
+/* ---- languages: three tall cards, the middle one set lower ---- */
+.langs { position: relative; padding: 20px 0 40px; }
+.card--lang { height: clamp(410px, 37vw, 510px); }
+.card--lang img { object-position: 50% 38%; }
+.card--lang .card-info small { max-width: 34ch; }
+.tag-glyph { font: 400 18px/1 var(--mincho); color: #e9fbff; }
+.buds-grid .card--lang:nth-child(2) { margin-top: 48px; }
+
+/* ---- the app: screens are taller and narrower than the Cubamii ones ---- */
+.lingo-app .phones { --pw: 216px; }
+.lingo-app .phone { aspect-ratio: 375 / 812; }
+.panel-visual--lingo { --glow: 255, 170, 205; grid-template-rows: 1fr auto; padding: 8px 0 18px;
+  background: radial-gradient(55% 50% at 50% 78%, rgba(var(--glow), .2), transparent 70%), radial-gradient(120% 90% at 50% 0%, rgba(120, 226, 240, .14), transparent 60%), #0a3248; }
+.panel-visual--practice { --glow: 110, 232, 246; }
+.panel-visual--stay { --glow: 255, 205, 120; }
+
+/* ---- quiet by design: the about layout of the main page with 語 inside the ink circle ---- */
+.quiet .facts { margin-top: 34px; max-width: 470px; }
+.quiet .enso-y { font: 400 clamp(76px, 8vw, 118px)/1 var(--mincho); font-style: normal; letter-spacing: 0; }
+
+/* ---- contact ---- */
+.app-icon--lg { display: block; width: 56px; height: 56px; margin-bottom: 22px; border-radius: 14px; }
+
+/* ---- smaller screens ---- */
+@media (max-width: 1060px) {
+  .glyph { width: 32px; height: 32px; font-size: 17px; }
+}
+@media (max-width: 899px) {
+  .lingo-app .phones { --pw: 200px; }
+}
+@media (max-width: 760px) {
+  /* three languages in one column: the ghost word fits again */
+  .what--3 { grid-template-columns: 1fr; gap: 0; }
+  .what--3 a { padding: 14px 6px; border-left: 0; border-radius: 18px; }
+  .what--3 a + a { border-top: 1px solid rgba(217, 249, 253, .13); border-radius: 0 0 18px 18px; }
+  .what--3 .ja { display: block; font-size: 26px; }
+  .buds-grid .card--lang { height: 420px; }
+  .buds-grid .card--lang:nth-child(2) { margin-top: 0; }
+  .lingo-app .phones { --pw: 166px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fore-item--sway { animation: none; }
+}

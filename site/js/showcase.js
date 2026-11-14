@@ -1,4 +1,4 @@
-// Project showcase: accessible tabs (click, arrow keys, links from the strip) and the Cubamii phone carousel.
+// Project showcase: accessible tabs (click, arrow keys, links from the strip) and the phone carousels (one in every panel that has one).
 
 export function initShowcase({ reduceMotion }) {
   const root = document.querySelector('[data-showcase]');
@@ -34,8 +34,7 @@ export function initShowcase({ reduceMotion }) {
     if (i >= 0) select(i);
   });
 
-  const phones = root.querySelector('[data-phones]');
-  if (phones) initPhones(phones, reduceMotion);
+  root.querySelectorAll('[data-phones]').forEach((phones) => initPhones(phones, reduceMotion));
 }
 
 // five screenshots on a circle: the active one in front, its neighbours fanned out behind
