@@ -23,7 +23,7 @@ const SLAB = { w: 1457, top: 56 };          // width of the slab and the row of 
 const WIDE = 900;                           // from this width on the scene stands on the right of the text
 
 // world size of a sprite = sprite px * TYPE_SCALE (a blade is about 85 world px across)
-const TYPE_SCALE = { leaf: 0.25, side: 0.25, fall: 0.15 };
+const TYPE_SCALE = { leaf: 0.25, side: 0.25, fall: 0.2 };
 
 // The foliage. The leaves of a maple stand in pairs on the nodes of a twig, so that is how they are put on the twigs
 // of the picture: a pair on a node, one more at the end of a twig.
@@ -49,6 +49,18 @@ const TONES = [
 ];
 const SHADOW_OFF = [5, 14];     // world px: how far the shadow of the deepest and of the nearest leaf falls
 const SHADOW_BLUR = 5;          // world px
+
+// leaves on the water: they lie flat, wet, and drift
+const FLOAT_FLAT = [0.2, 0.3];  // a leaf on the water is this much lower than wide (far, near; the rings are 0.24)
+const FLOAT_SIZE = [0.85, 1.15]; // the nearer to the eye, the bigger
+const FLOAT_ROW = [1010, 95];   // the row where the water in front of the slab begins, and its depth (world px)
+const FLOAT_LIFE = [16, 26];    // s on the water
+const FLOAT_FADE = 4;           // s in which it sinks away at the end
+const FLOAT_FLATTEN = 0.7;      // s from tumbling in the air to lying flat
+const FLOAT_DRIFT = 4;          // px/s of the slow current (the wind adds a little)
+const FLOAT_SHADOW = [2.5, 1.6]; // world px the shade lies to the right and below
+const FLOAT_SHADOW_BLUR = 2.5;  // world px
+const WET_TINT = 'rgb(206,160,158)'; // multiplied on a leaf on the water
 
 // the laptop stands on the left, flat part of the slab; its base line is at LAPTOP.base
 const LAPTOP = { scale: 0.8, cx: 640, base: 862, front: 880, top: 340 }; // right of the column `front` and above the row `top` the slab, the moss and the tree are in front of the laptop
@@ -134,8 +146,7 @@ function prescale(img, factor) {
 const view = { S: 1, tx: 0, ty: 0, dpr: 1, cssW: 0 };
 let data, platImg, lapImg, spriteImgs = {}, sprites = {};
 let platCanvas, lapCanvas;
-let items = [], backCount = 0, fallen = [], ripples = [];
-const pointer = { active: false, x: 0, y: 0, vx: 0, vy: 0, lastT: 0 };
+let items = [], backCount = 0, fallen = [], ripples = [];const pointer = { active: false, x: 0, y: 0, vx: 0, vy: 0, lastT: 0 };
 let running = true, lastFrame = 0;
 let shimmer = [], bgInfo = null;
 
@@ -339,6 +350,20 @@ function buildItems(anchors) {
   return out;
 }
 
+// the soft shadow of a sprite: its silhouette in the colour of the shade, blurred by scaling down and up again
+function softShadow(c, blur) {
+  const pad = Math.ceil(blur * 2);
+  const sil = mkCanvas(c.width + 2 * pad, c.height + 2 * pad), sg = sil.getContext('2d');
+  sg.drawImage(c, pad, pad);
+  sg.globalCompositeOperation = 'source-in';
+  const P = PAL[theme()];
+  sg.fillStyle = `rgba(${P.leaf},${P.leafA})`; sg.fillRect(0, 0, sil.width, sil.height);
+  const small = prescale(sil, 1 / Math.max(2, blur * 0.8));
+  const shadow = mkCanvas(sil.width, sil.height), hg = shadow.getContext('2d');
+  hg.imageSmoothingQuality = 'high'; hg.drawImage(small, 0, 0, sil.width, sil.height);
+  return { shadow, pad };
+}
+
 function buildSprites() {
   sprites = {};
   for (const name of Object.keys(spriteImgs)) {
@@ -365,22 +390,21 @@ function buildSprites() {
         }
         return v;
       });
-      // the soft shadow of the blade: its silhouette, blurred by scaling down and up again
-      const blur = SHADOW_BLUR * view.S, pad = Math.ceil(blur * 2);
-      const sil = mkCanvas(c.width + 2 * pad, c.height + 2 * pad), sg = sil.getContext('2d');
-      sg.drawImage(c, pad, pad);
-      sg.globalCompositeOperation = 'source-in';
-      const P = PAL[theme()];
-      sg.fillStyle = `rgba(${P.leaf},${P.leafA})`; sg.fillRect(0, 0, sil.width, sil.height);
-      const small = prescale(sil, 1 / Math.max(2, blur * 0.8));
-      const shadow = mkCanvas(sil.width, sil.height), hg = shadow.getContext('2d');
-      hg.imageSmoothingQuality = 'high'; hg.drawImage(small, 0, 0, sil.width, sil.height);
-      sprites[name].shadow = shadow; sprites[name].pad = pad;
+      Object.assign(sprites[name], softShadow(c, SHADOW_BLUR * view.S));
     }
-    // the same picture at the size of a falling leaf
+    // the same picture at the size of a falling leaf, and as it lies on the water: wet (darker) with a sheen of the sky on it
     if (type === 'leaf') {
       const f2 = TYPE_SCALE.fall * view.S;
-      sprites[`fall:${name}`] = { c: prescale(spriteImgs[name], f2), cx: m.centroid[0] * f2, cy: m.centroid[1] * f2 };
+      const fc = prescale(spriteImgs[name], f2);
+      const wet = mkCanvas(fc.width, fc.height), wg = wet.getContext('2d');
+      wg.drawImage(fc, 0, 0);
+      wg.globalCompositeOperation = 'multiply'; wg.fillStyle = WET_TINT; wg.fillRect(0, 0, wet.width, wet.height);
+      wg.globalCompositeOperation = 'destination-in'; wg.drawImage(fc, 0, 0); // the blend paints beside the leaf, too
+      wg.globalCompositeOperation = 'source-atop';
+      const P = PAL[theme()], sh = wg.createLinearGradient(0, 0, wet.width, wet.height);
+      sh.addColorStop(0, `rgba(${P.edge},0.26)`); sh.addColorStop(0.55, `rgba(${P.edge},0.06)`); sh.addColorStop(1, `rgba(${P.edge},0)`);
+      wg.fillStyle = sh; wg.fillRect(0, 0, wet.width, wet.height);
+      sprites[`fall:${name}`] = { c: fc, wet, cx: m.centroid[0] * f2, cy: m.centroid[1] * f2, ...softShadow(fc, FLOAT_SHADOW_BLUR * view.S) };
     }
   }
   platCanvas = prescale(platImg, view.S);
@@ -665,12 +689,15 @@ function spawnFall(it, vx = 0, vy = 0) {
     rot: Math.random() * 6.28, vr: (Math.random() - 0.5) * 1.8,
     ph: Math.random() * 6.28, fr: 1.2 + Math.random() * 1.4,
     s: 0.8 + Math.random() * 0.5,
-    floor: 1010 + Math.random() * 95,
+    fy: 1, // how far the tumbling leaf is turned to the eye
+    floor: FLOAT_ROW[0] + Math.random() * FLOAT_ROW[1],
     landed: false, tl: 0,
+    life: FLOAT_LIFE[0] + Math.random() * (FLOAT_LIFE[1] - FLOAT_LIFE[0]),
+    cur: (Math.random() - 0.4) * 2 * FLOAT_DRIFT,
   });
 }
-function spawnRipple(x, y) {
-  ripples.push({ x, y, t: 0 });
+function spawnRipple(x, y, delay = 0) {
+  ripples.push({ x, y, t: -delay });
   if (ripples.length > 40) ripples.shift();
 }
 
@@ -726,10 +753,22 @@ function step(dt, t) {
       p.y += p.vy * dt;
       p.vx *= Math.exp(-dt * 0.7);
       p.rot += (p.vr + Math.cos(p.ph) * 1.3) * dt;
-      if (p.y >= p.floor) { p.landed = true; spawnRipple(p.x, p.y + 4); }
+      p.fy = 0.25 + 0.75 * Math.abs(Math.cos(p.ph * 0.8));
+      if (p.y >= p.floor) {
+        p.landed = true; p.y = p.floor; p.ph = Math.random() * 6.28;
+        spawnRipple(p.x, p.y); spawnRipple(p.x, p.y, 0.3);
+      }
     } else {
+      // on the water: the fall is stopped at once, then the leaf is carried slowly by the current and the wind, and its
+      // turning dies away
       p.tl += dt;
-      if (p.tl > 4.2) fallen.splice(i, 1);
+      const calm = reduceMotion ? 0 : 1;
+      p.vx += (calm * (p.cur + wind(t, p.x, p.y) * 5) - p.vx) * Math.min(1, dt * 2);
+      p.x += p.vx * dt;
+      p.vr *= Math.exp(-dt * 1.6);
+      p.ph += dt * 0.9;
+      p.rot += (p.vr + calm * Math.sin(p.ph * 0.4) * 0.06) * dt;
+      if (p.tl > p.life) fallen.splice(i, 1);
     }
   }
   for (let i = ripples.length - 1; i >= 0; i--) { ripples[i].t += dt; if (ripples[i].t > 2) ripples.splice(i, 1); }
@@ -741,6 +780,7 @@ function drawRipples() {
   ctx.setTransform(view.S, 0, 0, view.S, view.tx, view.ty);
   ctx.lineWidth = 2;
   for (const r of ripples) {
+    if (r.t < 0) continue; // a ring that has not started yet
     const k = r.t / 2;
     ctx.strokeStyle = `rgba(${P.ripple},${(P.rippleA * (1 - k)).toFixed(3)})`;
     ctx.beginPath(); ctx.ellipse(r.x, r.y, 8 + k * 80, (8 + k * 80) * 0.24, 0, 0, 7); ctx.stroke();
@@ -774,14 +814,34 @@ function drawFallen() {
   const S = view.S;
   for (const p of fallen) {
     const spr = sprites[p.name];
-    let alpha = 1, fy;
-    if (p.landed) { alpha = 1 - clamp((p.tl - 2.2) / 2, 0, 1); fy = 0.4; }
-    else fy = 0.25 + 0.75 * Math.abs(Math.cos(p.ph * 0.8));
+    const cos = Math.cos(p.rot), sin = Math.sin(p.rot), sc = p.s;
+    // in the air the leaf tumbles: it turns in its own plane, and the plane is tipped (fy)
+    let a = cos * sc, b = sin * sc, c = -sin * sc * p.fy, d = cos * sc * p.fy;
+    let alpha = 1, wet = 0, y = p.y;
+    if (p.landed) {
+      // on the water it lies flat: it turns in the plane of the water, and that plane is seen from a low angle, so the
+      // whole leaf is as much lower than wide as the rings are. It settles into that over FLOAT_FLATTEN.
+      const depth = clamp((p.y - FLOAT_ROW[0]) / FLOAT_ROW[1], 0, 1);
+      const sz = sc * (FLOAT_SIZE[0] + (FLOAT_SIZE[1] - FLOAT_SIZE[0]) * depth);
+      const k = FLOAT_FLAT[0] + (FLOAT_FLAT[1] - FLOAT_FLAT[0]) * depth + (reduceMotion ? 0 : Math.sin(p.ph) * 0.02);
+      const u = clamp(p.tl / FLOAT_FLATTEN, 0, 1);
+      wet = u * u * (3 - 2 * u);
+      a += (cos * sz - a) * wet; b += (k * sin * sz - b) * wet;
+      c += (-sin * sz - c) * wet; d += (k * cos * sz - d) * wet;
+      alpha = clamp((p.life - p.tl) / FLOAT_FADE, 0, 1);
+      if (!reduceMotion) y += Math.sin(p.ph * 1.7) * 0.5; // it rides the small waves
+    }
+    const X = p.x * S + view.tx, Y = y * S + view.ty;
+    if (wet > 0) {
+      // the leaf lies in the water, so its shade is a thin dark rim beside it
+      ctx.globalAlpha = alpha * wet;
+      ctx.setTransform(a, b, c, d, X + FLOAT_SHADOW[0] * S, Y + FLOAT_SHADOW[1] * S);
+      ctx.drawImage(spr.shadow, -spr.cx - spr.pad, -spr.cy - spr.pad);
+    }
     ctx.globalAlpha = alpha;
-    const cos = Math.cos(p.rot), sin = Math.sin(p.rot);
-    const sc = p.s;
-    ctx.setTransform(cos * sc, sin * sc, -sin * sc * fy, cos * sc * fy, p.x * S + view.tx, p.y * S + view.ty);
+    ctx.setTransform(a, b, c, d, X, Y);
     ctx.drawImage(spr.c, -spr.cx, -spr.cy);
+    if (wet > 0) { ctx.globalAlpha = alpha * wet; ctx.drawImage(spr.wet, -spr.cx, -spr.cy); }
   }
   ctx.globalAlpha = 1;
 }
