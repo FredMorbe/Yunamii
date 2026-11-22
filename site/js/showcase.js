@@ -1,8 +1,15 @@
-// Project showcase: accessible tabs (click, arrow keys, links from the strip) and the phone carousels (one in every panel that has one).
+// Showcases: accessible tabs (click, arrow keys, links from the strip) and the phone carousels (one in every panel that has one).
+// A page can have several showcases; a showcase without tabs is only a phone carousel.
 
 export function initShowcase({ reduceMotion }) {
-  const root = document.querySelector('[data-showcase]');
-  if (!root) return;
+  document.querySelectorAll('[data-showcase]').forEach((root) => {
+    const tablist = root.querySelector('[role="tablist"]');
+    if (tablist) initTabs(root, tablist);
+    root.querySelectorAll('[data-phones]').forEach((phones) => initPhones(phones, reduceMotion));
+  });
+}
+
+function initTabs(root, tablist) {
   const tabs = [...root.querySelectorAll('[role="tab"]')];
   const panels = tabs.map((t) => {
     const p = document.getElementById(t.getAttribute('aria-controls'));
@@ -21,7 +28,7 @@ export function initShowcase({ reduceMotion }) {
   };
 
   tabs.forEach((t, i) => t.addEventListener('click', () => select(i)));
-  root.querySelector('[role="tablist"]').addEventListener('keydown', (e) => {
+  tablist.addEventListener('keydown', (e) => {
     const cur = tabs.indexOf(document.activeElement);
     if (cur < 0) return;
     const next = { ArrowDown: cur + 1, ArrowRight: cur + 1, ArrowUp: cur - 1, ArrowLeft: cur - 1, Home: 0, End: tabs.length - 1 }[e.key];
@@ -33,8 +40,6 @@ export function initShowcase({ reduceMotion }) {
     const i = tabs.findIndex((t) => t.dataset.tab === e.detail);
     if (i >= 0) select(i);
   });
-
-  root.querySelectorAll('[data-phones]').forEach((phones) => initPhones(phones, reduceMotion));
 }
 
 // five screenshots on a circle: the active one in front, its neighbours fanned out behind

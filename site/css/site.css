@@ -125,6 +125,9 @@ h2 em, h3 em, .section-title em { font-style: italic; font-weight: 320; color: v
 .head-in { height: 92px; display: flex; align-items: center; justify-content: space-between; transition: height .35s var(--ease); }
 .head--fixed.is-scrolled .head-in { height: 68px; }
 .logo { display: inline-flex; gap: 13px; align-items: center; font-weight: 700; letter-spacing: -.055em; font-size: 26px; line-height: 1; }
+/* the lettering of the logo is the wordmark picture (assets/brand/wordmark.webp, 9.6 : 1) used as a mask, so it takes the text colour */
+.logo-name { --wm-h: 18px; flex: none; display: block; width: calc(var(--wm-h) * 9.6); height: var(--wm-h); background: currentColor; -webkit-mask: url("../assets/brand/wordmark.webp") center / contain no-repeat; mask: url("../assets/brand/wordmark.webp") center / contain no-repeat; }
+.footer .logo-name { --wm-h: 13px; }
 .logomark { width: 35px; height: 35px; position: relative; filter: drop-shadow(0 2px 5px rgba(18, 40, 55, .16)); }
 .logomark i { display: block; position: absolute; width: 18px; height: 20px; border-radius: 73% 25% 74% 33%; transform-origin: 65% 70%; transition: transform .5s var(--ease); }
 .logo:hover .logomark i:nth-child(1) { transform: rotate(-57deg); }
@@ -457,6 +460,8 @@ a.os-item:hover .card-arrow { transform: translate(2px, -2px); }
   :root { --shell: calc(100% - 40px); }
   .head-in, .head--fixed.is-scrolled .head-in { height: 68px; }
   .logo { font-size: 23px; }
+  .logo-name { --wm-h: 15px; }
+  .footer .logo-name { --wm-h: 13px; }
   .desktop-nav, .head-actions { display: none; }
   .hamburger { display: flex; }
   .hero { min-height: 0; }
@@ -512,4 +517,36 @@ a.os-item:hover .card-arrow { transform: translate(2px, -2px); }
   .js .reveal { opacity: 1; transform: none; }
   .js .enso-stroke, .js .enso-dry { stroke-dashoffset: 0; }
   .petals { display: none; }
+}
+
+/* ---- feature: the studio's first app, right below the hero (phone carousel + copy) ---- */
+.feature { position: relative; padding: 70px 0 20px; }
+.feature-grid { position: relative; z-index: 2; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: clamp(28px, 4vw, 64px); align-items: center; }
+.feature .phones { --pw: 220px; }
+.feature .phone { aspect-ratio: 540 / 1120; }
+.feature .panel-visual--cubamii { min-height: clamp(520px, 44vw, 640px); }
+.feature-copy h3 { display: flex; align-items: flex-start; gap: 14px; margin: 0 0 18px; font: 360 clamp(32px, 3.4vw, 50px)/1.08 var(--serif); letter-spacing: -.035em; }
+.feature-copy h3 .app-icon { flex: 0 0 auto; margin-top: 4px; }
+.feature-copy p { margin: 0 0 22px; max-width: 46ch; color: var(--muted); font-size: 17px; line-height: 1.7; }
+.feature-copy .facts { max-width: 440px; margin-bottom: 8px; }
+.feature-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 22px; margin-top: 26px; }
+.play-pill svg { width: 18px; height: 18px; flex: 0 0 auto; fill: currentColor; }
+/* the second feature mirrors the first: copy on the left, the window on the right (on narrow screens the copy comes first, as in the markup) */
+@media (min-width: 900px) {
+  .feature--flip .feature-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); }
+  .feature--flip .feature-copy { order: -1; }
+}
+.feature--flip .panel-visual--katsumii { min-height: 0; }
+/* a showcase with a single panel and no tabs */
+.showcase--single { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 899px) {
+  .feature { padding-top: 40px; }
+  .feature-grid { grid-template-columns: minmax(0, 1fr); }
+  .feature .phones { --pw: 200px; }
+  .feature .panel-visual--cubamii { min-height: 480px; }
+}
+@media (max-width: 760px) {
+  .feature .phones { --pw: 166px; }
+  .feature .panel-visual--cubamii { min-height: 420px; }
+  .feature-copy h3 { flex-direction: column; gap: 12px; }
 }
