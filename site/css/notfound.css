@@ -1,0 +1,23 @@
+/* Yunamii — the 404 page. Loaded after site.css and only adds to it: the backdrop, glass, seals, petals, enso and footer waves
+   are the main page's. What is new is the layout of the one section and the number inside the brush circle. */
+
+.hero--404 { min-height: clamp(620px, 100vh, 900px); }
+.hero--404 .eyebrow::after { display: none; }
+.hero--404 p { max-width: 430px; }
+@media (min-width: 431px) {
+  .hero--404 h1 { font-size: clamp(38px, 4.5vw, 70px); }
+}
+.hero--404 .hero-stage { position: relative; z-index: 2; display: grid; place-items: center; }
+.ghost-kanji--404 { top: 8%; right: 4%; z-index: 1; font-size: clamp(220px, 32vw, 480px); }
+
+/* the number inside the circle: serif, lighter than the "y." of the main page, with the seal in the corner */
+.enso--404 { width: min(420px, 78%); margin: 0; }
+.enso--404 .enso-y { font: italic 300 clamp(70px, 8.4vw, 124px)/1 var(--serif); letter-spacing: -.04em; padding-right: .04em; }
+.enso--404 .hanko { right: 4%; bottom: 6%; }
+
+@media (max-width: 899px) {
+  .hero--404 { min-height: 0; }
+  .hero--404 .hero-inner { padding-bottom: 70px; gap: 30px; }
+  .enso--404 { width: min(300px, 70vw); }
+  .ghost-kanji--404 { top: 40%; right: -6%; }
+}

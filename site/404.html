@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Page not found — Yunamii</title>
+  <meta name="description" content="This page has drifted away. Back to Yunamii Studio.">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#0a3b52">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <!-- GitHub Pages serves this file for every address that does not exist, at any depth (/a/b/c), so everything is
+       linked from the root of the site: /css, /js, /assets. The same backdrop, petals and footer waves as the main page. -->
+  <link rel="preload" href="/assets/fonts/Fraunces-normal-300-640-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/Fraunces-italic-300-640-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/DMSans-normal-300-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="modulepreload" href="/js/notfound.js">
+  <link rel="modulepreload" href="/js/backdrop.js">
+  <link rel="modulepreload" href="/js/site.js">
+  <link rel="stylesheet" href="/css/site.css">
+  <link rel="stylesheet" href="/css/notfound.css">
+  <script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+<!-- shared SVG filters: "ink" roughens the edges of seals, "brush" roughens the enso stroke -->
+<svg class="defs" width="0" height="0" aria-hidden="true" focusable="false">
+  <defs>
+    <filter id="ink" x="-8%" y="-8%" width="116%" height="116%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="4" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="2.4"/>
+    </filter>
+    <filter id="ink-sm" x="-8%" y="-8%" width="116%" height="116%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="2" seed="4" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="1"/>
+    </filter>
+    <filter id="brush" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035 0.05" numOctaves="3" seed="11" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="7"/>
+    </filter>
+  </defs>
+</svg>
+
+<div class="site">
+  <canvas class="petals petals--back" id="petals-back" aria-hidden="true"></canvas>
+  <canvas class="petals" id="petals" aria-hidden="true"></canvas>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="head head--fixed" id="head">
+    <div class="shell head-in">
+      <a href="/" class="logo" aria-label="Yunamii Studio — home"><span class="logomark" aria-hidden="true"><i></i><i></i><i></i></span><span class="logo-name" aria-hidden="true"></span></a>
+      <nav class="desktop-nav" aria-label="Main navigation">
+        <a href="/#cubamii">Cubamii</a><a href="/#katsumii">Katsumii</a><a href="/#open-source">Open Source</a><a href="/#process">Approach</a><a href="/#about">About</a>
+      </nav>
+      <div class="head-actions"><a href="/impressum.html#kontakt" class="pill">Contact <span aria-hidden="true">↗</span></a></div>
+      <button type="button" class="hamburger" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="mobileOverlay"><svg width="22" height="22" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.9" fill="none"><path d="M3 7h18M3 12h18M3 17h18"/></svg></button>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- ============ NOT FOUND: the water of the main page and a brush circle with the number inside ============ -->
+    <section class="hero hero--404" id="hero" aria-labelledby="heroTitle">
+      <canvas class="hero-bg" id="bg" aria-hidden="true"></canvas>
+      <canvas class="hero-bg" id="bg-fx" aria-hidden="true"></canvas>
+      <span class="hero-vert" aria-hidden="true">Yunamii Studio — Page not found</span>
+      <span class="ghost-kanji ghost-kanji--404" lang="ja" aria-hidden="true">迷</span>
+      <div class="hero-inner">
+        <div class="hero-copy">
+          <div class="eyebrow"><span class="hanko hanko--sm stamp" lang="ja" aria-hidden="true">迷</span>ERROR 404</div>
+          <h1 id="heroTitle"><span>This page has</span><span><em>drifted away.</em></span></h1>
+          <p>The address may be misspelled, or the page has moved on. Everything we make is still where it was.</p>
+          <div class="hero-buttons"><a href="/" class="pill magnetic">Back to Yunamii <span aria-hidden="true">↗</span></a><a href="/cubamii/" class="outline">Meet Cubamii</a></div>
+        </div>
+        <div class="hero-stage">
+          <figure class="enso enso--404 reveal" id="lost" data-enso>
+            <svg viewBox="0 0 280 280" aria-hidden="true" focusable="false">
+              <defs>
+                <linearGradient id="ensoGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#ffd6e6"/><stop offset=".55" stop-color="#f6c0d6"/><stop offset="1" stop-color="#9eeef6"/>
+                </linearGradient>
+              </defs>
+              <g filter="url(#brush)" fill="none" stroke-linecap="round">
+                <path class="enso-stroke" pathLength="100" d="M 196 46 A 104 104 0 1 1 66 52" stroke="url(#ensoGrad)" stroke-width="13"/>
+                <path class="enso-dry" pathLength="100" d="M 192 58 A 92 92 0 1 1 74 62" stroke="url(#ensoGrad)" stroke-width="2.6" opacity=".55"/>
+              </g>
+            </svg>
+            <span class="enso-y" role="img" aria-label="404">404</span>
+            <span class="hanko hanko--lg stamp" lang="ja" aria-hidden="true">迷</span>
+          </figure>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer-wrap">
+    <div class="waves" data-seigaiha aria-hidden="true"></div>
+    <div class="footer shell">
+      <a href="/" class="logo" aria-label="Yunamii Studio, back to the main page"><span class="logomark" aria-hidden="true"><i></i><i></i><i></i></span><span class="logo-name" aria-hidden="true"></span></a>
+      <span class="footer-note">Made with imagination, intention &amp; care.</span>
+      <span class="footer-links"><a href="/">Yunamii Studio</a><a href="/impressum.html">Impressum</a><a href="/datenschutz.html">Datenschutz</a><span>© 2026 Yunamii Studio</span></span>
+    </div>
+  </footer>
+</div>
+
+<div class="mobile-overlay" id="mobileOverlay" aria-hidden="true">
+  <nav class="mobile-menu" aria-label="Mobile navigation">
+    <button class="close-menu" id="closeMenu" type="button" aria-label="Close menu">✕</button>
+    <a href="/#cubamii">Cubamii</a><a href="/#katsumii">Katsumii</a><a href="/#open-source">Open Source</a><a href="/#process">Approach</a><a href="/#about">About</a><a href="/impressum.html#kontakt">Contact</a>
+  </nav>
+</div>
+
+<script type="module" src="/js/notfound.js"></script>
+<script type="module" src="/js/site.js"></script>
+</body>
+</html>
