@@ -3,8 +3,8 @@
 Usage: python tools/dev-server.py [directory] [port]
 The PORT environment variable overrides the port, as a tool that has to move the server sets it.
 
-Like the deployed site, it serves the design concepts under /concepts/ next to the directory it
-was given, so the links of the site's design switcher work locally.
+Like the deployed site, it serves the design concepts (the concepts/ folder) under /sandbox/ next to the
+directory it was given, so the links of the concepts' design switcher work locally.
 """
 import functools
 import http.server
@@ -26,10 +26,10 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
 
     def translate_path(self, path):
         url_path = urllib.parse.urlsplit(path).path
-        if url_path.startswith("/concepts/") and CONCEPTS.is_dir():
+        if url_path.startswith("/sandbox/") and CONCEPTS.is_dir():
             served, self.directory = self.directory, str(CONCEPTS)
             try:
-                return super().translate_path(url_path[len("/concepts"):])
+                return super().translate_path(url_path[len("/sandbox"):])
             finally:
                 self.directory = served
         return super().translate_path(path)

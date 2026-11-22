@@ -23,12 +23,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
-      # the design concepts are published under /concepts/ while they are under review
+      # the design concepts are published under /sandbox/ (not linked from the site)
       - name: Assemble the site
         run: |
           mkdir _site
           cp -r site/. _site/
-          cp -r concepts _site/concepts
+          cp -r concepts _site/sandbox
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

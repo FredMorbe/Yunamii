@@ -1,7 +1,7 @@
-// Design switcher for the concept review: a small bar at the foot of the main page and of every
-// concept page that leads to all the designs (also with the number keys, 0 is the main page).
-// Not part of the final site. It finds the concepts from its own location (concepts/shared/), so it
-// works wherever the page that loads it lives, as long as the concepts are served as concepts/.
+// Design switcher for the concept review: a small bar at the foot of every concept page that leads to
+// all the designs (also with the number keys, 0 is the main page). The main page does not load it and
+// does not link to the concepts, which are published under /sandbox/. It finds the concepts from its own
+// location (shared/ inside the concepts folder), so it works wherever that folder is served.
 
 const DESIGNS = [
   { id: '', name: 'Hauptseite' },                 // the landing page, one level above concepts/
