@@ -1,0 +1,101 @@
+/* Cubamii — product page. Loaded after ../css/site.css and only adds to it: the glass, the seals, the kanji numerals, the vine,
+   the enso, the showcase and the footer waves are the main page's. What is new here is the hero (the game's own block instead
+   of the bonsai), the four collections, the screens of the app and the three plans. */
+
+/* ---- hero: the block in front of the code-drawn water ---- */
+.hero--cubamii .eyebrow::after { display: none; }
+.hero--cubamii .eyebrow .badge { margin-left: 6px; }
+.hero--cubamii p { max-width: 450px; }
+@media (min-width: 431px) {
+  .hero--cubamii h1 { font-size: clamp(38px, 4.15vw, 64px); }
+}
+.hero--cubamii .hero-stage { position: relative; z-index: 2; display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; gap: 10px; min-width: 0; }
+.cube-wrap { position: relative; width: min(100%, 640px); aspect-ratio: 1 / 1; }
+#cube { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; touch-action: pan-y; outline-offset: -6px; }
+#cube.is-dragging { cursor: grabbing; }
+.cube-fallback { display: none; position: absolute; inset: 8% 24%; width: 52%; height: 84%; object-fit: cover; border-radius: 28px; border: 1px solid rgba(255, 255, 255, .2); box-shadow: 0 40px 80px rgba(0, 10, 20, .55); }
+.hero--static .cube-fallback { display: block; }
+.hero--static #cube, .hero--static .cube-ui { display: none; }
+.cube-ui { position: relative; z-index: 3; display: grid; justify-items: center; gap: 12px; margin-top: -34px; text-align: center; }
+.cube-btn {
+  display: inline-flex; align-items: center; gap: 10px; border-radius: 40px; padding: 11px 20px; font-size: 13px; font-weight: 650; color: #f3fcff;
+  background: rgba(6, 37, 53, .38); border: 1px solid rgba(237, 254, 255, .6); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  transition: background .24s, transform .24s, opacity .24s;
+}
+.cube-btn:hover:not(:disabled) { background: rgba(255, 255, 255, .16); transform: translateY(-2px); }
+.cube-btn:disabled { opacity: .55; cursor: default; }
+/* .hero p (site.css) would win over a bare class */
+.hero--cubamii .cube-caption { margin: 0; max-width: 34ch; min-height: 2.9em; font: italic 330 16px/1.45 var(--serif); color: var(--sakura-2); text-shadow: 0 1px 12px rgba(4, 28, 40, .6); }
+/* the block fades in with the backdrop (data-hero is set by hero.js) */
+.js #cube, .js .cube-ui { opacity: 0; transition: opacity .6s ease; }
+html[data-hero] #cube, html[data-hero] .cube-ui { opacity: 1; }
+.hero--cubamii .hero-hint { right: 4%; }
+
+/* ---- strip: the four collections ---- */
+.what--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.glyph {
+  flex: 0 0 auto; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%;
+  border: 1px solid rgba(156, 236, 245, .45); font: 400 21px/1 var(--mincho); color: #9cecf5;
+  transition: color .3s, border-color .3s, transform .5s var(--ease);
+}
+.what a:hover .glyph { color: var(--sakura-2); border-color: rgba(255, 220, 233, .65); transform: rotate(-8deg) scale(1.08); }
+
+/* ---- the app: the screens are taller and narrower than the main page's ---- */
+.cm-app .phones { --pw: 216px; }
+.cm-app .phone { aspect-ratio: 540 / 1120; }
+.panel-visual--cm { --glow: 110, 232, 246; grid-template-rows: 1fr auto; padding: 8px 0 18px;
+  background: radial-gradient(55% 50% at 50% 78%, rgba(var(--glow), .2), transparent 70%), radial-gradient(120% 90% at 50% 0%, rgba(120, 226, 240, .14), transparent 60%), #0a3248; }
+.panel-visual--collection { --glow: 255, 196, 96; }
+.panel-visual--models { --glow: 255, 170, 205; }
+
+/* ---- free to play: three plans in glass ---- */
+.plans { position: relative; padding: 110px 0 30px; }
+.plans-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; padding: 0 8px; }
+.plan {
+  position: relative; display: grid; align-content: start; gap: 12px; padding: 30px 28px 32px; border-radius: 26px;
+  background: var(--glass); border: 1px solid var(--stroke); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  box-shadow: 0 18px 44px rgba(3, 30, 46, .16); transition: transform .35s var(--ease), background .3s;
+}
+.plan:hover { transform: translateY(-5px); background: rgba(231, 250, 255, .14); }
+.plan--main { border-color: rgba(255, 220, 233, .55); background: linear-gradient(160deg, rgba(255, 220, 233, .16), rgba(231, 250, 255, .07)); }
+.plan-tag { font-size: 10px; letter-spacing: .26em; font-weight: 700; text-transform: uppercase; color: #9cecf5; }
+.plan--main .plan-tag { color: var(--sakura-2); }
+.plan h3 { margin: 0; font: 360 clamp(26px, 2.4vw, 34px)/1.1 var(--serif); letter-spacing: -.03em; }
+.plan p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.65; }
+.plans-note { padding: 26px 8px 0; margin: 0; max-width: 70ch; color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+/* ---- quiet by design: the about layout of the main page with 彫 inside the ink circle ---- */
+.quiet .facts { margin-top: 34px; max-width: 470px; }
+.quiet .enso-y { font: 400 clamp(76px, 8vw, 118px)/1 var(--mincho); font-style: normal; letter-spacing: 0; }
+.quiet .about-links { margin-top: 26px; }
+
+/* ---- get it ---- */
+.app-icon--lg { display: block; width: 56px; height: 56px; margin-bottom: 22px; border-radius: 14px; }
+.play-pill svg { width: 18px; height: 18px; flex: 0 0 auto; fill: currentColor; }
+.cta-meta { margin: 0; color: #a4d3df; font-size: 13px; letter-spacing: .02em; }
+.cta-meta a { color: #9cecf5; text-decoration: underline; text-underline-offset: 3px; }
+
+/* ---- smaller screens ---- */
+@media (max-width: 1060px) {
+  .glyph { width: 32px; height: 32px; font-size: 17px; }
+}
+@media (max-width: 899px) {
+  .cm-app .phones { --pw: 200px; }
+  .cube-wrap { width: min(100vw, 520px); justify-self: center; }
+  .cube-ui { margin-top: -26px; }
+  .plans-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .what--4 { grid-template-columns: repeat(2, 1fr); }
+  .what--4 a:nth-child(3) { border-left: 0; }
+  .cm-app .phones { --pw: 166px; }
+  .plans { padding-top: 80px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js #cube, .js .cube-ui { opacity: 1; }
+}
+
+/* long panel titles stay beside the icon instead of dropping below it */
+.cm-app .panel-copy h3 { flex-wrap: nowrap; align-items: flex-start; }
+.cm-app .panel-copy h3 .app-icon { flex: 0 0 auto; }
