@@ -128,14 +128,9 @@ h2 em, h3 em, .section-title em { font-style: italic; font-weight: 320; color: v
 /* the lettering of the logo is the wordmark picture (assets/brand/wordmark.webp, 9.6 : 1) used as a mask, so it takes the text colour */
 .logo-name { --wm-h: 18px; flex: none; display: block; width: calc(var(--wm-h) * 9.6); height: var(--wm-h); background: currentColor; -webkit-mask: url("../assets/brand/wordmark.webp") center / contain no-repeat; mask: url("../assets/brand/wordmark.webp") center / contain no-repeat; }
 .footer .logo-name { --wm-h: 13px; }
-.logomark { width: 35px; height: 35px; position: relative; filter: drop-shadow(0 2px 5px rgba(18, 40, 55, .16)); }
-.logomark i { display: block; position: absolute; width: 18px; height: 20px; border-radius: 73% 25% 74% 33%; transform-origin: 65% 70%; transition: transform .5s var(--ease); }
-.logo:hover .logomark i:nth-child(1) { transform: rotate(-57deg); }
-.logo:hover .logomark i:nth-child(2) { transform: rotate(65deg); }
-.logo:hover .logomark i:nth-child(3) { transform: rotate(225deg); }
-.logomark i:nth-child(1) { background: linear-gradient(125deg, #fca0ed, #a985f3); left: 2px; top: 1px; transform: rotate(-37deg); }
-.logomark i:nth-child(2) { background: linear-gradient(120deg, #9ef5ff, #43bfff); right: 2px; top: 1px; transform: rotate(45deg); }
-.logomark i:nth-child(3) { background: linear-gradient(120deg, #ffdda0, #ffd46a); left: 9px; bottom: 0; transform: rotate(205deg); }
+/* the logo mark: the finished Yunamii "Y" (assets/brand/yunamii-y.webp, cut out by tools/build-logo-assets.py) */
+.logomark { flex: none; width: 40px; height: 40px; background: url("../assets/brand/yunamii-y.webp") center / contain no-repeat; filter: drop-shadow(0 3px 6px rgba(3, 30, 46, .35)); transition: transform .5s var(--ease); }
+.logo:hover .logomark { transform: rotate(-8deg) scale(1.07); }
 .desktop-nav { display: flex; align-items: center; gap: 43px; margin-left: auto; margin-right: 43px; }
 .desktop-nav a { font-size: 14px; font-weight: 500; color: rgba(255, 255, 255, .86); transition: color .2s, transform .2s; }
 .desktop-nav a:hover { color: #85f8ff; transform: translateY(-2px); }
@@ -385,7 +380,7 @@ a.os-item:hover .card-arrow { transform: translate(2px, -2px); }
 @keyframes drift { from { transform: translateX(-9px); } to { transform: translateX(9px); } }
 .footer { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; border-top: 1px solid rgba(204, 248, 255, .16); margin-top: 90px; padding: 29px 0 34px; color: #a4d3df; font-size: 13px; }
 .footer .logo { font-size: 19px; color: #ecfbfe; }
-.footer .logomark { transform: scale(.7); width: 28px; }
+.footer .logomark { width: 28px; height: 28px; }
 .footer-note { letter-spacing: .04em; font-family: var(--serif); font-style: italic; font-size: 15px; }
 .footer-links { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
 .footer-links a:hover { color: #d5fbff; text-decoration: underline; }
@@ -461,6 +456,7 @@ a.os-item:hover .card-arrow { transform: translate(2px, -2px); }
   .head-in, .head--fixed.is-scrolled .head-in { height: 68px; }
   .logo { font-size: 23px; }
   .logo-name { --wm-h: 15px; }
+  .logomark { width: 36px; height: 36px; }
   .footer .logo-name { --wm-h: 13px; }
   .desktop-nav, .head-actions { display: none; }
   .hamburger { display: flex; }
