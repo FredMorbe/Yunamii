@@ -12,7 +12,7 @@ export function initProcess({ reduceMotion }) {
 
   const n = items.length;
   const at = (i) => 0.04 + (i / (n - 1)) * 0.96; // progress at which step i opens
-  let active = -1, swap = 0, pinned = null, pinnedAtCount = 0, count = 0;
+  let active = -1, swap = 0, pinned = null, pinnedY = 0, count = 0;
 
   const setActive = (i) => {
     if (i === active) return;
@@ -32,19 +32,20 @@ export function initProcess({ reduceMotion }) {
     const r = steps.getBoundingClientRect(), h = innerHeight;
     const p = reduceMotion ? 1 : clamp((h * 0.82 - r.top) / (r.height + h * 0.18), 0, 1);
     steps.style.setProperty('--p', clamp((p - 0.04) / 0.96, 0, 1).toFixed(3));
-    count = 0;
-    items.forEach((s, i) => {
-      s.classList.toggle('is-on', p >= at(i) || s.dataset.manual === '1');
-      if (p >= at(i)) count++;
-    });
-    if (pinned !== null && count !== pinnedAtCount) pinned = null; // scrolling takes over again
+    count = items.filter((_, i) => p >= at(i)).length;
+    // scrolling takes over again: the vine decides, so a blossom opened by a click does not stay open ahead of it
+    if (pinned !== null && Math.abs(scrollY - pinnedY) > 40) {
+      pinned = null;
+      items.forEach((s) => { delete s.dataset.manual; });
+    }
+    items.forEach((s, i) => s.classList.toggle('is-on', p >= at(i) || s.dataset.manual === '1'));
     setActive(pinned !== null ? pinned : Math.max(0, count - 1));
   };
 
   items.forEach((s, i) => s.querySelector('.step-btn').addEventListener('click', () => {
     s.dataset.manual = '1';
     pinned = i;
-    pinnedAtCount = count;
+    pinnedY = scrollY;
     s.classList.add('is-on');
     setActive(i);
   }));
