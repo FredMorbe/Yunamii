@@ -476,6 +476,13 @@ canvas.addEventListener('pointerdown', (ev) => {
 });
 
 // ---- petals / ripples ----------------------------------------------------
+const WATER_SQUASH = 0.3; // vertical squash of something lying flat on the water (the ripple ellipses use 0.28)
+const SETTLE = 0.4;       // seconds from touchdown until a petal lies flat
+const FLOAT_LIFE = 9;     // seconds a petal floats before it is gone
+const FLOAT_FADE = 2.5;   // of which the last ones fade it out
+const SHORE_GAP = 8;      // world px a floating petal keeps from the island's waterline
+// world y of the island's waterline at x, or -Infinity beside the island (open water there)
+const shoreAt = (x) => (x >= wlMin && x <= wlMax ? wlAt(x) : -Infinity);
 function spawnPetal(it, vx = 0, vy = 0) {
   if (petals.length > 45) return;
   petals.push({
@@ -487,6 +494,7 @@ function spawnPetal(it, vx = 0, vy = 0) {
     ph: Math.random() * 6.28, fr: 1.6 + Math.random() * 1.6,
     s: 0.8 + Math.random() * 0.5,
     floor: 1110 + Math.random() * 100,
+    shore: SHORE_GAP + Math.random() * 50, // in front of the island: how far below its waterline it lands
     landed: false, tl: 0,
   });
 }
@@ -547,10 +555,20 @@ function step(dt, t) {
       p.y += p.vy * dt;
       p.vx *= Math.exp(-dt * 0.8);
       p.rot += (p.vr + Math.cos(p.ph) * 1.2) * dt;
-      if (p.y >= p.floor) { p.landed = true; spawnRipple(p.x, p.y + 6); }
+      if (p.y >= Math.max(p.floor, shoreAt(p.x) + p.shore)) { // on the water, never on the island's stones and moss
+        p.landed = true; spawnRipple(p.x, p.y + 6);
+        p.fyLand = 0.3 + 0.7 * Math.abs(Math.cos(p.ph * 0.8)); // flutter squash at touchdown, eased out in drawPetals
+        p.vx += Math.sin(p.ph) * 34 + wind(t, p.x, p.y) * 18;   // keeps the drift it had in the air
+        p.vr = (Math.random() - 0.5) * 0.5;                     // slow turning on the water
+      }
     } else {
+      // floating: water drag on the leftover drift, a light breeze along the surface, slow turning
       p.tl += dt;
-      if (p.tl > 3.2) petals.splice(i, 1);
+      p.vx *= Math.exp(-dt * 1.2);
+      const nx = p.x + (p.vx + wind(t, p.x, p.y) * 7) * dt;
+      if (p.y >= shoreAt(nx) + SHORE_GAP) p.x = nx; else p.vx = 0; // stops at the shore instead of drifting onto the island
+      p.rot += p.vr * dt;
+      if (p.tl > FLOAT_LIFE) petals.splice(i, 1);
     }
   }
   for (let i = ripples.length - 1; i >= 0; i--) { ripples[i].t += dt; if (ripples[i].t > 1.8) ripples.splice(i, 1); }
@@ -584,13 +602,24 @@ function drawPetals() {
   const S = view.S;
   for (const p of petals) {
     const spr = sprites[p.name];
-    let alpha = 1, fy;
-    if (p.landed) { alpha = 1 - clamp((p.tl - 1.6) / 1.6, 0, 1); fy = 0.45; }
-    else fy = 0.3 + 0.7 * Math.abs(Math.cos(p.ph * 0.8));
-    ctx.globalAlpha = alpha;
     const cos = Math.cos(p.rot), sin = Math.sin(p.rot);
     const sc = p.s;
-    ctx.setTransform(cos * sc, sin * sc, -sin * sc * fy, cos * sc * fy, p.x * S + view.tx, p.y * S + view.ty);
+    if (!p.landed) {
+      // in the air: squashed along its own axis (tumbling)
+      const fy = 0.3 + 0.7 * Math.abs(Math.cos(p.ph * 0.8));
+      ctx.globalAlpha = 1;
+      ctx.setTransform(cos * sc, sin * sc, -sin * sc * fy, cos * sc * fy, p.x * S + view.tx, p.y * S + view.ty);
+    } else {
+      // on the water: lying flat in the surface plane, so the screen squashes it vertically like the ripples,
+      // blended in from the tumbling pose over SETTLE seconds; bobs gently on the swell
+      const k = clamp(p.tl / SETTLE, 0, 1), e = k * k * (3 - 2 * k);
+      const fy = p.fyLand, ws = WATER_SQUASH * (1 + Math.sin(p.tl * 1.7 + p.ph) * 0.06);
+      const a = cos * sc, b = sin * sc * (1 - e + e * ws);
+      const c = -sin * sc * (fy + e * (1 - fy)), d = cos * sc * (fy + e * (ws - fy));
+      const bob = Math.sin(p.tl * 1.7 + p.ph) * 0.8 * e;
+      ctx.globalAlpha = 1 - clamp((p.tl - (FLOAT_LIFE - FLOAT_FADE)) / FLOAT_FADE, 0, 1);
+      ctx.setTransform(a, b, c, d, p.x * S + view.tx, (p.y + bob) * S + view.ty);
+    }
     ctx.drawImage(spr.c, -spr.cx, -spr.cy);
   }
   ctx.globalAlpha = 1;
