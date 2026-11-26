@@ -4,7 +4,7 @@
     python tools/build-lingo-assets.py --out DIR  # writes somewhere else (to compare settings)
 
 Sources live in source-assets/lingo/ (they are not deployed). They come from the Linguii app
-(D:\\Workspace\\Linguii, the app behind Yunamii Lingo):
+(D:\\Workspace\\Linguii, the app behind Yunamii Lingua):
   screens/*.png   renders of the app's own screens on a 375 x 812 phone, English, dark ("sakura dusk") or
                   light ("aqua morning"); build/preview/ of the app, made by its tool/*_preview_test.dart
   art/card_*.webp the painted portrait of each country (Taiwan, Japan, Korea): assets/ui/card_*.webp
